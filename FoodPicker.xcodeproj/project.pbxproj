@@ -15,9 +15,6 @@
 		2CF9F487279DF08100A25FE8 /* OverView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2CF9F486279DF08100A25FE8 /* OverView.swift */; };
 		2CF9F489279DF08300A25FE8 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 2CF9F488279DF08300A25FE8 /* Assets.xcassets */; };
 		2CF9F48C279DF08300A25FE8 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 2CF9F48B279DF08300A25FE8 /* Preview Assets.xcassets */; };
-		2CF9F496279DF08300A25FE8 /* FoodPickerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2CF9F495279DF08300A25FE8 /* FoodPickerTests.swift */; };
-		2CF9F4A0279DF08300A25FE8 /* FoodPickerUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2CF9F49F279DF08300A25FE8 /* FoodPickerUITests.swift */; };
-		2CF9F4A2279DF08300A25FE8 /* FoodPickerUITestsLaunchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2CF9F4A1279DF08300A25FE8 /* FoodPickerUITestsLaunchTests.swift */; };
 		2CF9F4B2279DFBEE00A25FE8 /* HeaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2CF9F4B1279DFBEE00A25FE8 /* HeaderView.swift */; };
 /* End PBXBuildFile section */
 
@@ -49,10 +46,7 @@
 		2CF9F488279DF08300A25FE8 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		2CF9F48B279DF08300A25FE8 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		2CF9F491279DF08300A25FE8 /* FoodPickerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FoodPickerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		2CF9F495279DF08300A25FE8 /* FoodPickerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodPickerTests.swift; sourceTree = "<group>"; };
 		2CF9F49B279DF08300A25FE8 /* FoodPickerUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FoodPickerUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		2CF9F49F279DF08300A25FE8 /* FoodPickerUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodPickerUITests.swift; sourceTree = "<group>"; };
-		2CF9F4A1279DF08300A25FE8 /* FoodPickerUITestsLaunchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodPickerUITestsLaunchTests.swift; sourceTree = "<group>"; };
 		2CF9F4B1279DFBEE00A25FE8 /* HeaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HeaderView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -85,8 +79,6 @@
 			isa = PBXGroup;
 			children = (
 				2CF9F483279DF08100A25FE8 /* FoodPicker */,
-				2CF9F494279DF08300A25FE8 /* FoodPickerTests */,
-				2CF9F49E279DF08300A25FE8 /* FoodPickerUITests */,
 				2CF9F482279DF08100A25FE8 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -123,23 +115,6 @@
 				2CF9F48B279DF08300A25FE8 /* Preview Assets.xcassets */,
 			);
 			path = "Preview Content";
-			sourceTree = "<group>";
-		};
-		2CF9F494279DF08300A25FE8 /* FoodPickerTests */ = {
-			isa = PBXGroup;
-			children = (
-				2CF9F495279DF08300A25FE8 /* FoodPickerTests.swift */,
-			);
-			path = FoodPickerTests;
-			sourceTree = "<group>";
-		};
-		2CF9F49E279DF08300A25FE8 /* FoodPickerUITests */ = {
-			isa = PBXGroup;
-			children = (
-				2CF9F49F279DF08300A25FE8 /* FoodPickerUITests.swift */,
-				2CF9F4A1279DF08300A25FE8 /* FoodPickerUITestsLaunchTests.swift */,
-			);
-			path = FoodPickerUITests;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -286,7 +261,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				2CF9F496279DF08300A25FE8 /* FoodPickerTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -294,8 +268,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				2CF9F4A2279DF08300A25FE8 /* FoodPickerUITestsLaunchTests.swift in Sources */,
-				2CF9F4A0279DF08300A25FE8 /* FoodPickerUITests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
