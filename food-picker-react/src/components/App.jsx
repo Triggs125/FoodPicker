@@ -14,6 +14,9 @@ import Lobby from './Lobby/Lobby';
 import Account from './Account/Account';
 import Picker from './Picker/Picker';
 import { Component } from 'react';
+import SignIn from './Account/SignIn';
+import ResetPassword from './Account/ResetPassword';
+import CreateAccount from './Account/CreateAccount';
 
 const app = initializeApp(firebaseConfig);
 const analytics = getAnalytics(app);
@@ -22,37 +25,25 @@ const db = getFirestore(app);
 
 const store = createStore(reducer);
 
-function setUser(user) {
-
-}
-
 class App extends Component {
 
   constructor(props) {
     super(props);
 
     this.state = {
-      user: undefined,
     }
-
-    this.setUser = this.setUser.bind(this);
-  }
-
-  setUser(user) {
-    console.log("Set User:", user);
-    this.setState({ user });
   }
 
   render() {
-    console.log("App state:", this.state)
     return (
       <div className="App">
         <header className="App-header">
           <Provider store={store}>
-            <Header key={this.state.user?.uid} db={db} user={{ displayName: "Tanner" }} />
             <BrowserRouter>
+              <Header db={db} />
               <Routes>
                 <Route exact path="/" element={<Lobby db={db} />} />
+                <Route exact path="/picker" element={<Picker db={db} />} />
                 <Route
                   exact
                   path="/account"
@@ -60,7 +51,9 @@ class App extends Component {
                     <Account db={db} auth={auth} setUser={this.setUser} />
                   }
                 />
-                <Route exact path="/picker" element={<Picker db={db} />} />
+                <Route exact path="/signin" element={<SignIn db={db} auth={auth} />} />
+                <Route exact path="/create-account" element={<CreateAccount db={db} auth={auth} />} />
+                <Route exact path="/reset-password" element={<ResetPassword db={db} auth={auth} />} />
               </Routes>
             </BrowserRouter>
           </Provider>

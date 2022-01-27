@@ -24,7 +24,7 @@ class Lobby extends Component {
 Lobby.propTypes = propTypes;
 
 const mapStateToProps = state => ({
-  pageShowing: state.pageShowing,
+
 });
 
 export default connect(mapStateToProps)(Lobby);
