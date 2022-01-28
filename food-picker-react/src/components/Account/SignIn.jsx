@@ -1,15 +1,23 @@
 import { Button, Container, TextField, Typography } from "@mui/material";
 import GoogleIcon from '@mui/icons-material/Google';
 import { Component } from "react";
+import { connect } from "react-redux";
 import withParams from "../utils/withParams";
 import {
   signInWithEmailAndPassword,
+  signInWithRedirect,
   sendPasswordResetEmail,
 } from 'firebase/auth';
-import { pushLastPage, setHeaderTitle } from "../../actions";
+import {
+  query,
+  getDocs,
+  collection,
+  where,
+  addDoc,
+} from 'firebase/firestore';
+import { pushLastPage, setHeaderTitle, setUser } from "../../actions";
 
 import '../../css/SignIn.css';
-import { connect } from "react-redux";
 
 class SignIn extends Component {
   componentDidMount() {
@@ -27,6 +35,37 @@ class SignIn extends Component {
       this.setState({ signInError: true });
     }
     this.setState({ loading: false });
+  }
+
+  signInWithGoogle = async () => {
+    const { googleProvider } = this.state;
+    const { db, auth } = this.props;
+    this.setState({ loading: true });
+    try {
+      const res = await signInWithRedirect(auth, googleProvider);
+      const user = res.user;
+      this.props.dispatch(setUser(user));
+      this.setHeaderTitle();
+      const q = query(collection(db, "users"), where("uid", "==", user.uid));
+      console.log("Before query")
+      const docs = await getDocs(q);
+      console.log("After query")
+      if (docs.docs.length === 0) {
+        console.log("Before collection")
+        await addDoc(collection(db, "users"), {
+          uid: user.uid,
+          name: user.displayName,
+          authProvider: "google",
+          email: user.email,
+        });
+        console.log("After collection")
+      }
+      this.setState({ signInError: false });
+    } catch (err) {
+      console.error(err);
+      this.setState({ signInError: true });
+    }
+    this.setState({ loading: false })
   }
 
   sendPasswordReset = async (email) => {

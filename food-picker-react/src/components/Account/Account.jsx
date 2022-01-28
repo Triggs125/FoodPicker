@@ -7,7 +7,8 @@ import PersonIcon from '@mui/icons-material/Person';
 
 import {
   GoogleAuthProvider,
-  signInWithPopup,
+  // signInWithPopup,
+  signInWithRedirect,
   sendPasswordResetEmail,
   signOut,
 } from 'firebase/auth';
@@ -51,8 +52,10 @@ class Account extends Component {
     const { db, auth } = this.props;
     this.setState({ loading: true });
     try {
-      const res = await signInWithPopup(auth, googleProvider);
+      const res = await signInWithRedirect(auth, googleProvider);
       const user = res.user;
+      console.log("RES:", res)
+      console.log("User:", user)
       this.props.dispatch(setUser(user));
       this.setHeaderTitle();
       const q = query(collection(db, "users"), where("uid", "==", user.uid));

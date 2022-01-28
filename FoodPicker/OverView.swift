@@ -11,7 +11,8 @@ struct OverView: View {
     @ObservedObject var pageViewModel = PageViewModel()
     
     var body: some View {
-        WebView(url: URL(string: "https://google.com")!)
+        WebView(url: URL(string: "https://my-food-picker.web.app/")!)
+            
 //        VStack {
 //            HeaderView(title: pageViewModel.pageTitle)
 //
@@ -29,5 +30,6 @@ struct OverView: View {
 struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
         OverView()
+            
     }
 }
