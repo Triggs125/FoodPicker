@@ -18,7 +18,9 @@
     ],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.driggs.foodpicker"
+      "bundleIdentifier": "com.driggs.foodpicker",
+      "googleServicesFile": "./GoogleService-Info.plist",
+      "buildNumber": "1.0.0"
     },
     "android": {
       "package": "com.driggs.foodpicker",
