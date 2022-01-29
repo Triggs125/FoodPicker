@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "380426534087",
+    "project_id": "my-food-picker",
+    "storage_bucket": "my-food-picker.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:380426534087:android:48c8fd99286b32cde392e2",
+        "android_client_info": {
+          "package_name": "com.driggs.foodpicker"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "380426534087-kt7ctnk84ik0uog7n5vccnduimpqr730.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.driggs.foodpicker",
+            "certificate_hash": "61b0c4bfe0ddaf7d60e2d5958fcd686469e19256"
+          }
+        },
+        {
+          "client_id": "380426534087-d2r86fub5lrv38dhrhhl630si4e1hfjs.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCt2YZBvw5f6wN-HcMeHVTnl0driessAvM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "380426534087-d2r86fub5lrv38dhrhhl630si4e1hfjs.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

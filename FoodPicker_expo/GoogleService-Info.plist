@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CLIENT_ID</key>
+	<string>380426534087-lq731opp3jrr46l9dvl7v0v8009e53gi.apps.googleusercontent.com</string>
+	<key>REVERSED_CLIENT_ID</key>
+	<string>com.googleusercontent.apps.380426534087-lq731opp3jrr46l9dvl7v0v8009e53gi</string>
+	<key>ANDROID_CLIENT_ID</key>
+	<string>380426534087-kt7ctnk84ik0uog7n5vccnduimpqr730.apps.googleusercontent.com</string>
+	<key>API_KEY</key>
+	<string>AIzaSyAnwjA7o5BYIOlOWKF_cvEXkNKGkpGnbVI</string>
+	<key>GCM_SENDER_ID</key>
+	<string>380426534087</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>com.driggs.foodpicker</string>
+	<key>PROJECT_ID</key>
+	<string>my-food-picker</string>
+	<key>STORAGE_BUCKET</key>
+	<string>my-food-picker.appspot.com</string>
+	<key>IS_ADS_ENABLED</key>
+	<false></false>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false></false>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true></true>
+	<key>IS_GCM_ENABLED</key>
+	<true></true>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true></true>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:380426534087:ios:480ef7716343afb7e392e2</string>
+</dict>
+</plist>
