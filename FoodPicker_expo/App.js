@@ -10,19 +10,19 @@ import { getFirestore } from 'firebase/firestore';
 import { firebaseConfig } from './config';
 import ThemeColors from './assets/ThemeColors';
 import { UserColors } from './ColorContext';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import Account from './components/Account/Account';
 import CreateAccount from './components/Account/CreateAccount';
-import SignIn from './components/Account/SignIn';
 import Lobby from './components/Lobby/Lobby';
-
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
 
 const Stack = createStackNavigator();
 
 export default function App() {
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+
   const [userColors, setUserColors] = useState({}); 
   const navColors = {
     colors: {
@@ -85,27 +85,25 @@ export default function App() {
           ref={navigationRef}
           theme={navColors}
         >
-          <Stack.Navigator initialRouteName="CreateAccount">
+          <Stack.Navigator initialRouteName="Account">
             <Stack.Screen
               name="Lobby"
-              component={Lobby}
-              options={{ headerTitle: 'Lobby' }}
-            />
+              options={{ headerTitle: "Join or Start a Lobby" }}
+            >
+              {props => <Lobby {...props} auth={auth} db={db} />}
+            </Stack.Screen>
             <Stack.Screen
               name="Account"
-              component={Account}
-              options={{ headerTitle: 'Good evening' }}
-            />
+              options={{ headerTitle: 'Log In' }}
+            >
+              {props => <Account {...props} auth={auth} db={db} firstTime />}
+            </Stack.Screen>
             <Stack.Screen
               name="CreateAccount"
-              component={CreateAccount}
               options={{ headerTitle: 'Create an Account' }}
-            />
-            <Stack.Screen
-              name="SignIn"
-              component={SignIn}
-              options={{ headerTitle: 'Sign In' }}
-            />
+            >
+              {props => <CreateAccount {...props} auth={auth} db={db} />}
+            </Stack.Screen>
           </Stack.Navigator>
         </NavigationContainer>
       </UserColors.Provider>

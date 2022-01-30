@@ -1,8 +1,12 @@
 import { Component } from "react";
-import { SafeAreaView, StyleSheet, View, TextInput } from 'react-native';
+import { SafeAreaView, StyleSheet, View, Text } from 'react-native';
 import Constants from 'expo-constants';
-import { Button } from 'react-native-elements';
+import { Button, Card, Icon } from 'react-native-elements';
 import LoadingSpinner from '../LoadingSpinner';
+import { ScrollView } from "react-native-gesture-handler";
+import { collection, onSnapshot, query, where } from 'firebase/firestore';
+import { Input } from "react-native-elements/dist/input/Input";
+// import ThemeColors from '../../assets/ThemeColors';
 
 class Lobby extends Component {
   constructor(props) {
@@ -10,26 +14,82 @@ class Lobby extends Component {
 
     this.state = {
       loading: false,
-      username: "",
       error: false,
+      user: this.props.route.params.user,
     }
   }
 
+  componentDidMount() {
+    const { user } = this.state;
+    const userLobbiesUnsubscribe = onSnapshot(query(collection(this.props.db, 'lobbies'), where('host', '==', user.uid)), (lobbies) => { 
+      let userLobbies = [];
+      lobbies.forEach((lobby) => {
+        const lobbyData = lobby.data();
+        userLobbies.push(lobbyData);
+      });
+      this.setState({ userLobbies });
+    });
+    this.setState({ userLobbiesUnsubscribe });
+  }
+
+  componentWillUnmount() {
+    const { userLobbiesUnsubscribe } = this.state;
+    userLobbiesUnsubscribe ?? userLobbiesUnsubscribe();
+  }
+
+  lobby(lobby, i) {
+    return (
+      <Button
+        key={i}
+        title={lobby.name}
+        buttonStyle={styles.lobbyButton}
+        titleStyle={styles.name}
+        icon={<Icon name="angle-right" type="font-awesome" />}
+        iconRight
+      />
+    )
+  }
+
   render() {
-    const { loading, username, error } = this.state;
+    const { loading, error, user } = this.state;
     return (
       <SafeAreaView>
-        <LoadingSpinner spinning={loading} />
-        <View>
-          <TextInput
-            label="Username"
-            placeholder="Username"
-            onChangeText={this.handleUsernameChange}
-            errorMessage={this.getErrorMessage}
-            maxLength={20}
-          />
-          <Button disabled={!username || error} onPress={this.createUser} title="Sign up" style={styles.button} />
-        </View>
+        <ScrollView>
+          <LoadingSpinner spinning={loading} />
+          <View style={styles.container}>
+            <Card
+              id="user-lobbies"
+              containerStyle={styles.cardContainer}
+            >
+              <Card.Title style={styles.cardTitle}>Your Lobbies</Card.Title>
+              <ScrollView style={{ maxHeight: 140 }}>
+                {this.state.userLobbies?.map((lobby, i) => {
+                  return this.lobby(lobby, i);
+                })}
+              </ScrollView>
+            </Card>
+            <Card
+              id="search-for-lobbies"
+              containerStyle={styles.cardContainer}
+            >
+              <Card.Title style={styles.cardTitle}>Lobby Search</Card.Title>
+              <Input
+                placeholder="Search for a Lobby"
+                containerStyle={{ backgroundColor: 'white' }}
+                rightIcon={
+                  <Icon
+                    name='search'
+                    type='font-awesome'
+                    iconStyle={styles.inputIcon}
+                    onPress={() => this.setState({ passwordShowing: !passwordShowing })}
+                  />
+                }
+                inputStyle={styles.inputStyle}
+                onChangeText={(text) => this.setState({ passwordText: text })}
+              />
+            </Card>
+          </View>
+        </ScrollView>
       </SafeAreaView>
     );
   }
@@ -37,15 +97,38 @@ class Lobby extends Component {
 
 const styles = StyleSheet.create({
   container: {
-    marginTop: Constants.statusBarHeight + 50,
     paddingLeft: 20,
     paddingRight: 20,
     height: '100%',
+    display: 'flex',
+    justifyContent: 'flex-start',
   },
   button: {
     width: '100%',
     marginTop: 20,
     alignSelf: 'center',
+  },
+  cardContainer: {
+    overflow: 'scroll',
+    backgroundColor: 'transparent',
+    paddingBottom: 15,
+  },
+  cardTitle: {
+    fontSize: 24,
+    color: 'black',
+  },
+  lobbyButton: {
+    paddingTop: 5,
+    paddingBottom: 5,
+    marginBottom: 3,
+    backgroundColor: 'white',
+    display: 'flex',
+    justifyContent: 'space-between'
+  },
+  name: {
+    textAlign: 'left',
+    fontSize: 18,
+    color: 'black',
   }
 });
 
