@@ -4,9 +4,10 @@ import Constants from 'expo-constants';
 import { Button, Card, Icon } from 'react-native-elements';
 import LoadingSpinner from '../LoadingSpinner';
 import { ScrollView } from "react-native-gesture-handler";
-import { collection, onSnapshot, query, where } from 'firebase/firestore';
+import { collection, getDocs, onSnapshot, query, where } from 'firebase/firestore';
 import { Input } from "react-native-elements/dist/input/Input";
 // import ThemeColors from '../../assets/ThemeColors';
+import SearchAlgolia from "../Algolia/SearchAlgolia";
 
 class Lobby extends Component {
   constructor(props) {
@@ -14,9 +15,12 @@ class Lobby extends Component {
 
     this.state = {
       loading: false,
+      searchLoading: false,
       error: false,
       user: this.props.route.params.user,
     }
+
+    this.searchForLobbies = this.searchForLobbies.bind(this);
   }
 
   componentDidMount() {
@@ -29,6 +33,7 @@ class Lobby extends Component {
       });
       this.setState({ userLobbies });
     });
+    
     this.setState({ userLobbiesUnsubscribe });
   }
 
@@ -41,22 +46,64 @@ class Lobby extends Component {
     return (
       <Button
         key={i}
-        title={lobby.name}
+        title={lobby?.arrow === false ? {textAlign: 'center'} : lobby.name}
         buttonStyle={styles.lobbyButton}
         titleStyle={styles.name}
-        icon={<Icon name="angle-right" type="font-awesome" />}
+        icon={lobby?.arrow === false ? <></> : <Icon name="angle-right" type="font-awesome" />}
         iconRight
       />
-    )
+    );
+  }
+
+  async searchForLobbies() {
+    const { lobbySearchText } = this.state;
+    this.setState({ searchLoading: true });
+    try {
+      const q = query(collection(this.props.db, 'lobbies'), where('name', 'in', lobbySearchText));
+      const matchingDocs = await getDocs(q);
+      
+      const searchLobbies = [];
+      matchingDocs.forEach((doc) => {
+        searchLobbies.push(doc);
+      });
+      this.setState({ searchLobbies, searchLoading: false });
+    } catch (err) {
+      console.error("Lobby Search Error", err);
+      this.setState({ searchLobbies: [{ name: "None Found", arrow: false }], searchLoading: false });
+    }
   }
 
   render() {
-    const { loading, error, user } = this.state;
+    const { loading, searchLoading, error, user, searchClient } = this.state;
     return (
       <SafeAreaView>
         <ScrollView>
           <LoadingSpinner spinning={loading} />
           <View style={styles.container}>
+            <Button
+              title="Create a Lobby"
+              raised
+              icon={{
+                name: 'home',
+                type: 'font-awesome',
+                color: 'white',
+                marginRight: 8
+              }}
+              titleStyle={{ fontWeight: '500', fontSize: 22 }}
+              buttonStyle={{
+                backgroundColor: '#E54040',
+                borderColor: 'transparent',
+                borderWidth: 0,
+                height: 60,
+              }}
+              containerStyle={{
+                width: '100%',
+                alignSelf: 'center',
+                marginTop: 10,
+                overflow: 'visible'
+              }}
+              onPress={() => { this.props.navigation.navigate('CreateLobby'); }}
+            />
             <Card
               id="user-lobbies"
               containerStyle={styles.cardContainer}
@@ -73,20 +120,7 @@ class Lobby extends Component {
               containerStyle={styles.cardContainer}
             >
               <Card.Title style={styles.cardTitle}>Lobby Search</Card.Title>
-              <Input
-                placeholder="Search for a Lobby"
-                containerStyle={{ backgroundColor: 'white' }}
-                rightIcon={
-                  <Icon
-                    name='search'
-                    type='font-awesome'
-                    iconStyle={styles.inputIcon}
-                    onPress={() => this.setState({ passwordShowing: !passwordShowing })}
-                  />
-                }
-                inputStyle={styles.inputStyle}
-                onChangeText={(text) => this.setState({ passwordText: text })}
-              />
+              <SearchAlgolia lobbyComponent={this.lobby} />
             </Card>
           </View>
         </ScrollView>

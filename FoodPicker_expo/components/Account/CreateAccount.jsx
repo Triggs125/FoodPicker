@@ -216,7 +216,7 @@ class CreateAccount extends Component {
               height: 60,
             }}
             containerStyle={{
-              width: 330,
+              width: '100%',
               alignSelf: 'center',
               marginTop: 0,
               overflow: 'visible'

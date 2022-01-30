@@ -10,6 +10,7 @@ npm-debug.*
 *.orig.*
 web-build/
 config.js
+my-food-picker-firebase-adminsdk-cozou-fccb1576b6.json
 
 # macOS
 .DS_Store

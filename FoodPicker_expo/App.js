@@ -15,6 +15,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import Account from './components/Account/Account';
 import CreateAccount from './components/Account/CreateAccount';
 import Lobby from './components/Lobby/Lobby';
+import CreateLobby from './components/Lobby/CreateLobby';
 
 const Stack = createStackNavigator();
 
@@ -91,6 +92,12 @@ export default function App() {
               options={{ headerTitle: "Join or Start a Lobby" }}
             >
               {props => <Lobby {...props} auth={auth} db={db} />}
+            </Stack.Screen>
+            <Stack.Screen
+              name="CreateLobby"
+              options={{ headerTitle: "Join or Start a Lobby" }}
+            >
+              {props => <CreateLobby {...props} auth={auth} db={db} />}
             </Stack.Screen>
             <Stack.Screen
               name="Account"

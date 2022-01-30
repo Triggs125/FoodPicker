@@ -150,7 +150,7 @@ class Account extends Component {
                     height: 60,
                   }}
                   containerStyle={{
-                    width: 330,
+                    width: '100%',
                     alignSelf: 'center',
                     marginTop: 10,
                     overflow: 'visible'
@@ -198,11 +198,9 @@ class Account extends Component {
                     height: 60,
                   }}
                   containerStyle={{
-                    overflow: 'visible'
-                  }}
-                  containerStyle={{
-                    width: 330,
+                    width: '100%',
                     alignSelf: 'center',
+                    overflow: 'visible',
                   }}
                   onPress={() => { this.props.navigation.navigate('CreateAccount') }}
                 />
