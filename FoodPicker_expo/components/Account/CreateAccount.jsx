@@ -1,5 +1,5 @@
 import { Component } from 'react';
-import { SafeAreaView } from 'react-native';
+import { SafeAreaView, View } from 'react-native';
 import { Input, Text, Icon } from 'react-native-elements';
 import { Button } from 'react-native-elements/dist/buttons/Button';
 import PasswordValidator from 'password-validator';
@@ -7,7 +7,7 @@ import isAlpha from 'validator/lib/isAlpha';
 import isEmail from 'validator/lib/isEmail';
 // import SignInWithGoogle from '../Utils/SignInWithGoogle';
 import { AddUserToDB } from '../Utils/firebase';
-import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ScrollView } from 'react-native-gesture-handler';
 
@@ -45,10 +45,15 @@ class CreateAccount extends Component {
       console.log("Valid Form");
       try {
         const res = await createUserWithEmailAndPassword(this.props.auth, this.state.emailAddressText, this.state.passwordText);
+        const displayName = `${this.state.firstNameText}${this.state.lastNameText !== "" ? " " + this.state.lastNameText : ""}`;
+        console.log("Display Name:", displayName);
+        await updateProfile(this.props.auth.currentUser, {
+          displayName: displayName
+        });
         const user = await AddUserToDB(this.props.db, res.user, this.state.firstNameText, this.state.lastNameText);
         AsyncStorage.setItem("@user_foodpicker", JSON.stringify(res.user.uid));
         this.setState({ firstNameText: "", lastNameText: "", emailAddressText: "", passwordText: "" });
-        this.props.navigation.navigate('Lobby', { user: user });
+        this.props.navigation.navigate('LobbyPicker');
       } catch (err) {
         console.error("Account Creation Error:", err);
         if (err.code === "auth/email-already-in-use") {
@@ -96,7 +101,7 @@ class CreateAccount extends Component {
 
     return (
       <SafeAreaView style={{ paddingTop: 10 }}>
-        <ScrollView>
+        <ScrollView style={styles.container}>
           <Input
             placeholder="First Name *"
             textContentType="name"
@@ -201,7 +206,7 @@ class CreateAccount extends Component {
           }
           <Button
             title="Create Account"
-            raised={{}}
+            raised
             icon={{
               name: 'user-plus',
               type: 'font-awesome',
@@ -253,6 +258,11 @@ class CreateAccount extends Component {
 }
 
 const styles = {
+  container: {
+    paddingLeft: 20,
+    paddingRight: 20,
+    height: '100%',
+  },
   inputIcon: {
     paddingLeft: 10,
     color: 'black',

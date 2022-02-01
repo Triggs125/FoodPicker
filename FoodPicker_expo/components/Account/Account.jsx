@@ -1,10 +1,10 @@
 import { Component } from "react";
-import { SafeAreaView, StyleSheet, View } from 'react-native';
+import { Dimensions, SafeAreaView, StyleSheet, View } from 'react-native';
 import Constants from 'expo-constants';
 import { Input, Button, Text, Icon } from 'react-native-elements';
 import LoadingSpinner from '../LoadingSpinner';
 import { GetUserFromDB } from '../Utils/firebase';
-import { signInWithEmailAndPassword } from 'firebase/auth';
+import { signInWithEmailAndPassword, signOut } from 'firebase/auth';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ScrollView } from 'react-native-gesture-handler';
 import isEmail from 'validator/lib/isEmail';
@@ -24,31 +24,10 @@ class Account extends Component {
   }
 
   componentDidMount() {
-    if (this.props.firstTime) {
-      AsyncStorage.getItem('@user_foodpicker')
-        .then((uid) => {
-          const new_uid = uid.replace(/['"]+/g, '');
-          if (new_uid && new_uid.length > 0) {
-            GetUserFromDB(this.props.db, new_uid)
-              .then((user) => {
-                if (user) {
-                  this.setState({ loading: false });
-                  this.props.navigation.navigate('Lobby', { user });
-                } else {
-                  this.setState({ loading: false });
-                }
-              })
-              .catch((err) => {
-                this.setState({ loading: false });
-              });
-          }
-        })
-        .catch((err) => {
-          this.setState({ loading: false });
-        });
-    } else {
-      this.setState({ loading: false });
-    }
+    AsyncStorage.getItem('foodPicker_currentLobby').then(value => {
+      const currentLobby = JSON.parse(value);
+      this.props.navigation.navigate('LobbyView', { lobbyRef: currentLobby });
+    });
   }
 
   async signIn() {
@@ -57,9 +36,8 @@ class Account extends Component {
       try {
         const res = await signInWithEmailAndPassword(this.props.auth, emailAddressText, passwordText);
         const user = await GetUserFromDB(this.props.db, res.user.uid);
-        AsyncStorage.setItem("@user_foodpicker", JSON.stringify(res.user.uid));
         this.setState({ emailAddressText: "", passwordText: "" });
-        this.props.navigation.navigate('Lobby', { user: user });
+        this.props.navigation.navigate('LobbyPicker');
       } catch (err) {
         console.error(err);
         this.setState({ loginError: true });
@@ -69,17 +47,59 @@ class Account extends Component {
     }
   }
 
+  userLoggedIn() {
+    return (
+      <View style={styles.container}>
+        <View>
+          <Icon name="user-circle" type="font-awesome" iconStyle={{ fontSize: 200 }} />
+          <Text
+            style={{ textAlign: 'center', fontSize: 30 }}
+          >
+            {this.props.user?.displayName}
+          </Text>
+        </View>
+        <Button
+          buttonStyle={{ backgroundColor: 'white' }}
+          title="Join or Create a Lobby"
+          raised
+          titleStyle={{ color: 'white', fontSize: 30, paddingLeft: 3 }}
+          buttonStyle={{ justifyContent: 'space-between', backgroundColor: '#E54040' }}
+          icon={<Icon name="angle-right" type="font-awesome" iconStyle={{ fontSize: 30, color: 'white', paddingRight: 3 }} />}
+          iconRight
+          onPress={() => this.props.navigation.navigate('LobbyPicker')}
+        />
+        <Button
+          buttonStyle={{ backgroundColor: 'white' }}
+          title="Settings"
+          raised
+          titleStyle={{ color: 'black', fontSize: 30, paddingLeft: 3 }}
+          buttonStyle={{ justifyContent: 'space-between', backgroundColor: 'lightgray' }}
+          icon={<Icon name="angle-right" type="font-awesome" iconStyle={{ fontSize: 30, paddingRight: 3 }} />}
+          iconRight
+          onPress={() => this.props.navigation.navigate('Settings')}
+        />
+        <Button
+          buttonStyle={{ backgroundColor: 'transparent' }}
+          title="Sign Out"
+          titleStyle={{ color: '#E54040', fontSize: 30, textAlign: 'center' }}
+          onPress={() => { signOut(this.props.auth) }}
+        />
+      </View>
+    );
+  }
+
   render() {
     const { loading, emailAddressText, passwordText, emailAddressError, passwordShowing, loginError } = this.state;
     return (
       <SafeAreaView>
         <ScrollView>
           {
-            loading ? (
-              <LoadingSpinner spinning={true} />
+            this.props.user ? (
+              this.userLoggedIn()
             ) :
             (
               <View style={styles.container}>
+                <Text style={{ textAlign: 'center', fontSize: 35 }}>Log In</Text>
                 <Input
                   placeholder="Email Address"
                   textContentType="emailAddress"
@@ -213,14 +233,18 @@ class Account extends Component {
   }
 }
 
+const screenHeight = Dimensions.get('window').height;
+
 const styles = StyleSheet.create({
   container: {
     marginTop: Constants.statusBarHeight,
     display: 'flex',
-    justifyContent: 'flex-start',
+    justifyContent: 'space-around',
+    paddingTop: 15,
+    paddingBottom: 15,
     paddingLeft: 20,
     paddingRight: 20,
-    height: '100%',
+    height: screenHeight - 64,
   },
   inputIcon: {
     paddingLeft: 10,

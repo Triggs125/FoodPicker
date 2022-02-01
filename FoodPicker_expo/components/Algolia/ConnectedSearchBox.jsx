@@ -15,6 +15,7 @@ class ConnectedSearchBox extends Component {
           autoCorrect={false}
           inputStyle={styles.inputStyle}
           onChangeText={(text) => this.props.refine(text)}
+          value={this.props.currentRefinement}
         />
       </View>
     )
