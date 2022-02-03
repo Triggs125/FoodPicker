@@ -12,6 +12,10 @@ class LobbyPicker extends Component {
   constructor(props) {
     super(props);
 
+    this.componentFocusUnsub = props.navigation.addListener('focus', () => {
+      this.addUserSubscription();
+    });
+
     this.state = {
       loading: false,
       searchLoading: false,
@@ -22,6 +26,7 @@ class LobbyPicker extends Component {
     this.createLobby = this.createLobby.bind(this);
     this.getLobbyRef = this.getLobbyRef.bind(this);
     this.lobbyComponent = this.lobbyComponent.bind(this);
+    this.refreshLobbySearch = this.refreshLobbySearch.bind(this);
   }
 
   componentDidMount() {
@@ -30,21 +35,13 @@ class LobbyPicker extends Component {
       this.setState({ user: undefined, userLobbiesUnsubscribe: undefined });
       this.props.navigation.navigate('Account');
     }
-  }
-
-  componentDidUpdate(newProps) {
-    const { user } = this.props;
-    if (user !== newProps.user) {
-      this.state.userLobbiesUnsubscribe && this.state.userLobbiesUnsubscribe();
-      if (user) {
-        this.addUserSubscription();
-      }
-    }
+    this.addUserSubscription()
   }
 
   componentWillUnmount() {
     const { userLobbiesUnsubscribe } = this.state;
     userLobbiesUnsubscribe && userLobbiesUnsubscribe();
+    this.componentFocusUnsub && this.componentFocusUnsub();
   }
 
   addUserSubscription() {
@@ -56,7 +53,7 @@ class LobbyPicker extends Component {
       });
       this.setState({ userLobbies });
     });
-    this.setState({ userLobbiesUnsubscribe, user });
+    this.setState({ userLobbiesUnsubscribe });
   }
 
   getLobbyRef(lobby) {
@@ -69,6 +66,8 @@ class LobbyPicker extends Component {
         key={i}
         title={lobby.arrow === false ? {textAlign: 'center'} : lobby.name}
         buttonStyle={styles.lobbyButton}
+        containerStyle={styles.containerStyle}
+        raised
         titleStyle={styles.name}
         icon={lobby?.arrow === false ? <></> : <Icon name="angle-right" type="font-awesome" />}
         iconRight
@@ -82,6 +81,12 @@ class LobbyPicker extends Component {
     );
   }
 
+  refreshLobbySearch() {
+    this.setState({ refresh: true }, () => {
+      this.setState({ refresh: false });
+    });
+  }
+
   async createLobby() {
     const docRef = await addDoc(collection(this.props.db, 'lobbies'), {
       host: this.props.user.uid,
@@ -92,7 +97,7 @@ class LobbyPicker extends Component {
   }
 
   render() {
-    const { loading } = this.state;
+    const { loading, refresh } = this.state;
     if (!this.props.user) this.props.navigation.navigate('Account');
     return (
       <SafeAreaView>
@@ -123,23 +128,31 @@ class LobbyPicker extends Component {
               }}
               onPress={this.createLobby}
             />
-            <Card
-              id="user-lobbies"
-              containerStyle={styles.cardContainer}
-            >
-              <Card.Title style={styles.cardTitle}>Your Lobbies</Card.Title>
-              <ScrollView style={{ maxHeight: 140 }}>
-                {this.state.userLobbies?.map((lobby, i) => {
-                  return this.lobbyComponent(lobby, i);
-                })}
-              </ScrollView>
-            </Card>
+            {
+              this.state.userLobbies?.length > 0 &&
+              <Card
+                id="user-lobbies"
+                containerStyle={styles.cardContainer}
+              >
+                <Card.Title style={styles.cardTitle}>Your Hosted Lobbies</Card.Title>
+                <ScrollView style={{ maxHeight: 140, borderWidth: 0.3, borderColor: 'grey' }}>
+                  {this.state.userLobbies?.map((lobby, i) => {
+                    return this.lobbyComponent(lobby, i);
+                  })}
+                </ScrollView>
+              </Card>
+            }
             <Card
               id="search-for-lobbies"
               containerStyle={styles.cardContainer}
             >
               <Card.Title style={styles.cardTitle}>Lobby Search</Card.Title>
-              <SearchAlgolia lobbyComponent={this.lobbyComponent} db={this.props.db} />
+              <SearchAlgolia
+                lobbyComponent={this.lobbyComponent}
+                db={this.props.db}
+                refreshHits={this.refreshLobbySearch}
+                refresh={refresh}
+              />
             </Card>
           </View>
         </ScrollView>
@@ -172,10 +185,12 @@ const styles = StyleSheet.create({
     fontSize: 24,
     color: 'black',
   },
+  containerStyle: {
+    marginTop: 1
+  },
   lobbyButton: {
     paddingTop: 5,
     paddingBottom: 5,
-    marginBottom: 3,
     backgroundColor: 'white',
     display: 'flex',
     justifyContent: 'space-between'

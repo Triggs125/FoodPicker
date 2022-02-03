@@ -11,9 +11,6 @@ import { getFirestore } from 'firebase/firestore';
 import { firebaseConfig } from './config';
 import ThemeColors from './assets/ThemeColors';
 import { UserColors } from './ColorContext';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-
-import { collection, getDocs, onSnapshot, query, where } from 'firebase/firestore';
 import { onAuthStateChanged } from "firebase/auth";
 
 import Settings from './components/Settings';
@@ -23,6 +20,8 @@ import LobbyPicker from './components/Lobby/LobbyPicker';
 import CreateLobby from './components/Lobby/LobbyView';
 import LoadingSpinner from './components/LoadingSpinner';
 import LobbyView from './components/Lobby/LobbyView';
+import MakeSelections from './components/Selections/MakeSelections';
+import EditFoodProfile from './components/Selections/EditFoodProfile';
 
 const Stack = createStackNavigator();
 
@@ -116,7 +115,7 @@ export default function App() {
                     onPress={() => props.navigation.navigate('Account')}
                   />
                 ),
-                headerTitleAlign: 'left'
+                headerTitleAlign: 'center'
               }
             }}
           >
@@ -149,16 +148,31 @@ export default function App() {
                     {props => <LobbyPicker {...props} user={user} auth={auth} db={db} />}
                   </Stack.Screen>
                   <Stack.Screen
+                    name="CreateLobby"
+                    options={{ headerTitle: "Join or Start a Lobby" }}
+                  >
+                    {props => <CreateLobby {...props} user={user} auth={auth} db={db} />}
+                  </Stack.Screen>
+                  <Stack.Screen
                     name="LobbyView"
                     options={{ headerTitle: "Lobby" }}
                   >
                     {props => <LobbyView {...props} user={user} auth={auth} db={db} />}
                   </Stack.Screen>
                   <Stack.Screen
-                    name="CreateLobby"
-                    options={{ headerTitle: "Join or Start a Lobby" }}
+                    name="MakeSelections"
+                    options={{
+                      headerTitle: "Make Selections",
+                      headerTitleAlign: 'center'
+                    }}
                   >
-                    {props => <CreateLobby {...props} user={user} auth={auth} db={db} />}
+                    {props => <MakeSelections {...props} user={user} auth={auth} db={db} />}
+                  </Stack.Screen>
+                  <Stack.Screen
+                    name="EditFoodProfile"
+                    options={{ headerTitle: "Food Profile" }}
+                  >
+                    {props => <EditFoodProfile {...props} user={user} auth={auth} db={db} />}
                   </Stack.Screen>
                 </>
               )

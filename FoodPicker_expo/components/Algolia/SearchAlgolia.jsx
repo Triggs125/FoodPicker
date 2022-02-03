@@ -26,17 +26,21 @@ class SearchAlgolia extends Component {
 
   render() {
     const { searchState } = this.state;
+    const { refreshHits, refresh, db, lobbyComponent } = this.props;
     return (
-      <View>
+      <View
+        style={{ borderWidth: 0.3, borderColor: 'lightgrey' }}
+      >
         <InstantSearch
           searchClient={this.state.searchClient}
           indexName="lobbies"
           searchState={searchState}
           onSearchStateChange={this.onSearchStateChange}
+          refresh={refresh}
         >
           <VirtualRefinementList attribute="brand" />
-          <ConnectedSearchBox />
-          <ConnectedInfiniteHits db={this.props.db} lobbyComponent={this.props.lobbyComponent} />
+          <ConnectedSearchBox delay={1000} refreshHits={refreshHits} />
+          <ConnectedInfiniteHits db={db} lobbyComponent={lobbyComponent} />
         </InstantSearch>
       </View>
     );

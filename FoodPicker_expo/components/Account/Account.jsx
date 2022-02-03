@@ -16,18 +16,12 @@ class Account extends Component {
     this.state = {
       loading: true,
       loginError: false,
+      generalError: false,
       emailAddressText: "",
       passwordText: "",
       passwordShowing: false,
       emailAddressError: false,
     }
-  }
-
-  componentDidMount() {
-    AsyncStorage.getItem('foodPicker_currentLobby').then(value => {
-      const currentLobby = JSON.parse(value);
-      this.props.navigation.navigate('LobbyView', { lobbyRef: currentLobby });
-    });
   }
 
   async signIn() {
@@ -36,11 +30,19 @@ class Account extends Component {
       try {
         const res = await signInWithEmailAndPassword(this.props.auth, emailAddressText, passwordText);
         const user = await GetUserFromDB(this.props.db, res.user.uid);
-        this.setState({ emailAddressText: "", passwordText: "" });
+        this.setState({ emailAddressText: "", passwordText: "", passwordShowing: false });
         this.props.navigation.navigate('LobbyPicker');
       } catch (err) {
-        console.error(err);
-        this.setState({ loginError: true });
+        console.error("Sign In Error:", err);
+        if (
+          err.code === "auth/email-already-in-use" ||
+          err.code === "auth/wrong-password" ||
+          err.code === "auth/user-not-found"
+        ) {
+          this.setState({ loginError: true, generalError: false });
+        } else {
+          this.setState({ loginError: false, generalError: true });
+        }
       }
     } else {
       this.setState({ emailAddressError: true });
@@ -59,20 +61,18 @@ class Account extends Component {
           </Text>
         </View>
         <Button
-          buttonStyle={{ backgroundColor: 'white' }}
           title="Join or Create a Lobby"
           raised
-          titleStyle={{ color: 'white', fontSize: 30, paddingLeft: 3 }}
+          titleStyle={{ color: 'white', fontSize: 26, paddingLeft: 3 }}
           buttonStyle={{ justifyContent: 'space-between', backgroundColor: '#E54040' }}
           icon={<Icon name="angle-right" type="font-awesome" iconStyle={{ fontSize: 30, color: 'white', paddingRight: 3 }} />}
           iconRight
           onPress={() => this.props.navigation.navigate('LobbyPicker')}
         />
         <Button
-          buttonStyle={{ backgroundColor: 'white' }}
           title="Settings"
           raised
-          titleStyle={{ color: 'black', fontSize: 30, paddingLeft: 3 }}
+          titleStyle={{ color: 'black', fontSize: 26, paddingLeft: 3 }}
           buttonStyle={{ justifyContent: 'space-between', backgroundColor: 'lightgray' }}
           icon={<Icon name="angle-right" type="font-awesome" iconStyle={{ fontSize: 30, paddingRight: 3 }} />}
           iconRight
@@ -89,7 +89,7 @@ class Account extends Component {
   }
 
   render() {
-    const { loading, emailAddressText, passwordText, emailAddressError, passwordShowing, loginError } = this.state;
+    const { loading, emailAddressText, passwordText, emailAddressError, passwordShowing, loginError, generalError } = this.state;
     return (
       <SafeAreaView>
         <ScrollView>
@@ -120,6 +120,7 @@ class Account extends Component {
                   placeholder="Password"
                   textContentType="password"
                   secureTextEntry={!passwordShowing}
+                  autoCapitalize='none'
                   value={passwordText}
                   leftIcon={
                     <Icon
@@ -146,11 +147,16 @@ class Account extends Component {
                     color: 'red',
                     marginBottom: 10,
                     height: 20,
+                    flexWrap: 'wrap'
                   }}
                 >
                   {
                     loginError &&
                     "Email or Password Incorrect."
+                  }
+                  {
+                    generalError &&
+                    "Error logging in. Please try again or contact support."
                   }
                 </Text>
                 <Button
@@ -237,7 +243,6 @@ const screenHeight = Dimensions.get('window').height;
 
 const styles = StyleSheet.create({
   container: {
-    marginTop: Constants.statusBarHeight,
     display: 'flex',
     justifyContent: 'space-around',
     paddingTop: 15,

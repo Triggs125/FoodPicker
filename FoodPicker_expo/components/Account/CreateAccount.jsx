@@ -46,13 +46,12 @@ class CreateAccount extends Component {
       try {
         const res = await createUserWithEmailAndPassword(this.props.auth, this.state.emailAddressText, this.state.passwordText);
         const displayName = `${this.state.firstNameText}${this.state.lastNameText !== "" ? " " + this.state.lastNameText : ""}`;
-        console.log("Display Name:", displayName);
         await updateProfile(this.props.auth.currentUser, {
           displayName: displayName
         });
         const user = await AddUserToDB(this.props.db, res.user, this.state.firstNameText, this.state.lastNameText);
         AsyncStorage.setItem("@user_foodpicker", JSON.stringify(res.user.uid));
-        this.setState({ firstNameText: "", lastNameText: "", emailAddressText: "", passwordText: "" });
+        this.setState({ firstNameText: "", lastNameText: "", emailAddressText: "", passwordText: "", passwordShowing: false });
         this.props.navigation.navigate('LobbyPicker');
       } catch (err) {
         console.error("Account Creation Error:", err);
@@ -161,6 +160,7 @@ class CreateAccount extends Component {
           <Input
             placeholder="Password *"
             textContentType="password"
+            autoCapitalize="none"
             secureTextEntry={!passwordShowing}
             value={passwordText}
             leftIcon={
