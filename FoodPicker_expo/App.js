@@ -21,7 +21,7 @@ import CreateLobby from './components/Lobby/LobbyView';
 import LoadingSpinner from './components/LoadingSpinner';
 import LobbyView from './components/Lobby/LobbyView';
 import MakeSelections from './components/Selections/MakeSelections';
-import EditFoodProfile from './components/Selections/EditFoodProfile';
+import EditFoodProfile from './components/FoodProfile/EditFoodProfile';
 
 const Stack = createStackNavigator();
 
@@ -170,7 +170,7 @@ export default function App() {
                   </Stack.Screen>
                   <Stack.Screen
                     name="EditFoodProfile"
-                    options={{ headerTitle: "Food Profile" }}
+                    options={{ headerTitle: "Edit Food Profile" }}
                   >
                     {props => <EditFoodProfile {...props} user={user} auth={auth} db={db} />}
                   </Stack.Screen>

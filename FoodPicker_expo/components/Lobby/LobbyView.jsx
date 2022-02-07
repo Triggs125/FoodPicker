@@ -5,6 +5,7 @@ import { Dimensions, StyleSheet, View } from "react-native";
 import { Card, Icon, Input, Text } from 'react-native-elements';
 import { Button } from "react-native-elements/dist/buttons/Button";
 import ThemeColors from "../../assets/ThemeColors";
+import LocationView from "./Location";
 
 class LobbyView extends Component {
   constructor(props) {
@@ -14,6 +15,7 @@ class LobbyView extends Component {
     });
 
     this.state = {
+      loading: true,
       lobbyData: {},
       lobbyRef: {},
       lobbyNameEditable: false,
@@ -35,6 +37,7 @@ class LobbyView extends Component {
     const unsubscribeLobby = onSnapshot(lobbyRef, async (lobby) => {
       const { user, db } = this.props;
       if (user) {
+        this.setState({ loading: true });
         const lobbyData = lobby.data();
         try {
           const isHost = lobbyData.host === user.uid;
@@ -43,12 +46,12 @@ class LobbyView extends Component {
           } else {
             const matchingUsers = (await getDocs(query(collection(db, 'users'), where('uid', 'in', [...lobbyData.users, lobbyData.host]))));
             const lobbyUsers = matchingUsers.docs.map((doc) => { return {...doc.data(), id: doc.id} });
-
             this.setState({ lobbyData: {...lobbyData, ref: lobby.ref}, lobbyName: lobbyData.name, lobbyUsers, isHost });
           }
         } catch(err) {
           console.error(err);
         }
+        this.setState({ loading: false });
       }
     });
     this.setState({ unsubscribeLobby });
@@ -86,7 +89,7 @@ class LobbyView extends Component {
   }
 
   render() {
-    const { lobbyData, lobbyName, lobbyUsers, isHost, lobbyNameEditable, lobbyNameRef, screenHeight } = this.state;
+    const { lobbyData, lobbyName, lobbyUsers, isHost, lobbyNameEditable, lobbyNameRef, screenHeight, loading } = this.state;
     return (
       <View style={styles.container}>
         <View style={{ display: 'flex', flexDirection: "row", justifyContent: 'flex-start' }}>
@@ -96,10 +99,15 @@ class LobbyView extends Component {
             style={{ textAlign: 'center', fontSize: 30 }}
             leftIcon={isHost && <Button onPress={() => this.updateName()} icon={<Icon name={lobbyNameEditable ? "check" : "edit"} type="font-awesome" />} />}
             editable={lobbyNameEditable}
-            onChange={(event) => { this.setState({ lobbyName: event.nativeEvent.text }); }}
+            onChange={(event) => this.setState({ lobbyName: event.nativeEvent.text })}
             rightIcon={<Button onPress={this.copyShareLink()} icon={<Icon name="share" type="font-awesome" />} />}
           />
         </View>
+        {
+          isHost && !loading && (
+            <LocationView {...this.props} lobbyData={lobbyData} />
+          )
+        }
         <View style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', height: screenHeight - 150 }}>
           <Card>
             <Card.Title>People Ready: {this.numberOfUsersReady()} of {lobbyUsers?.length}</Card.Title>
