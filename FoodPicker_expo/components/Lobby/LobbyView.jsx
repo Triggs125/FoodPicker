@@ -4,15 +4,13 @@ import { Component } from "react";
 import { Dimensions, StyleSheet, View } from "react-native";
 import { Card, Icon, Input, Text } from 'react-native-elements';
 import { Button } from "react-native-elements/dist/buttons/Button";
+import { ScrollView } from "react-native-gesture-handler";
 import ThemeColors from "../../assets/ThemeColors";
-import LocationView from "./Location";
+import LocationView from "./LocationView";
 
 class LobbyView extends Component {
   constructor(props) {
     super(props);
-    this.componentFocusUnsub = props.navigation.addListener('focus', () => {
-      this.componentDidAppear();
-    });
 
     this.state = {
       loading: true,
@@ -26,7 +24,9 @@ class LobbyView extends Component {
   }
 
   componentDidMount() {
-    this.componentDidAppear();
+    this.componentFocusUnsub = this.props.navigation.addListener('focus', () => {
+      this.componentDidAppear();
+    });
   }
 
   componentDidAppear() {
@@ -91,65 +91,67 @@ class LobbyView extends Component {
   render() {
     const { lobbyData, lobbyName, lobbyUsers, isHost, lobbyNameEditable, lobbyNameRef, screenHeight, loading } = this.state;
     return (
-      <View style={styles.container}>
-        <View style={{ display: 'flex', flexDirection: "row", justifyContent: 'flex-start' }}>
-          <Input
-            value={lobbyName}
-            autoFocus={lobbyNameEditable}
-            style={{ textAlign: 'center', fontSize: 30 }}
-            leftIcon={isHost && <Button onPress={() => this.updateName()} icon={<Icon name={lobbyNameEditable ? "check" : "edit"} type="font-awesome" />} />}
-            editable={lobbyNameEditable}
-            onChange={(event) => this.setState({ lobbyName: event.nativeEvent.text })}
-            rightIcon={<Button onPress={this.copyShareLink()} icon={<Icon name="share" type="font-awesome" />} />}
-          />
-        </View>
-        {
-          isHost && !loading && (
-            <LocationView {...this.props} lobbyData={lobbyData} />
-          )
-        }
-        <View style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', height: screenHeight - 150 }}>
-          <Card>
-            <Card.Title>People Ready: {this.numberOfUsersReady()} of {lobbyUsers?.length}</Card.Title>
-            <Card.Divider />
-            {
-              lobbyUsers?.map((user, i) => {
-                const userReady = lobbyData.usersReady?.includes(user.uid);
-                return (
-                  <Button
-                    title={this.userTitle(user, userReady)}
-                    key={i}
-                    buttonStyle={{ justifyContent: userReady ? 'space-between' : 'center' }}
-                    icon={userReady && <Icon name="angle-right" type="font-awesome" style={{ paddingLeft: 3, paddingRight: 3, paddingTop: 0, paddingBottom: 0 }} />}
-                    iconRight
-                  />
-                );
-              })
-            }
-          </Card>
-          <View>
-            {
-              isHost &&
+      <ScrollView>
+        <View style={styles.container}>
+          <View style={{ display: 'flex', flexDirection: "row", justifyContent: 'flex-start' }}>
+            <Input
+              value={lobbyName}
+              autoFocus={lobbyNameEditable}
+              style={{ textAlign: 'center', fontSize: 30 }}
+              leftIcon={isHost && <Button onPress={() => this.updateName()} icon={<Icon name={lobbyNameEditable ? "check" : "edit"} type="font-awesome" />} />}
+              editable={lobbyNameEditable}
+              onChange={(event) => this.setState({ lobbyName: event.nativeEvent.text })}
+              rightIcon={<Button onPress={this.copyShareLink()} icon={<Icon name="share" type="font-awesome" />} />}
+            />
+          </View>
+          {
+            !loading && (
+              <LocationView {...this.props} lobbyData={lobbyData} isHost={isHost} />
+            )
+          }
+          <View style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', marginVertical: 10 }}>
+            <Card containerStyle={{ marginHorizontal: 0, borderRadius: 10 }}>
+              <Card.Title>People Ready: {this.numberOfUsersReady()} of {lobbyUsers?.length}</Card.Title>
+              <Card.Divider />
+              {
+                lobbyUsers?.map((user, i) => {
+                  const userReady = lobbyData.usersReady?.includes(user.uid);
+                  return (
+                    <Button
+                      title={this.userTitle(user, userReady)}
+                      key={i}
+                      buttonStyle={{ justifyContent: userReady ? 'space-between' : 'center' }}
+                      icon={userReady && <Icon name="angle-right" type="font-awesome" style={{ paddingLeft: 3, paddingRight: 3, paddingTop: 0, paddingBottom: 0 }} />}
+                      iconRight
+                    />
+                  );
+                })
+              }
+            </Card>
+            <View style={{ marginVertical: 10 }}>
               <Button
-                title="Get Final Decision"
+                title="Make Selections"
                 raised
                 titleStyle={{ color: 'white', fontWeight: 'bold', fontSize: 26 }}
                 buttonStyle={{ backgroundColor: ThemeColors.text }}
                 containerStyle={{ marginTop: 10, marginBottom: 10 }}
-                onPress={() => {}}
+                onPress={() => this.props.navigation.navigate('MakeSelections')}
               />
-            }
-            <Button
-              title="Make Selections"
-              raised
-              titleStyle={{ color: 'white', fontWeight: 'bold', fontSize: 26 }}
-              buttonStyle={{ backgroundColor: ThemeColors.text }}
-              containerStyle={{ marginTop: 10, marginBottom: 10 }}
-              onPress={() => this.props.navigation.navigate('MakeSelections')}
-            />
+              {
+                isHost &&
+                <Button
+                  title="Get Final Decision"
+                  raised
+                  titleStyle={{ color: 'white', fontWeight: 'bold', fontSize: 26 }}
+                  buttonStyle={{ backgroundColor: ThemeColors.text }}
+                  containerStyle={{ marginTop: 10, marginBottom: 10 }}
+                  onPress={() => {}}
+                />
+              }
+            </View>
           </View>
         </View>
-      </View>
+      </ScrollView>
     );
   }
 }
