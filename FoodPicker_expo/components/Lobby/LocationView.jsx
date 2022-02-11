@@ -8,6 +8,10 @@ import MapView, { Marker, Circle, PROVIDER_GOOGLE } from 'react-native-maps';
 import ThemeColors from "../../assets/ThemeColors";
 import Constants from 'expo-constants';
 import { BottomSheet } from "react-native-elements/dist/bottomSheet/BottomSheet";
+import { GooglePlacesAutocomplete } from "react-native-google-places-autocomplete";
+import { ScrollView } from "react-native-gesture-handler";
+
+navigator.geolocation = require('react-native-geolocation-service');
 
 class LocationView extends Component {
   constructor(props) {
@@ -23,14 +27,14 @@ class LocationView extends Component {
       locationSearchText: undefined,
     }
 
-    this.searchGooglePlaces = this.searchGooglePlaces.bind(this);
+    this.setPlaceData = this.setPlaceData.bind(this);
     this.changeDistance = this.changeDistance.bind(this);
   }
 
   componentDidMount() {
     if (this.props.isHost && !this.props.lobbyData?.location) {
       this.getUsersLocation();
-      this.setState({ distance: this.props.lobbyData?.distance })
+      this.setState({ distance: this.props.lobbyData?.distance });
     }
   }
 
@@ -83,8 +87,9 @@ class LocationView extends Component {
     }
   }
 
-  searchGooglePlaces() {
-
+  setPlaceData(data, details) {
+    console.log("Details", details?.geometry.location);
+    // setDoc(this.props.lobbyData.ref, { location: details?.geometry.location })
   }
 
   distances = [2, 5, 10, 20, 50]
@@ -154,14 +159,27 @@ class LocationView extends Component {
           </View>
           {
             mapViewOpen && isHost &&
-            <SearchBar
-              lightTheme
-              platform={Constants.platform.ios ? 'ios' : Constants.platform.android ? 'android' : 'default'}
-              placeholder='Search Location'
-              onChangeText={(locationSearchText) => this.setState({ locationSearchText })}
-              rightIcon={<Icon name="search" type="font-awesome" onPress={this.searchGooglePlaces} />}
-              inputStyle={{ paddingBottom: 0 }}
-            />
+            <ScrollView keyboardShouldPersistTaps>
+              <GooglePlacesAutocomplete
+                placeholder="Search Location"
+                onPress={(data, details = null) => this.setPlaceData(data, details)}
+                query={{ key: "AIzaSyABLEWTpgnHhloYv_JH301853XGEhVDpMc", language: 'en' }}
+                // GooglePlacesSearchQuery={(query) => this.setPlaceData(query)}
+                // GoogleReverseGeocodingQuery={(geocode) => this.setPlaceData(geocode)}
+                // currentLocation={true}
+                // currentLocationLabel="Current Location"
+                fetchDetails={true}
+              />
+            </ScrollView>
+            // <SearchBar
+            //   lightTheme
+            //   platform={Constants.platform.ios ? 'ios' : Constants.platform.android ? 'android' : 'default'}
+            //   placeholder='Search Location'
+            //   onChangeText={(locationSearchText) => this.setState({ locationSearchText })}
+            //   inputStyle={{ paddingBottom: 0 }}
+            //   inputContainerStyle={{ backgroundColor: 'lightgray' }}
+            //   containerStyle={{ paddingBottom: 0 }}
+            // />
           }
         </View>
         {(!Constants.platform.web && mapViewOpen && location) ?

@@ -1,5 +1,7 @@
 const response = require('./mock/mockGoogleNearbyResponse.json');
 
-export const getNearbyRestaurants = () => {
-  return JSON.stringify(response);
+export const getNearbyRestaurants = (searchText) => {
+  return new Promise((resolve) => {
+    resolve(response.results);
+  });
 }
