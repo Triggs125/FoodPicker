@@ -1,10 +1,10 @@
 import { Component } from "react";
 import PropType from 'prop-types';
-import { Dimensions, StyleSheet, View } from "react-native";
-import { Card, Icon, Input, Text, Tile } from 'react-native-elements';
-import { getNearbyRestaurants } from '../../services/service';
+import { View } from "react-native";
+import { Tile, AirbnbRating, Text } from 'react-native-elements';
 import Constants from 'expo-constants';
-import { SliderBox } from "react-native-image-slider-box";
+import { Icon } from "react-native-elements/dist/icons/Icon";
+import { getDistance } from 'geolib';
 
 const propTypes = {
   googleSearchText: PropType.string,
@@ -14,118 +14,129 @@ const propTypes = {
 }
 
 class FoodChoices extends Component {
-  constructor(props) {
-    super(props);
+  stars(rating) {
+    const _rating = Math.round(rating * 2);
+    const fullStars = Math.floor(_rating / 2);
+    const halfStar = _rating % 2 !== 0;
+    const stars = [];
 
-    this.state = {
-      foodChoices: [],
+    // Gets the number of full stars to display
+    for (let i = 0; i < fullStars; i++) {
+      stars.push(<Icon name="star" type="font-awesome" color='gold' size={18} />);
     }
 
-    this.fetchNearestPlacesFromGoogle = this.fetchNearestPlacesFromGoogle.bind(this);
-  }
-
-  componentDidMount() {
-    this.fetchNearestPlacesFromGoogle();
-  }
-
-  fetchNearestPlacesFromGoogle() {
-    const { lobbyData } = this.props.route.params;
+    // Adds a half star if the rating decimal is .5 or above
+    if (halfStar) {
+      stars.push(<Icon name="star-half-full" type="font-awesome" color='gold' size={18} />);
+    }
     
-    const latitude = lobbyData.location.latitude;
-    const longitude = lobbyData.location.longitude;
-    const radius = Math.round(lobbyData.distance * 1609.344);
-    const types = 'establishments';
-    const url = 'https://maps.googleapis.com/maps/api/place/nearbysearch/json?'
-      + 'location=' + latitude + ',' + longitude
-      + '&radius=' + radius
-      + '&types=' + types
-      + '&keyword=restaurant'
-      + '&key=' + 'AIzaSyABLEWTpgnHhloYv_JH301853XGEhVDpMc'
+    return stars;
+  }
 
-    fetch(url)
-      .then(res => {
-        return res.json()
-      })
-      .then(res => {
+  totalRatings(num) {
+    return Math.abs(num) > 999 ? Math.sign(num)*((Math.abs(num)/1000).toFixed(1)) + 'k' : Math.sign(num)*Math.abs(num)
+  }
 
-        var places = []
-        const GooglePicBaseUrl = `https://maps.googleapis.com/maps/api/place/photo?key=AIzaSyB1q8bz0Sr14VhwhwKaUiinzUHZmwtj9oo&maxwidth=400&photo_reference=`
-        for(let googlePlace of res.results) {
-          var place = {}
-          var lat = googlePlace.geometry.location.lat;
-          var lng = googlePlace.geometry.location.lng;
-          var coordinate = {
-            latitude: lat,
-            longitude: lng,
-          }
+  priceLevel(priceLevel) {
+    let price = "";
+    for (let i = 0; i < priceLevel; i++) {
+      price += '$';
+    }
+    return price;
+  }
 
-          var gallery = []
-          if (googlePlace.photos) {
-            console.log("Photo Length:", googlePlace.photos.length)
-            for(let photo of googlePlace.photos) {
-              var photoUrl = GooglePicBaseUrl + photo.photo_reference;
-              gallery.push(photoUrl);
-            }
-          }
+  distanceAway(coords) {
+    const { lobbyData } = this.props;
+    const lobbyCoords = { latitude: lobbyData.location.latitude, longitude: lobbyData.location.longitude };
+    return Math.round((getDistance(lobbyCoords, coords) / 1609.344) * 10) / 10;
+  }
 
-          place['types'] = googlePlace.types
-          place['coordinate'] = coordinate
-          place['id'] = googlePlace.place_id
-          place['name'] = googlePlace.name
-          place['photos'] = gallery
-
-          places.push(place);
-        }
-
-        this.setState({ places });
-      })
-      .catch(error => {
-        console.error("FoodChoices::fetchNearestPlacesFromGoogle", error);
-      });
+  placeTypes(types) {
+    let typeNames = "";
+    for (let i = 0; i < types.length; i++) {
+      const type = types[i];
+      if (type.toLowerCase() === "restaurant") {
+        if (i === 0) return type;
+        return typeNames;
+      }
+      typeNames += type.replace('_', ' ') + " ";
+    }
+    return typeNames;
   }
 
   render() {
-    const { places } = this.state;
+    const { choicesPageIndex, foodChoices } = this.props;
 
     return (
-      <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center' }}>
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', marginHorizontal: -10 }}>
         {
-          places?.map((place, i) => {
-            if (i >= 2) return;
+          foodChoices?.map((place, i) => {
+            if (i < choicesPageIndex * 2 || i >= choicesPageIndex * 2 + 2) return;
             return (
-              <Card
+              <Tile
                 key={i}
-                containerStyle={{ borderRadius: 10 }}
+                imageSrc={{ uri: place.photos[0] }}
+                imageContainerStyle={{ height: 0 }}
+                height={200}
+                width={'90%'}
+                title={place.name}
+                titleStyle={{ textAlign: 'left', fontSize: 16, fontWeight: 'bold' }}
+                containerStyle={{
+                  margin: 10,
+                  borderRadius: 10,
+                  borderWidth: Constants.platform.ios && '0.5',
+                  borderColor: 'gray',
+                  backgroundColor: 'white',
+                  overflow: 'hidden',
+                  elevation: 5,
+                }}
+                onPress={() => this.props.addFoodChoice(place)}
               >
-                <View style={{ marginTop: -15 }}>
-                  <SliderBox images={place.photos} />
+                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                  <Text style={{ marginRight: 5, alignSelf: 'center' }}>{place.rating}</Text>
+                  <View style={{ flexDirection: 'row', marginRight: 5, alignSelf: 'center' }}>
+                    {
+                      this.stars(place.rating).map(star => star)
+                    }
+                  </View>
+                  <Text style={{ alignSelf: 'center', marginRight: 5 }}>({this.totalRatings(place.userRatingsTotal)})</Text>
+                  <Icon
+                    name="circle"
+                    type="font-awesome"
+                    size={5}
+                    color='#333'
+                    style={{ alignSelf: 'center', marginRight: 5 }}
+                  />
+                  <Text style={{ flexDirection: 'row', marginRight: 5, alignSelf: 'center' }}>
+                    {
+                      this.priceLevel(place.priceLevel)
+                    }
+                  </Text>
+                  <Icon
+                    name="circle"
+                    type="font-awesome"
+                    size={5}
+                    color='#333'
+                    style={{ alignSelf: 'center', marginRight: 5 }}
+                  />
+                  <Text style={{ flexDirection: 'row', marginRight: 5, alignSelf: 'center' }}>
+                    {
+                      `${this.distanceAway(place.coordinate)} mi`
+                    }
+                  </Text>
                 </View>
-                <Card.Title>{place.name}</Card.Title>
-              </Card>
-              
-              // <Tile
-              //   key={i}
-              //   // imageSrc={{ uri: place.photos[0] }}
-              //   imageContainerStyle={{ height: 0 }}
-              //   height={200}
-              //   width={'90%'}
-              //   // title={place.name}
-              //   // titleStyle={{ textAlign: 'left', fontSize: 16, fontWeight: 'bold' }}
-              //   containerStyle={{
-              //     margin: 10,
-              //     borderRadius: 10,
-              //     borderWidth: Constants.platform.ios && '0.5',
-              //     borderColor: 'gray',
-              //     backgroundColor: 'white',
-              //     overflow: 'hidden',
-              //     elevation: 5
-              //   }}
-              // >
-              //   <View style={{ marginLeft: -15 }}>
-              //     <SliderBox images={place.photos} />
-              //   </View>
-              //   <Text style={{ textAlign: 'left', fontSize: 16, fontWeight: 'bold' }}>{place.name}</Text>
-              // </Tile>
+                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                  <Text style={{ textTransform: 'capitalize', marginRight: 5 }}>{this.placeTypes(place.types)}</Text>
+                  <Icon
+                    name="circle"
+                    type="font-awesome"
+                    size={5}
+                    color='#333'
+                    style={{ alignSelf: 'center', marginRight: 5 }}
+                  />
+                  <Text>{place.vicinity}</Text>
+                </View>
+              </Tile>
             );
           })
         }

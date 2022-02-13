@@ -130,6 +130,7 @@ class LobbyView extends Component {
             <View style={{ marginVertical: 10 }}>
               <Button
                 title="Make Selections"
+                disabled={!lobbyData.location}
                 raised
                 titleStyle={{ color: 'white', fontWeight: 'bold', fontSize: 26 }}
                 buttonStyle={{ backgroundColor: ThemeColors.text }}
@@ -140,6 +141,7 @@ class LobbyView extends Component {
                 isHost &&
                 <Button
                   title="Get Final Decision"
+                  disabled={!lobbyData.location || !lobbyData.usersReady || lobbyData.userReady.length === 0}
                   raised
                   titleStyle={{ color: 'white', fontWeight: 'bold', fontSize: 26 }}
                   buttonStyle={{ backgroundColor: ThemeColors.text }}

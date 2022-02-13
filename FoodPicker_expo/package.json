@@ -27,6 +27,7 @@
     "expo-splash-screen": "~0.14.1",
     "expo-status-bar": "~1.2.0",
     "firebase": "^9.6.5",
+    "geolib": "^3.3.3",
     "password-validator": "^5.2.1",
     "react": "17.0.1",
     "react-dom": "17.0.1",

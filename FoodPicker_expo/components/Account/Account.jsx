@@ -8,6 +8,7 @@ import { signInWithEmailAndPassword, signOut } from 'firebase/auth';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ScrollView } from 'react-native-gesture-handler';
 import isEmail from 'validator/lib/isEmail';
+import { HeaderHeightContext } from '@react-navigation/elements';
 
 class Account extends Component {
   constructor(props) {
@@ -49,9 +50,9 @@ class Account extends Component {
     }
   }
 
-  userLoggedIn() {
+  userLoggedIn(headerHeight) {
     return (
-      <View style={styles.container}>
+      <View style={{ ...styles.container, height: screenHeight - headerHeight }}>
         <View>
           <Icon name="user-circle" type="font-awesome" iconStyle={{ fontSize: 200 }} />
           <Text
@@ -93,146 +94,149 @@ class Account extends Component {
     return (
       <SafeAreaView>
         <ScrollView>
-          {
-            this.props.user ? (
-              this.userLoggedIn()
-            ) :
-            (
-              <View style={styles.container}>
-                <Text style={{ textAlign: 'center', fontSize: 35 }}>Log In</Text>
-                <Input
-                  placeholder="Email Address"
-                  textContentType="emailAddress"
-                  autoCapitalize='none'
-                  value={emailAddressText}
-                  leftIcon={
-                    <Icon
-                      name='envelope'
-                      type='font-awesome'
-                      iconStyle={styles.inputIcon}
+          <HeaderHeightContext.Consumer>
+            {headerHeight => (
+              this.props.user ? (
+                this.userLoggedIn(headerHeight)
+              ) :
+                (
+                  <View style={{ ...styles.container, height: screenHeight - headerHeight }}>
+                    <Text style={{ textAlign: 'center', fontSize: 35 }}>Log In</Text>
+                    <Input
+                      placeholder="Email Address"
+                      textContentType="emailAddress"
+                      autoCapitalize='none'
+                      value={emailAddressText}
+                      leftIcon={
+                        <Icon
+                          name='envelope'
+                          type='font-awesome'
+                          iconStyle={styles.inputIcon}
+                        />
+                      }
+                      inputStyle={styles.inputStyle}
+                      errorMessage={emailAddressError ? "Please enter a valid email address" : ""}
+                      onChangeText={(text) => this.setState({ emailAddressText: text, emailAddressError: false, })}
                     />
-                  }
-                  inputStyle={styles.inputStyle}
-                  errorMessage={emailAddressError ? "Please enter a valid email address" : ""}
-                  onChangeText={(text) => this.setState({ emailAddressText: text, emailAddressError: false, })}
-                />
-                <Input
-                  placeholder="Password"
-                  textContentType="password"
-                  secureTextEntry={!passwordShowing}
-                  autoCapitalize='none'
-                  value={passwordText}
-                  leftIcon={
-                    <Icon
-                      name='key'
-                      type='font-awesome'
-                      iconStyle={styles.inputIcon}
+                    <Input
+                      placeholder="Password"
+                      textContentType="password"
+                      secureTextEntry={!passwordShowing}
+                      autoCapitalize='none'
+                      value={passwordText}
+                      leftIcon={
+                        <Icon
+                          name='key'
+                          type='font-awesome'
+                          iconStyle={styles.inputIcon}
+                        />
+                      }
+                      rightIcon={
+                        <Icon
+                          name={passwordShowing ? 'eye-slash' : 'eye'}
+                          type='font-awesome'
+                          iconStyle={styles.inputIcon}
+                          onPress={() => this.setState({ passwordShowing: !passwordShowing })}
+                        />
+                      }
+                      inputStyle={styles.inputStyle}
+                      onChangeText={(text) => this.setState({ passwordText: text })}
                     />
-                  }
-                  rightIcon={
-                    <Icon
-                      name={passwordShowing ? 'eye-slash' : 'eye'}
-                      type='font-awesome'
-                      iconStyle={styles.inputIcon}
-                      onPress={() => this.setState({ passwordShowing: !passwordShowing })}
+                    <Text
+                      style={{
+                        textAlign: 'center',
+                        fontSize: 16,
+                        color: 'red',
+                        marginBottom: 10,
+                        height: 20,
+                        flexWrap: 'wrap'
+                      }}
+                    >
+                      {
+                        loginError &&
+                        "Email or Password Incorrect."
+                      }
+                      {
+                        generalError &&
+                        "Error logging in. Please try again or contact support."
+                      }
+                    </Text>
+                    <Button
+                      title="Sign in with FoodPicker"
+                      raised={{}}
+                      icon={{
+                        name: 'home',
+                        type: 'font-awesome',
+                        color: 'white',
+                        marginRight: 8
+                      }}
+                      titleStyle={{ fontWeight: '500', fontSize: 22 }}
+                      buttonStyle={{
+                        backgroundColor: '#E54040',
+                        borderColor: 'transparent',
+                        borderWidth: 0,
+                        height: 60,
+                      }}
+                      containerStyle={{
+                        width: '100%',
+                        alignSelf: 'center',
+                        marginTop: 10,
+                        overflow: 'visible'
+                      }}
+                      onPress={() => { this.signIn(); }}
                     />
-                  }
-                  inputStyle={styles.inputStyle}
-                  onChangeText={(text) => this.setState({ passwordText: text })}
-                />
-                <Text
-                  style={{
-                    textAlign: 'center',
-                    fontSize: 16,
-                    color: 'red',
-                    marginBottom: 10,
-                    height: 20,
-                    flexWrap: 'wrap'
-                  }}
-                >
-                  {
-                    loginError &&
-                    "Email or Password Incorrect."
-                  }
-                  {
-                    generalError &&
-                    "Error logging in. Please try again or contact support."
-                  }
-                </Text>
-                <Button
-                  title="Sign in with FoodPicker"
-                  raised={{}}
-                  icon={{
-                    name: 'home',
-                    type: 'font-awesome',
-                    color: 'white',
-                    marginRight: 8
-                  }}
-                  titleStyle={{ fontWeight: '500', fontSize: 22 }}
-                  buttonStyle={{
-                    backgroundColor: '#E54040',
-                    borderColor: 'transparent',
-                    borderWidth: 0,
-                    height: 60,
-                  }}
-                  containerStyle={{
-                    width: '100%',
-                    alignSelf: 'center',
-                    marginTop: 10,
-                    overflow: 'visible'
-                  }}
-                  onPress={() => { this.signIn(); }}
-                />
-                <Button
-                  title="Forgot Password"
-                  titleStyle={{
-                    textAlign: 'center',
-                    fontSize: 20,
-                    marginTop: 10,
-                    marginBottom: 10,
-                    color: '#0645AD',
-                  }}
-                  buttonStyle={{
-                    backgroundColor: 'transparent'
-                  }}
-                  onPress={() => this.props.navigation.navigate('Account')}
-                />
-                {/* <SignInWithGoogle /> */}
-                <Text
-                  style={{
-                    textAlign: 'center',
-                    fontSize: 20,
-                    marginTop: 30,
-                    marginBottom: 50,
-                    color: 'grey',
-                  }}
-                >
-                  - OR -
-                </Text>
-                <Button
-                  title="Create an Account"
-                  raised
-                  icon={{
-                    name: 'user',
-                    type: 'font-awesome',
-                    color: 'black',
-                    marginRight: 8
-                  }}
-                  titleStyle={{ fontWeight: '500', fontSize: 22, color: 'black' }}
-                  buttonStyle={{
-                    backgroundColor: '#fff',
-                    height: 60,
-                  }}
-                  containerStyle={{
-                    width: '100%',
-                    alignSelf: 'center',
-                    overflow: 'visible',
-                  }}
-                  onPress={() => { this.props.navigation.navigate('CreateAccount') }}
-                />
-              </View>
-            )
-          }
+                    <Button
+                      title="Forgot Password"
+                      titleStyle={{
+                        textAlign: 'center',
+                        fontSize: 20,
+                        marginTop: 10,
+                        marginBottom: 10,
+                        color: '#0645AD',
+                      }}
+                      buttonStyle={{
+                        backgroundColor: 'transparent'
+                      }}
+                      onPress={() => this.props.navigation.navigate('Account')}
+                    />
+                    {/* <SignInWithGoogle /> */}
+                    <Text
+                      style={{
+                        textAlign: 'center',
+                        fontSize: 20,
+                        marginTop: 30,
+                        marginBottom: 50,
+                        color: 'grey',
+                      }}
+                    >
+                      - OR -
+                    </Text>
+                    <Button
+                      title="Create an Account"
+                      raised
+                      icon={{
+                        name: 'user',
+                        type: 'font-awesome',
+                        color: 'black',
+                        marginRight: 8
+                      }}
+                      titleStyle={{ fontWeight: '500', fontSize: 22, color: 'black' }}
+                      buttonStyle={{
+                        backgroundColor: '#fff',
+                        height: 60,
+                      }}
+                      containerStyle={{
+                        width: '100%',
+                        alignSelf: 'center',
+                        overflow: 'visible',
+                      }}
+                      onPress={() => { this.props.navigation.navigate('CreateAccount') }}
+                    />
+                  </View>
+                )
+              )
+            }
+          </HeaderHeightContext.Consumer>
         </ScrollView>
       </SafeAreaView>
     );
@@ -244,12 +248,11 @@ const screenHeight = Dimensions.get('window').height;
 const styles = StyleSheet.create({
   container: {
     display: 'flex',
-    justifyContent: 'space-around',
+    justifyContent: 'space-between',
     paddingTop: 15,
     paddingBottom: 15,
     paddingLeft: 20,
     paddingRight: 20,
-    height: screenHeight - 64,
   },
   inputIcon: {
     paddingLeft: 10,

@@ -17,7 +17,7 @@ class LocationView extends Component {
       location: props.lobbyData.location,
       locationGeocodeAddress: props.lobbyData.locationGeocodeAddress,
       alreadyRequested: false,
-      mapViewOpen: props.isHost === true,
+      mapViewOpen: props.isHost === true && !props.lobbyData.locationGeocodeAddress,
       distanceChoicesOpen: false,
       distance: props.lobbyData.distance,
       locationSearchText: undefined,
@@ -156,7 +156,7 @@ class LocationView extends Component {
               titleStyle={{ textAlign: 'left', fontSize: 18, color: ThemeColors.text, marginRight: 10, overflow: 'scroll' }}
               onPress={() => { !Constants.platform.web && this.setState({ mapViewOpen: !mapViewOpen }) }}
               buttonStyle={{ backgroundColor: 'transparent' }}
-              icon={!Constants.platform.web && location && <Icon name={mapViewOpen ? "angle-up" : "angle-down"} type="font-awesome" />}
+              icon={!Constants.platform.web && location && <Icon name={mapViewOpen ? "angle-up" : "map-o"} type="font-awesome" />}
               iconRight
               containerStyle={{ alignSelf: 'center' }}
             />
