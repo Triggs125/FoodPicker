@@ -1,17 +1,13 @@
 import { Component } from "react";
-import { Button, Icon, Input, ListItem, SearchBar, Text } from "react-native-elements";
+import { Button, Icon, ListItem, Text, BottomSheet } from "react-native-elements";
 import * as Location from 'expo-location';
 import { View } from "react-native";
 import { setDoc } from "firebase/firestore";
 import { googleApiKey } from "../../config";
-import MapView, { Marker, Circle, PROVIDER_GOOGLE } from 'react-native-maps';
+import MapView, { Circle } from 'react-native-maps';
 import ThemeColors from "../../assets/ThemeColors";
 import Constants from 'expo-constants';
-import { BottomSheet } from "react-native-elements/dist/bottomSheet/BottomSheet";
 import { GooglePlacesAutocomplete } from "react-native-google-places-autocomplete";
-import { ScrollView } from "react-native-gesture-handler";
-
-navigator.geolocation = require('react-native-geolocation-service');
 
 class LocationView extends Component {
   constructor(props) {
@@ -19,7 +15,7 @@ class LocationView extends Component {
 
     this.state = {
       location: props.lobbyData.location,
-      locationGeocodeAddress: !Constants.platform.web && props.lobbyData.locationGeocodeAddress,
+      locationGeocodeAddress: props.lobbyData.locationGeocodeAddress,
       alreadyRequested: false,
       mapViewOpen: props.isHost === true,
       distanceChoicesOpen: false,
@@ -29,6 +25,7 @@ class LocationView extends Component {
 
     this.setPlaceData = this.setPlaceData.bind(this);
     this.changeDistance = this.changeDistance.bind(this);
+    this.getUsersLocation = this.getUsersLocation.bind(this);
   }
 
   componentDidMount() {
@@ -39,7 +36,11 @@ class LocationView extends Component {
   }
 
   componentDidUpdate(newProps) {
-    if (newProps.isHost && this.state.alreadyRequested === false && newProps.lobbyData?.location !== this.props.lobbyData?.location) {
+    if (
+      newProps.isHost
+      && this.state.alreadyRequested === false
+      && newProps.lobbyData?.location !== this.props.lobbyData?.location
+    ) {
       if (!newProps.lobbyData?.location) {
         this.getUsersLocation();
       }
@@ -58,14 +59,13 @@ class LocationView extends Component {
           .then(location => {
             Location.reverseGeocodeAsync({ latitude: location.coords.latitude, longitude: location.coords.longitude })
               .then(locationGeocodeAddress => {
-                setDoc(this.props.lobbyData.ref, { locationGeocodeAddress: locationGeocodeAddress }, { merge: true });
-                this.setState({ locationGeocodeAddress, alreadyRequested: true });
+                const coords = { longitude: location.coords.longitude, latitude: location.coords.latitude };
+                setDoc(this.props.lobbyData.ref, { location: coords, locationGeocodeAddress: locationGeocodeAddress }, { merge: true });
+                this.setState({ location: coords, locationGeocodeAddress, alreadyRequested: true });
               })
               .catch(err => {
                 console.error("Error::Location::reverseGeocodeAsync", err);
               });
-            setDoc(this.props.lobbyData.ref, { location: location }, { merge: true });
-            this.setState({ location, alreadyRequested: true });
           })
           .catch(err => {
             console.error("Error::Location:getCurrentPositionAsync", err);
@@ -88,25 +88,29 @@ class LocationView extends Component {
   }
 
   setPlaceData(data, details) {
-    console.log("Details", details?.geometry.location);
-    // setDoc(this.props.lobbyData.ref, { location: details?.geometry.location })
+    const newCoords = { longitude: details?.geometry.location.lng, latitude: details?.geometry.location.lat };
+    Location.reverseGeocodeAsync(newCoords)
+      .then(locationGeocodeAddress => {
+        setDoc(this.props.lobbyData.ref, { locationGeocodeAddress: locationGeocodeAddress, location: newCoords }, { merge: true });
+        this.setState({ locationGeocodeAddress, alreadyRequested: true });
+      })
+      .catch(err => {
+        console.error("Error::Location::reverseGeocodeAsync", err);
+      });
   }
 
-  distances = [2, 5, 10, 20, 50]
+  distances = [0.5, 1, 2, 5, 10, 20]
 
   render() {
-    // return null;
     const { locationGeocodeAddress, location, mapViewOpen, distanceChoicesOpen, distance } = this.state;
     const { isHost } = this.props;
+
     const addressName = locationGeocodeAddress &&
-      // locationGeocodeAddress[0]?.streetNumber + " " + 
-      // locationGeocodeAddress[0]?.street + ", " + 
       locationGeocodeAddress[0]?.city + ", " + 
       locationGeocodeAddress[0]?.region;
-      // locationGeocodeAddress[0]?.postalCode;
     
     return (
-      <View style={{ borderWidth: 1.5, borderColor: 'lightgray', borderRadius: 10, overflow: 'hidden' }}>
+      <View style={{ borderWidth: 1.5, borderColor: 'lightgray', borderRadius: 10, overflow: 'hidden', backgroundColor: 'white' }}>
         <View style={{ flexDirection: 'column', justifyContent: 'center' }}>
           <View style={{ flexDirection: 'row', justifyContent: 'flex-start', paddingLeft: 10 }}>
             <Text style={{ fontSize: 20, paddingBottom: 2, textAlign: 'center', alignSelf: 'center' }}>
@@ -150,65 +154,63 @@ class LocationView extends Component {
             <Button
               title={location ? addressName : isHost ? 'Select a Location' : 'No Location Selected'}
               titleStyle={{ textAlign: 'left', fontSize: 18, color: ThemeColors.text, marginRight: 10, overflow: 'scroll' }}
-              onPress={() => { this.setState({ mapViewOpen: !mapViewOpen }) }}
+              onPress={() => { !Constants.platform.web && this.setState({ mapViewOpen: !mapViewOpen }) }}
               buttonStyle={{ backgroundColor: 'transparent' }}
-              icon={location && <Icon name={mapViewOpen ? "angle-up" : "angle-down"} type="font-awesome" />}
+              icon={!Constants.platform.web && location && <Icon name={mapViewOpen ? "angle-up" : "angle-down"} type="font-awesome" />}
               iconRight
               containerStyle={{ alignSelf: 'center' }}
             />
           </View>
           {
-            mapViewOpen && isHost &&
-            <ScrollView keyboardShouldPersistTaps>
-              <GooglePlacesAutocomplete
-                placeholder="Search Location"
-                onPress={(data, details = null) => this.setPlaceData(data, details)}
-                query={{ key: "AIzaSyABLEWTpgnHhloYv_JH301853XGEhVDpMc", language: 'en' }}
-                // GooglePlacesSearchQuery={(query) => this.setPlaceData(query)}
-                // GoogleReverseGeocodingQuery={(geocode) => this.setPlaceData(geocode)}
-                // currentLocation={true}
-                // currentLocationLabel="Current Location"
-                fetchDetails={true}
-              />
-            </ScrollView>
-            // <SearchBar
-            //   lightTheme
-            //   platform={Constants.platform.ios ? 'ios' : Constants.platform.android ? 'android' : 'default'}
-            //   placeholder='Search Location'
-            //   onChangeText={(locationSearchText) => this.setState({ locationSearchText })}
-            //   inputStyle={{ paddingBottom: 0 }}
-            //   inputContainerStyle={{ backgroundColor: 'lightgray' }}
-            //   containerStyle={{ paddingBottom: 0 }}
-            // />
+            (mapViewOpen && isHost) && // Location search for host only
+              (!Constants.platform.web ? // Mobile
+                (<View style={{ flexDirection: "row", alignSelf: 'stretch' }}>
+                  <Button
+                    icon={<Icon name="my-location" type="MaterialIcons" />}
+                    buttonStyle={{ backgroundColor: 'transparent' }}
+                    onPress={this.getUsersLocation}
+                  />
+                  <GooglePlacesAutocomplete
+                    placeholder="Search Location"
+                    onPress={(data, details = null) => this.setPlaceData(data, details)}
+                    query={{ key: "AIzaSyABLEWTpgnHhloYv_JH301853XGEhVDpMc", language: 'en' }}
+                    fetchDetails={true}
+                    // requestUrl={{
+                    //   useOnPlatform: 'web',
+                    //   url: 'https://cors-anywhere.herokuapp.com/https://maps.googleapis.com/maps/api',
+                    // }}
+                  />
+                </View>
+              ) : ( // Web View
+                <View>
+                </View>
+              )
+            )
           }
         </View>
-        {(!Constants.platform.web && mapViewOpen && location) ?
-          (
-            <View>
-              <MapView
-                // provider={PROVIDER_GOOGLE}
-                style={{ width: '100%', height: 200 }}
-                initialRegion={{ latitude: location.coords.latitude, longitude: location.coords.longitude, latitudeDelta: 0.1, longitudeDelta: 0.1 }}
-                region={{ latitude: location.coords.latitude, longitude: location.coords.longitude, latitudeDelta: distance ? distance * 0.04 : 0.1, longitudeDelta: distance ? distance * 0.04 : 0.1 }}
-              >
-                {/* <Marker
-                  coordinate={location.coords}
-                  title={addressName}
-                  description="Currently Selected Location"
-                /> */}
-                <Circle
-                  center={{ latitude: location.coords.latitude, longitude: location.coords.longitude}}
-                  radius={distance ? Math.round(distance * 1609.344) : 5000}
-                  strokeWidth={2}
-                  strokeColor={'transparent'}
-                  fillColor={'rgba(229,64,64,0.25)'}
-                />
-              </MapView>
-            </View>
-          ) : (
-            <View>
-              
-            </View>
+        {(mapViewOpen && location) && // Location Map for everyone
+          (!Constants.platform.web ? // Mobile
+            (
+              <View>
+                <MapView
+                  style={{ width: '100%', height: 200 }}
+                  initialRegion={{ latitude: location.latitude, longitude: location.longitude, latitudeDelta: 0.1, longitudeDelta: 0.1 }}
+                  region={{ latitude: location.latitude, longitude: location.longitude, latitudeDelta: distance ? distance * 0.04 : 0.1, longitudeDelta: distance ? distance * 0.04 : 0.1 }}
+                >
+                  <Circle
+                    center={{ latitude: location.latitude, longitude: location.longitude}}
+                    radius={distance ? Math.round(distance * 1609.344) : 5000}
+                    strokeWidth={2}
+                    strokeColor={'transparent'}
+                    fillColor={'rgba(229,64,64,0.25)'}
+                  />
+                </MapView>
+              </View>
+            ) : ( // Web View
+              <View>
+                
+              </View>
+            )
           )
         }
       </View>

@@ -11,7 +11,7 @@ class ConnectedSearchBox extends Component {
           icon={<Icon name="refresh" type="font-awesome" />}
           onPress={this.props.refreshHits}
           containerStyle={{ justifyContent: 'flex-start', paddingRight: 0, paddingTop: 3 }}
-          buttonStyle={{ backgroundColor: 'transparent', borderWidth: 0, }}
+          buttonStyle={{ backgroundColor: 'transparent' }}
         />
         <Input
           placeholder="Search for a Lobby"
@@ -21,6 +21,7 @@ class ConnectedSearchBox extends Component {
           autoCorrect={false}
           onChangeText={(text) => this.props.refine(text)}
           value={this.props.currentRefinement}
+          errorStyle={{ height: 0 }}
         />
       </View>
     );

@@ -1,5 +1,5 @@
 export default {
-  background: '#fff',
+  background: '#f3f3f3',
   button: '#E54040',
   border: '#E54040',
   header: '#E54040',

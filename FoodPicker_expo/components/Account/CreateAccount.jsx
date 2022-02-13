@@ -1,7 +1,6 @@
 import { Component } from 'react';
 import { SafeAreaView, View } from 'react-native';
-import { Input, Text, Icon } from 'react-native-elements';
-import { Button } from 'react-native-elements/dist/buttons/Button';
+import { Input, Text, Icon, Button } from 'react-native-elements';
 import PasswordValidator from 'password-validator';
 import isAlpha from 'validator/lib/isAlpha';
 import isEmail from 'validator/lib/isEmail';

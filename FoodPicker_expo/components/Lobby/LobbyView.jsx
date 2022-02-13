@@ -2,8 +2,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { collection, doc, getDocs, onSnapshot, query, setDoc, where } from "firebase/firestore";
 import { Component } from "react";
 import { Dimensions, StyleSheet, View } from "react-native";
-import { Card, Icon, Input, Text } from 'react-native-elements';
-import { Button } from "react-native-elements/dist/buttons/Button";
+import { Card, Icon, Input, Text, Button } from 'react-native-elements';
 import { ScrollView } from "react-native-gesture-handler";
 import ThemeColors from "../../assets/ThemeColors";
 import LocationView from "./LocationView";
@@ -98,10 +97,10 @@ class LobbyView extends Component {
               value={lobbyName}
               autoFocus={lobbyNameEditable}
               style={{ textAlign: 'center', fontSize: 30 }}
-              leftIcon={isHost && <Button onPress={() => this.updateName()} icon={<Icon name={lobbyNameEditable ? "check" : "edit"} type="font-awesome" />} />}
+              leftIcon={isHost && <Button buttonStyle={{ backgroundColor: 'transparent' }} onPress={() => this.updateName()} icon={<Icon name={lobbyNameEditable ? "check" : "edit"} type="font-awesome" />} />}
               editable={lobbyNameEditable}
               onChange={(event) => this.setState({ lobbyName: event.nativeEvent.text })}
-              rightIcon={<Button onPress={this.copyShareLink()} icon={<Icon name="share" type="font-awesome" />} />}
+              rightIcon={<Button buttonStyle={{ backgroundColor: 'transparent' }} onPress={this.copyShareLink()} icon={<Icon name="share" type="font-awesome" />} />}
             />
           </View>
           {
@@ -120,7 +119,7 @@ class LobbyView extends Component {
                     <Button
                       title={this.userTitle(user, userReady)}
                       key={i}
-                      buttonStyle={{ justifyContent: userReady ? 'space-between' : 'center' }}
+                      buttonStyle={{ justifyContent: userReady ? 'space-between' : 'center', backgroundColor: 'transparent' }}
                       icon={userReady && <Icon name="angle-right" type="font-awesome" style={{ paddingLeft: 3, paddingRight: 3, paddingTop: 0, paddingBottom: 0 }} />}
                       iconRight
                     />
@@ -135,7 +134,7 @@ class LobbyView extends Component {
                 titleStyle={{ color: 'white', fontWeight: 'bold', fontSize: 26 }}
                 buttonStyle={{ backgroundColor: ThemeColors.text }}
                 containerStyle={{ marginTop: 10, marginBottom: 10 }}
-                onPress={() => this.props.navigation.navigate('MakeSelections')}
+                onPress={() => this.props.navigation.navigate('MakeSelections', { lobbyData: lobbyData })}
               />
               {
                 isHost &&

@@ -1,9 +1,8 @@
 import { Component } from "react";
 import { Dimensions, StyleSheet, View } from "react-native";
-import { Card, Icon, Input, Text } from 'react-native-elements';
+import { Card, Icon, Input, Text, Button } from 'react-native-elements';
 import { Dropdown } from 'react-native-element-dropdown';
 import { collection, doc, getDoc, getDocs, onSnapshot, query, setDoc, where } from "firebase/firestore";
-import { Button } from "react-native-elements/dist/buttons/Button";
 import RNPickerSelect from 'react-native-picker-select';
 import { onAuthStateChanged } from "firebase/auth";
 
@@ -61,7 +60,7 @@ class FoodProfile extends Component {
       }
     });
 
-    console.log("Selected Food Profile:", selectedFoodProfile);
+    // console.log("Selected Food Profile:", selectedFoodProfile);
 
     return (
       <View style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-evenly', marginTop: 10 }}>
@@ -89,8 +88,8 @@ class FoodProfile extends Component {
                   marginVertical: 5,
                   minWidth: 150,
                   backgroundColor: 'white',
-                  borderWidth: 1,
-                  borderColor: 'black',
+                  borderWidth: 0.5,
+                  borderColor: 'gray',
                   borderRadius: 8,
                   color: 'black',
                   paddingRight: 30, // to ensure the text is never behind the icon
@@ -102,9 +101,8 @@ class FoodProfile extends Component {
                   marginVertical: 5,
                   minWidth: 150,
                   backgroundColor: 'white',
-                  borderWidth: 1,
-                  borderColor: 'black',
                   borderRadius: 8,
+                  elevation: 6,
                   color: 'black',
                   paddingRight: 30, // to ensure the text is never behind the icon
                 },
@@ -145,6 +143,7 @@ class FoodProfile extends Component {
               this.setState({ renameFoodProfile: !renameFoodProfile });
             }
           }}
+          buttonStyle={{ backgroundColor: 'transparent' }}
           containerStyle={{ marginRight: -10, alignSelf: 'center' }}
         />
       </View>

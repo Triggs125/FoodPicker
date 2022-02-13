@@ -105,7 +105,7 @@ class LobbyPicker extends Component {
           <LoadingSpinner spinning={loading} />
           <View style={styles.container}>
             <Button
-              title="Create a Lobby"
+              title="Create a Picking Lobby"
               raised
               icon={{
                 name: 'home',
@@ -118,7 +118,7 @@ class LobbyPicker extends Component {
                 backgroundColor: '#E54040',
                 borderColor: 'transparent',
                 borderWidth: 0,
-                height: 60,
+                height: 50,
               }}
               containerStyle={{
                 width: '100%',
@@ -176,7 +176,7 @@ const styles = StyleSheet.create({
   },
   cardContainer: {
     overflow: 'scroll',
-    backgroundColor: 'transparent',
+    backgroundColor: 'white',
     paddingBottom: 15,
     marginLeft: 0,
     marginRight: 0,

@@ -1,5 +1,5 @@
 import { Component } from "react";
-import { Dimensions, StyleSheet, View } from "react-native";
+import { Dimensions, ScrollView, StyleSheet, View } from "react-native";
 import { Card, Icon, Input, Text } from 'react-native-elements';
 
 import FoodProfile from "../FoodProfile/FoodProfile";
@@ -64,15 +64,15 @@ class MakeSelections extends Component {
   render() {
     const { screenHeight, googleSearchText, choicesPageIndex } = this.state;
     return (
-      <View style={{ height: screenHeight, paddingHorizontal: 10 }}>
+      <ScrollView style={{ height: screenHeight, paddingHorizontal: 10 }}>
         <FoodProfile
           {...this.props}
           selectedFoodProfile={this.setSelectedFoodProfile}
         />
-        <GoogleFoodSearch
+        {/* <GoogleFoodSearch
           {...this.props}
           googleSearchText={this.setGoogleSearchText}
-        />
+        /> */}
         <FoodChoices
           {...this.props}
           googleSearchText={googleSearchText}
@@ -85,7 +85,7 @@ class MakeSelections extends Component {
           nextChoicesPage={this.nextChoicesPage}
           lastChoicesPage={this.lastChoicesPage}
         />
-      </View>
+      </ScrollView>
     )
   }
 }
