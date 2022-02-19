@@ -1,12 +1,13 @@
 import * as React from 'react';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
+import ThemeColors from '../assets/ThemeColors';
 
-const LoadingSpinner = ({ spinning }) => {
-  return spinning ? (
+const LoadingSpinner = () => {
+  return (
     <View style={styles.loading}>
-      <ActivityIndicator size="large" color="#512888" />
+      <ActivityIndicator size="large" color={ThemeColors.text} />
     </View>
-  ) : null;
+  );
 };
 
 const styles = StyleSheet.create({
@@ -17,7 +18,7 @@ const styles = StyleSheet.create({
     right: 0,
     top: 0,
     bottom: 0,
-    zIndex: 1000,
+    zIndex: 10000,
     alignItems: 'center',
     justifyContent: 'center',
   },

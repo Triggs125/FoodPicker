@@ -29,7 +29,7 @@ class SearchAlgolia extends Component {
     const { refreshHits, refresh, db, lobbyComponent } = this.props;
     return (
       <View
-        style={{ borderWidth: 0.3, borderColor: 'lightgrey' }}
+        style={{ borderWidth: 0, borderColor: 'lightgrey' }}
       >
         <InstantSearch
           searchClient={this.state.searchClient}

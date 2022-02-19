@@ -2,7 +2,6 @@ import { Component } from "react";
 import { Dimensions, SafeAreaView, StyleSheet, View } from 'react-native';
 import Constants from 'expo-constants';
 import { Input, Button, Text, Icon } from 'react-native-elements';
-import LoadingSpinner from '../LoadingSpinner';
 import { GetUserFromDB } from '../Utils/firebase';
 import { signInWithEmailAndPassword, signOut } from 'firebase/auth';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -82,8 +81,9 @@ class Account extends Component {
         <Button
           buttonStyle={{ backgroundColor: 'transparent' }}
           title="Sign Out"
-          titleStyle={{ color: '#E54040', fontSize: 30, textAlign: 'center' }}
+          titleStyle={{ color: '#E54040', fontSize: 30, textAlign: 'center', fontWeight: 'normal' }}
           onPress={() => { signOut(this.props.auth) }}
+          containerStyle={{ marginBottom: 10 }}
         />
       </View>
     );
@@ -102,65 +102,81 @@ class Account extends Component {
                 (
                   <View style={{ ...styles.container, height: screenHeight - headerHeight }}>
                     <Text style={{ textAlign: 'center', fontSize: 35 }}>Log In</Text>
-                    <Input
-                      placeholder="Email Address"
-                      textContentType="emailAddress"
-                      autoCapitalize='none'
-                      value={emailAddressText}
-                      leftIcon={
-                        <Icon
-                          name='envelope'
-                          type='font-awesome'
-                          iconStyle={styles.inputIcon}
+                    <View>
+                      <Input
+                        placeholder="Email Address"
+                        textContentType="emailAddress"
+                        autoCapitalize='none'
+                        value={emailAddressText}
+                        leftIcon={
+                          <Icon
+                            name='envelope'
+                            type='font-awesome'
+                            iconStyle={styles.inputIcon}
+                          />
+                        }
+                        inputStyle={styles.inputStyle}
+                        errorMessage={emailAddressError ? "Please enter a valid email address" : ""}
+                        onChangeText={(text) => this.setState({ emailAddressText: text, emailAddressError: false, })}
+                      />
+                      <Input
+                        placeholder="Password"
+                        textContentType="password"
+                        secureTextEntry={!passwordShowing}
+                        autoCapitalize='none'
+                        value={passwordText}
+                        leftIcon={
+                          <Icon
+                            name='key'
+                            type='font-awesome'
+                            iconStyle={styles.inputIcon}
+                          />
+                        }
+                        rightIcon={
+                          <Icon
+                            name={passwordShowing ? 'eye-slash' : 'eye'}
+                            type='font-awesome'
+                            iconStyle={styles.inputIcon}
+                            onPress={() => this.setState({ passwordShowing: !passwordShowing })}
+                          />
+                        }
+                        inputStyle={styles.inputStyle}
+                        onChangeText={(text) => this.setState({ passwordText: text })}
+                      />
+                      <Text
+                        style={{
+                          textAlign: 'center',
+                          fontSize: 16,
+                          color: 'red',
+                          marginBottom: 10,
+                          height: 20,
+                          flexWrap: 'wrap'
+                        }}
+                      >
+                        {
+                          loginError &&
+                          "Email or Password Incorrect."
+                        }
+                        {
+                          generalError &&
+                          "Error logging in. Please try again or contact support."
+                        }
+                        <Button
+                          title="Forgot Password"
+                          titleStyle={{
+                            textAlign: 'center',
+                            fontSize: 20,
+                            marginTop: 10,
+                            marginBottom: 10,
+                            color: '#0645AD',
+                          }}
+                          buttonStyle={{
+                            backgroundColor: 'transparent'
+                          }}
+                          onPress={() => this.props.navigation.navigate('Account')}
                         />
-                      }
-                      inputStyle={styles.inputStyle}
-                      errorMessage={emailAddressError ? "Please enter a valid email address" : ""}
-                      onChangeText={(text) => this.setState({ emailAddressText: text, emailAddressError: false, })}
-                    />
-                    <Input
-                      placeholder="Password"
-                      textContentType="password"
-                      secureTextEntry={!passwordShowing}
-                      autoCapitalize='none'
-                      value={passwordText}
-                      leftIcon={
-                        <Icon
-                          name='key'
-                          type='font-awesome'
-                          iconStyle={styles.inputIcon}
-                        />
-                      }
-                      rightIcon={
-                        <Icon
-                          name={passwordShowing ? 'eye-slash' : 'eye'}
-                          type='font-awesome'
-                          iconStyle={styles.inputIcon}
-                          onPress={() => this.setState({ passwordShowing: !passwordShowing })}
-                        />
-                      }
-                      inputStyle={styles.inputStyle}
-                      onChangeText={(text) => this.setState({ passwordText: text })}
-                    />
-                    <Text
-                      style={{
-                        textAlign: 'center',
-                        fontSize: 16,
-                        color: 'red',
-                        marginBottom: 10,
-                        height: 20,
-                        flexWrap: 'wrap'
-                      }}
-                    >
-                      {
-                        loginError &&
-                        "Email or Password Incorrect."
-                      }
-                      {
-                        generalError &&
-                        "Error logging in. Please try again or contact support."
-                      }
-                    </Text>
+                      </Text>
+                    </View>
                     <Button
                       title="Sign in with FoodPicker"
                       raised={{}}
@@ -184,20 +200,6 @@ class Account extends Component {
                         overflow: 'visible'
                       }}
                       onPress={() => { this.signIn(); }}
-                    />
-                    <Button
-                      title="Forgot Password"
-                      titleStyle={{
-                        textAlign: 'center',
-                        fontSize: 20,
-                        marginTop: 10,
-                        marginBottom: 10,
-                        color: '#0645AD',
-                      }}
-                      buttonStyle={{
-                        backgroundColor: 'transparent'
-                      }}
-                      onPress={() => this.props.navigation.navigate('Account')}
                     />
                     {/* <SignInWithGoogle /> */}
                     <Text
@@ -229,6 +231,7 @@ class Account extends Component {
                         width: '100%',
                         alignSelf: 'center',
                         overflow: 'visible',
+                        marginBottom: 20,
                       }}
                       onPress={() => { this.props.navigation.navigate('CreateAccount') }}
                     />
@@ -243,7 +246,8 @@ class Account extends Component {
   }
 }
 
-const screenHeight = Dimensions.get('window').height;
+const offset = Constants.platform.android ? 35 : 0;
+const screenHeight = Dimensions.get('screen').height - offset;
 
 const styles = StyleSheet.create({
   container: {

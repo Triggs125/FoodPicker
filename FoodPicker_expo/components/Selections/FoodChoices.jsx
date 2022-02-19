@@ -1,10 +1,10 @@
 import { Component } from "react";
 import PropType from 'prop-types';
-import { View } from "react-native";
-import { Tile, AirbnbRating, Text } from 'react-native-elements';
+import { View, Dimensions } from "react-native";
+import { Tile, Text, Icon } from 'react-native-elements';
 import Constants from 'expo-constants';
-import { Icon } from "react-native-elements/dist/icons/Icon";
 import { getDistance } from 'geolib';
+
 
 const propTypes = {
   googleSearchText: PropType.string,
@@ -14,7 +14,24 @@ const propTypes = {
 }
 
 class FoodChoices extends Component {
+  constructor(props) {
+    super(props);
+
+    const offset = Constants.platform.android ? 35 : 0;
+    const screenHeight = Dimensions.get('screen').height - offset;
+
+    this.state = {
+      screenHeight: screenHeight
+    }
+  }
+
+  isSelected(place) {
+    const { selectedFoodChoices } = this.props;
+    return selectedFoodChoices.some(choice => choice.id === place.id);
+  }
+
   stars(rating) {
+    if (!rating && isNaN(rating)) return [];
     const _rating = Math.round(rating * 2);
     const fullStars = Math.floor(_rating / 2);
     const halfStar = _rating % 2 !== 0;
@@ -29,12 +46,17 @@ class FoodChoices extends Component {
     if (halfStar) {
       stars.push(<Icon name="star-half-full" type="font-awesome" color='gold' size={18} />);
     }
+
+    for (let i = fullStars + halfStar; i < 5; i++) {
+      stars.push(<Icon name="star-o" type="font-awesome" color='gold' size={18} />)
+    }
     
     return stars;
   }
 
   totalRatings(num) {
-    return Math.abs(num) > 999 ? Math.sign(num)*((Math.abs(num)/1000).toFixed(1)) + 'k' : Math.sign(num)*Math.abs(num)
+    if (!num || isNaN(num)) return;
+    return `(${Math.abs(num) > 999 ? Math.sign(num)*((Math.abs(num)/1000).toFixed(1)) + 'k' : Math.sign(num)*Math.abs(num)})`;
   }
 
   priceLevel(priceLevel) {
@@ -53,44 +75,61 @@ class FoodChoices extends Component {
 
   placeTypes(types) {
     let typeNames = "";
+    if (types.length === 0) return typeNames;
     for (let i = 0; i < types.length; i++) {
       const type = types[i];
       if (type.toLowerCase() === "restaurant") {
-        if (i === 0) return type;
-        return typeNames;
+        typeNames += " " + type.replace('_', ' ') + ",";
+        break;
       }
-      typeNames += type.replace('_', ' ') + " ";
+      typeNames += " " + type.replace('_', ' ') + ",";
     }
-    return typeNames;
+    return typeNames.substring(1, typeNames.length - 1);
+  }
+
+  toggleSelection(place, isSelected) {
+    const { addFoodChoice, removeFoodChoice } = this.props;
+    if (isSelected) {
+      removeFoodChoice(place);
+    } else {
+      addFoodChoice(place)
+    }
   }
 
   render() {
-    const { choicesPageIndex, foodChoices } = this.props;
+    const { choicesPageIndex, foodChoices, selectedFoodChoices, maxNumberOfSelections } = this.props;
+    const { screenHeight } = this.state;
 
     return (
-      <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', marginHorizontal: -10 }}>
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', marginHorizontal: -10, marginVertical: 5 }}>
         {
           foodChoices?.map((place, i) => {
             if (i < choicesPageIndex * 2 || i >= choicesPageIndex * 2 + 2) return;
+            const isSelected = this.isSelected(place);
             return (
               <Tile
                 key={i}
-                imageSrc={{ uri: place.photos[0] }}
-                imageContainerStyle={{ height: 0 }}
-                height={200}
                 width={'90%'}
+                disabled={selectedFoodChoices.length >= maxNumberOfSelections && !isSelected}
                 title={place.name}
-                titleStyle={{ textAlign: 'left', fontSize: 16, fontWeight: 'bold' }}
+                titleStyle={{ textAlign: 'left', fontSize: 18, fontWeight: 'bold', marginTop: -5 }}
+                imageSrc={{ uri: place.photos[0] }}
                 containerStyle={{
-                  margin: 10,
+                  marginBottom: 10,
                   borderRadius: 10,
-                  borderWidth: Constants.platform.ios && '0.5',
+                  borderWidth: Constants.platform.ios ? 0.5 : 0,
                   borderColor: 'gray',
                   backgroundColor: 'white',
                   overflow: 'hidden',
-                  elevation: 5,
+                  elevation: isSelected || selectedFoodChoices.length >= 4 ? 0 : 6,
+                  height: screenHeight / 2.9,
+                  alignSelf: 'center',
                 }}
-                onPress={() => this.props.addFoodChoice(place)}
+                wrapperStyle={{
+                  margin: -15,
+                }}
+                contentContainerStyle={{ backgroundColor: isSelected ? "#aaa" : 'white' }}
+                onPress={() => this.toggleSelection(place, isSelected)}
               >
                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                   <Text style={{ marginRight: 5, alignSelf: 'center' }}>{place.rating}</Text>
@@ -99,7 +138,7 @@ class FoodChoices extends Component {
                       this.stars(place.rating).map(star => star)
                     }
                   </View>
-                  <Text style={{ alignSelf: 'center', marginRight: 5 }}>({this.totalRatings(place.userRatingsTotal)})</Text>
+                  <Text style={{ alignSelf: 'center', marginRight: 5 }}>{this.totalRatings(place.userRatingsTotal)}</Text>
                   <Icon
                     name="circle"
                     type="font-awesome"
@@ -125,7 +164,7 @@ class FoodChoices extends Component {
                     }
                   </Text>
                 </View>
-                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', marginVertical: 5, flexWrap: 'wrap' }}>
                   <Text style={{ textTransform: 'capitalize', marginRight: 5 }}>{this.placeTypes(place.types)}</Text>
                   <Icon
                     name="circle"

@@ -1,6 +1,6 @@
 import 'react-native-gesture-handler';
 import React, { useState } from 'react';
-import { StyleSheet, View, Image } from 'react-native';
+import { StyleSheet, View, Image, LogBox } from 'react-native';
 import { Button, Icon, Text } from 'react-native-elements';
 import { NavigationContainer, ThemeProvider } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
@@ -22,6 +22,8 @@ import LoadingSpinner from './components/LoadingSpinner';
 import LobbyView from './components/Lobby/LobbyView';
 import MakeSelections from './components/Selections/MakeSelections';
 import EditFoodProfile from './components/FoodProfile/EditFoodProfile';
+import UserSelections from './components/Selections/UserSelections';
+import PlaceDetails from './components/Selections/PlaceDetails';
 
 const Stack = createStackNavigator();
 
@@ -31,7 +33,10 @@ const db = getFirestore(app);
 
 export default function App() {
   const [userColors, setUserColors] = useState({}); 
-  const [user, setUser] = useState(undefined);
+  const [user, setUser] = useState();
+  const [lobbyData, setLobbyData] = useState();
+  const [userLobbies, setUserLobbies] = useState();
+  const [userLobbiesUnsubscribe, setUserLobbiesUnsubscribe] = useState();
 
   const navColors = {
     colors: {
@@ -84,8 +89,12 @@ export default function App() {
   SplashScreen.preventAutoHideAsync();
   SplashScreen.hideAsync();
   const navigationRef = React.useRef();
-  // LogBox.ignoreLogs(['Non-serializable values were found in the navigation state.',
-  //   'Error: Native splash screen is already hidden.']); // Ignore log notification by message
+  
+  // Ignore log notification by message
+  LogBox.ignoreLogs([
+    'AsyncStorage',
+    'Setting a timer for a long period of time'
+  ]);
 
   onAuthStateChanged(auth, (authUser) => {
     setUser(authUser);
@@ -145,7 +154,7 @@ export default function App() {
                     name="LobbyPicker"
                     options={{ headerTitle: "Join or Start a Lobby" }}
                   >
-                    {props => <LobbyPicker {...props} user={user} auth={auth} db={db} />}
+                    {props => <LobbyPicker {...props} userLobbies={userLobbies} user={user} auth={auth} db={db} />}
                   </Stack.Screen>
                   <Stack.Screen
                     name="CreateLobby"
@@ -157,7 +166,7 @@ export default function App() {
                     name="LobbyView"
                     options={{ headerTitle: "Lobby" }}
                   >
-                    {props => <LobbyView {...props} user={user} auth={auth} db={db} />}
+                    {props => <LobbyView {...props} user={user} auth={auth} db={db} setLobbyData={setLobbyData} />}
                   </Stack.Screen>
                   <Stack.Screen
                     name="MakeSelections"
@@ -166,13 +175,28 @@ export default function App() {
                       headerTitleAlign: 'center'
                     }}
                   >
-                    {props => <MakeSelections {...props} user={user} auth={auth} db={db} />}
+                    {props => <MakeSelections {...props} user={user} auth={auth} db={db} lobbyData={lobbyData} />}
+                  </Stack.Screen>
+                  <Stack.Screen
+                    name="UserSelections"
+                    options={{
+                      headerTitle: "Selections",
+                      headerTitleAlign: 'center'
+                    }}
+                  >
+                    {props => <UserSelections {...props} user={user} auth={auth} db={db} lobbyData={lobbyData} />}
                   </Stack.Screen>
                   <Stack.Screen
                     name="EditFoodProfile"
                     options={{ headerTitle: "Edit Food Profile" }}
                   >
                     {props => <EditFoodProfile {...props} user={user} auth={auth} db={db} />}
+                  </Stack.Screen>
+                  <Stack.Screen
+                    name="PlaceDetails"
+                    options={{ headerTitle: "Place Details" }}
+                  >
+                    {props => <PlaceDetails {...props} user={user} auth={auth} db={db} lobbyData={lobbyData} />}
                   </Stack.Screen>
                 </>
               )

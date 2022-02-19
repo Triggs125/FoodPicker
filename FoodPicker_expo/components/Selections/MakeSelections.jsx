@@ -1,21 +1,24 @@
 import { Component } from "react";
-import { Dimensions, ScrollView, StyleSheet, View } from "react-native";
+import { Dimensions, ScrollView, View } from "react-native";
 import { Card, Icon, Input, Text } from 'react-native-elements';
 import { HeaderHeightContext } from '@react-navigation/elements';
-
-import FoodProfile from "../FoodProfile/FoodProfile";
-import GoogleFoodSearch from "./GoogleFoodSearch";
+// import FoodProfile from "../FoodProfile/FoodProfile";
+// import GoogleFoodSearch from "./GoogleFoodSearch";
 import FoodChoices from "./FoodChoices";
 import FoodPageNavigation from "./FoodPageNavigation";
 import LoadingSpinner from "../LoadingSpinner";
+import Constants from 'expo-constants';
+import { getDoc, doc } from "firebase/firestore";
 
 class MakeSelections extends Component {
-
   constructor(props) {
     super(props);
+    const offset = Constants.platform.android ? 35 : 0;
+    const screenHeight = Dimensions.get('screen').height - offset;
+    const maxNumberOfSelections = 5
 
     this.state = {
-      screenHeight: Dimensions.get('window').height,
+      screenHeight: screenHeight,
       selectedFoodProfile: undefined,
       googleSearchText: "",
       selectedFoodChoices: [],
@@ -24,6 +27,7 @@ class MakeSelections extends Component {
       nextPageToken: undefined,
       tokenPage: -1,
       loading: true,
+      maxNumberOfSelections: maxNumberOfSelections,
     }
 
     this.setSelectedFoodProfile = this.setSelectedFoodProfile.bind(this);
@@ -33,12 +37,20 @@ class MakeSelections extends Component {
     this.removeFoodChoice = this.removeFoodChoice.bind(this);
     this.nextChoicesPage = this.nextChoicesPage.bind(this);
     this.lastChoicesPage = this.lastChoicesPage.bind(this);
+    this.clearSelections = this.clearSelections.bind(this);
+    this.getUserFoodSelections = this.getUserFoodSelections.bind(this);
   }
 
   componentDidMount() {
+    const { lobbyData } = this.props;
     this.componentFocusUnsub = this.props.navigation.addListener('focus', () => {
       this.fetchNearestPlacesFromGoogle();
+      this.getUserFoodSelections();
     });
+    if (lobbyData) {
+      this.fetchNearestPlacesFromGoogle();
+      this.getUserFoodSelections();
+    }
   }
 
   componentWillUnmount() {
@@ -58,17 +70,22 @@ class MakeSelections extends Component {
   }
 
   addFoodChoice(foodChoice) {
-    const { selectedFoodChoices } = this.state;
+    const { selectedFoodChoices, maxNumberOfSelections } = this.state;
+    if (selectedFoodChoices.includes(foodChoice) || selectedFoodChoices.length >= maxNumberOfSelections) return;
     let newFoodChoices = selectedFoodChoices;
     newFoodChoices.push(foodChoice);
-    this.setState({ selectedFoodChoices: newFoodChoices })
+    this.setState({ selectedFoodChoices: newFoodChoices });
   }
 
   removeFoodChoice(foodChoice) {
     const { selectedFoodChoices } = this.state;
     let newFoodChoices = selectedFoodChoices;
-    newFoodChoices = newFoodChoices.filter(choice => foodChoice.place_id !== choice.place_id);
+    newFoodChoices = newFoodChoices.filter(choice => foodChoice.id !== choice.id);
     this.setState({ selectedFoodChoices: newFoodChoices });
+  }
+
+  clearSelections() {
+    this.setState({ selectedFoodChoices: [] });
   }
 
   nextChoicesPage() {
@@ -89,8 +106,8 @@ class MakeSelections extends Component {
     }
   }
 
-  fetchNearestPlacesFromGoogle() {
-    const { lobbyData } = this.props.route.params;
+  async fetchNearestPlacesFromGoogle() {
+    const { lobbyData } = this.props;
     
     const latitude = lobbyData.location.latitude;
     const longitude = lobbyData.location.longitude;
@@ -105,7 +122,7 @@ class MakeSelections extends Component {
     
     this.setState({ loading: true });
 
-    fetch(url)
+    await fetch(url)
       .then(res => {
         return res.json();
       })
@@ -114,11 +131,9 @@ class MakeSelections extends Component {
         const GooglePicBaseUrl = `https://maps.googleapis.com/maps/api/place/photo?key=AIzaSyB1q8bz0Sr14VhwhwKaUiinzUHZmwtj9oo&maxwidth=400&photo_reference=`;
         for(let googlePlace of res.results) {
           var place = {};
-          var lat = googlePlace.geometry.location.lat;
-          var lng = googlePlace.geometry.location.lng;
-          var coordinate = {
-            latitude: lat,
-            longitude: lng,
+          const coordinate = {
+            latitude: googlePlace.geometry.location.lat,
+            longitude: googlePlace.geometry.location.lng,
           };
 
           var gallery = [];
@@ -133,22 +148,35 @@ class MakeSelections extends Component {
           place['coordinate'] = coordinate;
           place['id'] = googlePlace.place_id;
           place['name'] = googlePlace.name;
-          place['rating'] = googlePlace.rating;
-          place['priceLevel'] = googlePlace.price_level;
-          place['types'] = googlePlace.types;
+          place['rating'] = googlePlace.rating ?? 0;
+          place['priceLevel'] = googlePlace.price_level ?? 0;
           place['vicinity'] = googlePlace.vicinity;
-          place['userRatingsTotal'] = googlePlace.user_ratings_total;
+          place['userRatingsTotal'] = googlePlace.user_ratings_total ?? 0;
           place['photos'] = gallery;
+          place['opennow'] = googlePlace.opening_hours?.open_now ?? false
 
           places.push(place);
         }
-        this.setChoices(places, res.next_page_token);
-        this.setState({ loading: false })
+        this.setChoices(places);
       })
       .catch(error => {
         console.error("FoodChoices::fetchNearestPlacesFromGoogle", error);
-        this.setState({ loading: false });
+      })
+      .finally(() => {
+        this.setState({ loading: false })
       });
+  }
+
+  async getUserFoodSelections() {
+    const { lobbyData, user, db } = this.props;
+
+    try {
+      const selectedFoodChoicesDoc = await getDoc(doc(db, 'food_selections', `${lobbyData.ref.id}_${user.uid}`));
+      const selectedFoodChoices = selectedFoodChoicesDoc.data()?.selections;
+      this.setState({ selectedFoodChoices: selectedFoodChoices ?? [] });
+    } catch (err) {
+      console.error("MakeSelections::getUserFoodSelections", err);
+    }
   }
 
   render() {
@@ -159,19 +187,32 @@ class MakeSelections extends Component {
       selectedFoodChoices,
       nextPageToken,
       foodChoices,
-      loading
+      loading,
+      maxNumberOfSelections,
     } = this.state;
 
-    const { lobbyData } = this.props.route.params;
+    const { user } = this.props;
+
+    const { lobbyData } = this.props;
+
+    const addressName = lobbyData.locationGeocodeAddress &&
+      lobbyData.locationGeocodeAddress[0]?.city + ", " + 
+      lobbyData.locationGeocodeAddress[0]?.region;
 
     return (
       <HeaderHeightContext.Consumer>
         {headerHeight => (
-          <ScrollView style={{ height: screenHeight, paddingHorizontal: 10 }} contentContainerStyle={{ height: screenHeight - headerHeight, display: 'flex', justifyContent: 'space-between' }}>
-            <FoodProfile
+          <ScrollView
+            style={{ height: screenHeight - headerHeight, paddingHorizontal: 10 }}
+            contentContainerStyle={{
+              height: screenHeight - headerHeight,
+              display: 'flex',
+              justifyContent: 'space-between',
+            }}>
+            {/* <FoodProfile
               {...this.props}
               selectedFoodProfile={this.setSelectedFoodProfile}
-            />
+            /> */}
             {/* <GoogleFoodSearch
               {...this.props}
               googleSearchText={this.setGoogleSearchText}
@@ -190,11 +231,13 @@ class MakeSelections extends Component {
                     setChoices={this.setChoices}
                     nextPageToken={nextPageToken}
                     foodChoices={foodChoices}
+                    selectedFoodChoices={selectedFoodChoices}
                     lobbyData={lobbyData}
+                    maxNumberOfSelections={maxNumberOfSelections}
                   />
-                  <View style={{ justifyContent: 'space-between', flexDirection: 'row', marginTop: -8 }}>
-                    <Text style={{ paddingLeft: 12 }}>**Select up to 4</Text>
-                    <Text style={{ paddingRight: 12 }}>Hold down card for more details**</Text>
+                  <View style={{ justifyContent: 'space-between', flexDirection: 'row', marginTop: -8, paddingHorizontal: 10 }}>
+                    <Text>{addressName}</Text>
+                    <Text>Page {choicesPageIndex}</Text>
                   </View>
                 </>
               )
@@ -203,7 +246,11 @@ class MakeSelections extends Component {
               {...this.props}
               nextChoicesPage={this.nextChoicesPage}
               lastChoicesPage={this.lastChoicesPage}
+              clearSelections={this.clearSelections}
               selectedFoodChoices={selectedFoodChoices}
+              lobbyData={lobbyData}
+              user={user}
+              maxNumberOfSelections={maxNumberOfSelections}
             />
           </ScrollView>
         )}
