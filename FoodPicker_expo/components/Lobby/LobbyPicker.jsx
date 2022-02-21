@@ -1,13 +1,16 @@
 import { Component } from "react";
 import { SafeAreaView, StyleSheet, View } from 'react-native';
 import Constants from 'expo-constants';
-import { Button, Card, Icon, Text } from 'react-native-elements';
+import { Button, Card, Icon, Overlay, Text, Input } from 'react-native-elements';
 import LoadingSpinner from '../LoadingSpinner';
-import { ScrollView } from "react-native-gesture-handler";
+import { ScrollView, TouchableOpacity } from "react-native-gesture-handler";
 // import ThemeColors from '../../assets/ThemeColors';
 import SearchAlgolia from "../Algolia/SearchAlgolia";
-import { addDoc, collection, doc, onSnapshot, query, setDoc, where } from 'firebase/firestore';
+import { addDoc, collection, doc, getDoc, getDocs, onSnapshot, query, setDoc, where } from 'firebase/firestore';
 import { onAuthStateChanged } from 'firebase/auth';
+import ThemeColors from "../../assets/ThemeColors";
+import { ScreenWidth } from "react-native-elements/dist/helpers";
+import Password from "../Utils/Password";
 
 class LobbyPicker extends Component {
   constructor(props) {
@@ -17,6 +20,12 @@ class LobbyPicker extends Component {
       loading: false,
       searchLoading: false,
       error: false,
+      openOverlay: false,
+      overlayLobby: null,
+      overlayPasswordText: "",
+      overlayPasswordShowing: false,
+      overlayPasswordHash: "",
+      overlayPasswordError: false,
     }
 
     this.createLobby = this.createLobby.bind(this);
@@ -33,10 +42,15 @@ class LobbyPicker extends Component {
       const userLobbiesUnsubscribe = this.userLobbiesUnsubscribe();
       this.setState({ userLobbiesUnsubscribe });
     });
+    
     if (this.props.user && !this.state.userLobbies) {
       const userLobbiesUnsubscribe = this.userLobbiesUnsubscribe();
       this.setState({ userLobbiesUnsubscribe });
     }
+
+    this.componentFocusUnsub = this.props.navigation.addListener('blur', () => {
+      this.setState({ loading: false });
+    });
   }
 
   componentWillUnmount() {
@@ -72,20 +86,52 @@ class LobbyPicker extends Component {
     return doc(this.props.db, lobby.path);
   }
 
+  getTitle(lobby) {
+    const userOwned = lobby.host === this.props.user.uid;
+    return (
+      <View style={{ flexDirection: 'row', alignContent: 'center', justifyContent: 'flex-start' }}>
+        {
+          userOwned &&
+          <Icon name="x-circle" type="feather" size={18} color={ThemeColors.text} containerStyle={{ marginRight: 5, alignSelf: 'center' }} />
+        }
+        {
+          lobby.passwordProtected &&
+          <Icon name="lock" size={18} containerStyle={{ marginRight: 5, alignSelf: 'center' }} />
+        }
+        <Text style={{ ...styles.name, alignSelf: 'center' }}>{lobby.name}</Text>
+      </View>
+    )
+  }
+
   lobbyComponent(lobby, i) {
     if (!lobby.active) return;
     return (
       <Button
         key={i}
-        title={lobby.arrow === false ? {textAlign: 'center'} : lobby.name}
-        buttonStyle={styles.lobbyButton}
-        containerStyle={{ margin: 1 }}
+        title={this.getTitle(lobby)}
+        buttonStyle={{ ...styles.lobbyButton }}
+        containerStyle={{ margin: 1, borderWidth: Constants.platform.ios ? 0.5 : 0, borderColor: 'lightgray' }}
         raised
-        titleStyle={styles.name}
+        titleStyle={{ ...styles.name }}
         icon={lobby?.arrow === false ? <></> : <Icon name="angle-right" type="font-awesome" />}
         iconRight
-        onPress={() => {
-          if (lobby.arrow === undefined || lobby.arrow === true) {
+        onPress={async () => {
+          if (lobby.passwordProtected) {
+            try {
+              console.log("Lobby path", lobby.path);
+              const passwordHash = (await getDocs(
+                query(
+                  collection(this.props.db, 'lobby_passwords'),
+                  where('lobbyPath', '==', lobby.path)
+                )
+              )).docs[0]?.data().passwordHash;
+              if (passwordHash && passwordHash.length > 0) {
+                this.setState({ openOverlay: true, overlayLobby: lobby, overlayPasswordHash: passwordHash });
+              }
+            } catch(err) {
+              console.error("LobbyPicker::lobbyComponent::onPress", err);
+            }
+          } else {
             const lobbyRef = this.getLobbyRef(lobby);
             this.props.navigation.navigate('LobbyView', { lobbyRef });
           }
@@ -107,13 +153,7 @@ class LobbyPicker extends Component {
   }
 
   async createLobby() {
-    const docRef = await addDoc(collection(this.props.db, 'lobbies'), {
-      host: this.props.user.uid,
-      name: 'Default Lobby',
-      users: [this.props.user.uid],
-      active: true,
-    });
-    this.props.navigation.navigate('LobbyView', { lobbyRef: docRef });
+    this.props.navigation.navigate("LobbyCreator");
   }
 
   async removeLobby(lobby) {
@@ -126,13 +166,90 @@ class LobbyPicker extends Component {
   }
 
   render() {
-    const { loading, refresh, userLobbies } = this.state;
+    const {
+      loading, refresh, userLobbies,
+      openOverlay, overlayLobby, overlayPasswordText,
+      overlayPasswordShowing, overlayPasswordHash, overlayPasswordError,
+      overlayLoading,
+    } = this.state;
     return (
       <SafeAreaView>
         {
           loading &&
           <LoadingSpinner />
         }
+        <Overlay
+          isVisible={openOverlay}
+          overlayStyle={{ width: ScreenWidth - 20 }}
+          onBackdropPress={() => {
+            this.setState({ openOverlay: false, overlayLobby: null })
+          }}
+        >
+          <Text style={{ fontSize: 24, textAlign: 'center' }}>{overlayLobby?.name}</Text>
+          <Input
+            placeholder="Password"
+            textContentType="password"
+            secureTextEntry={!overlayPasswordShowing}
+            autoCapitalize='none'
+            disabled={overlayLoading}
+            value={overlayPasswordText}
+            leftIcon={
+              <Icon
+                name='key'
+                type='font-awesome-5'
+                size={18}
+              />
+            }
+            rightIcon={
+              <TouchableOpacity onPress={() => this.setState({ overlayPasswordShowing: !overlayPasswordShowing })}>
+                <Text style={{ color: 'gray' }}>{overlayPasswordShowing ? 'hide' : 'show'}</Text>
+              </TouchableOpacity>
+            }
+            onChangeText={(text) => this.setState({ overlayPasswordText: text })}
+            inputStyle={{ fontSize: 24, paddingLeft: 5 }}
+            containerStyle={{ marginTop: 10 }}
+            errorMessage={overlayPasswordError ? "Incorrect Password. Please try again." : ""}
+          />
+          <Button
+            title="Open Lobby"
+            onPress={() => {
+              this.setState({ overlayLoading: true });
+              const passwordCorrect = this.props.comparePassword(overlayPasswordText, overlayPasswordHash);
+              if (passwordCorrect) {
+                const lobbyRef = this.getLobbyRef(overlayLobby);
+                this.props.navigation.navigate('LobbyView', { lobbyRef });
+                this.setState({
+                  openOverlay: false,
+                  overlayLobby: null,
+                  overlayPasswordText: "",
+                  overlayPasswordShowing: false,
+                  overlayPasswordHash: "",
+                  overlayPasswordError: false,
+                });
+              } else {
+                this.setState({ overlayPasswordError: true });
+              }
+              this.setState({ overlayLoading: false });
+            }}
+            titleStyle={{ fontSize: 24 }}
+            buttonStyle={{ backgroundColor: ThemeColors.button }}
+          />
+          <Button
+            title="Cancel"
+            type="clear"
+            titleStyle={{ color: ThemeColors.text, fontSize: 24 }}
+            onPress={() => {
+              this.setState({
+                openOverlay: false,
+                overlayLobby: null,
+                overlayPasswordText: "",
+                overlayPasswordShowing: false,
+                overlayPasswordHash: "",
+                overlayPasswordError: false,
+              });
+            }}
+          />
+        </Overlay>
         <View style={styles.container}>
           <Button
             title="Create a Lobby"
@@ -169,7 +286,7 @@ class LobbyPicker extends Component {
               <Card.Title style={styles.cardTitle}>Your Lobbies</Card.Title>
               {
                 userLobbies && userLobbies.length > 0 &&
-                <Text style={{ fontSize: 12, marginBottom: 2, marginTop: -5 }}>*Remove Lobby by holding it down</Text>
+                <Text style={{ fontSize: 12, marginBottom: 2, marginTop: -5 }}>*Hold down to remove hosted lobby</Text>
               }
               {userLobbies?.map((lobby, i) => {
                 return this.lobbyComponent(lobby, i);
@@ -210,7 +327,7 @@ const styles = StyleSheet.create({
   cardContainer: {
     overflow: 'scroll',
     backgroundColor: 'white',
-    paddingBottom: 15,
+    paddingBottom: 10,
     marginLeft: 0,
     marginRight: 0,
   },
@@ -236,4 +353,4 @@ const styles = StyleSheet.create({
   }
 });
 
-export default LobbyPicker;
+export default Password(LobbyPicker);

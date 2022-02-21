@@ -202,13 +202,13 @@ class MakeSelections extends Component {
     return (
       <HeaderHeightContext.Consumer>
         {headerHeight => (
-          <ScrollView
-            style={{ height: screenHeight - headerHeight, paddingHorizontal: 10 }}
-            contentContainerStyle={{
+          <View
+            style={{
               height: screenHeight - headerHeight,
-              display: 'flex',
+              paddingHorizontal: 10,
               justifyContent: 'space-between',
-            }}>
+            }}
+          >
             {/* <FoodProfile
               {...this.props}
               selectedFoodProfile={this.setSelectedFoodProfile}
@@ -246,13 +246,14 @@ class MakeSelections extends Component {
               {...this.props}
               nextChoicesPage={this.nextChoicesPage}
               lastChoicesPage={this.lastChoicesPage}
+              choicesPageIndex={choicesPageIndex}
               clearSelections={this.clearSelections}
               selectedFoodChoices={selectedFoodChoices}
               lobbyData={lobbyData}
               user={user}
               maxNumberOfSelections={maxNumberOfSelections}
             />
-          </ScrollView>
+          </View>
         )}
       </HeaderHeightContext.Consumer>
       

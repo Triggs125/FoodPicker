@@ -40,6 +40,7 @@ class FoodPageNavigation extends Component {
       <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 10, paddingHorizontal: 5 }}>
         <Button
           title="Last Page"
+          disabled={this.props.choicesPageIndex <= 0}
           onPress={this.props.lastChoicesPage}
           titleStyle={{ fontSize: 20, color: ThemeColors.text }}
           buttonStyle={{

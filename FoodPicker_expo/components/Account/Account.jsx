@@ -5,7 +5,7 @@ import { Input, Button, Text, Icon } from 'react-native-elements';
 import { GetUserFromDB } from '../Utils/firebase';
 import { signInWithEmailAndPassword, signOut } from 'firebase/auth';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { ScrollView } from 'react-native-gesture-handler';
+import { ScrollView, TouchableOpacity } from 'react-native-gesture-handler';
 import isEmail from 'validator/lib/isEmail';
 import { HeaderHeightContext } from '@react-navigation/elements';
 
@@ -128,17 +128,14 @@ class Account extends Component {
                         leftIcon={
                           <Icon
                             name='key'
-                            type='font-awesome'
+                            type='font-awesome-5'
                             iconStyle={styles.inputIcon}
                           />
                         }
                         rightIcon={
-                          <Icon
-                            name={passwordShowing ? 'eye-slash' : 'eye'}
-                            type='font-awesome'
-                            iconStyle={styles.inputIcon}
-                            onPress={() => this.setState({ passwordShowing: !passwordShowing })}
-                          />
+                          <TouchableOpacity onPress={() => this.setState({ passwordShowing: !passwordShowing })}>
+                            <Text style={{ color: 'gray' }}>{passwordShowing ? 'hide' : 'show'}</Text>
+                          </TouchableOpacity>
                         }
                         inputStyle={styles.inputStyle}
                         onChangeText={(text) => this.setState({ passwordText: text })}
@@ -261,7 +258,7 @@ const styles = StyleSheet.create({
   inputIcon: {
     paddingLeft: 10,
     color: 'black',
-    fontSize: 24,
+    fontSize: 18,
   },
   inputStyle: {
     fontSize: 20,

@@ -175,7 +175,10 @@ class UserSelections extends Component {
           >
             {
               loading ? (
-                <LoadingSpinner />
+                <>
+                  <Text></Text>
+                  <LoadingSpinner />
+                </>
               ) : (
                 <View>
                   <Text style={{ textAlign: 'center', marginTop: 5, fontWeight: '600', fontSize: 30, fontWeight: 'normal' }}>{userDisplayName}</Text>

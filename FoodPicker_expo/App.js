@@ -17,13 +17,12 @@ import Settings from './components/Settings';
 import Account from './components/Account/Account';
 import CreateAccount from './components/Account/CreateAccount';
 import LobbyPicker from './components/Lobby/LobbyPicker';
-import CreateLobby from './components/Lobby/LobbyView';
-import LoadingSpinner from './components/LoadingSpinner';
 import LobbyView from './components/Lobby/LobbyView';
 import MakeSelections from './components/Selections/MakeSelections';
 import EditFoodProfile from './components/FoodProfile/EditFoodProfile';
 import UserSelections from './components/Selections/UserSelections';
 import PlaceDetails from './components/Selections/PlaceDetails';
+import LobbyCreator from './components/Lobby/LobbyCreator';
 
 const Stack = createStackNavigator();
 
@@ -157,10 +156,10 @@ export default function App() {
                     {props => <LobbyPicker {...props} userLobbies={userLobbies} user={user} auth={auth} db={db} />}
                   </Stack.Screen>
                   <Stack.Screen
-                    name="CreateLobby"
-                    options={{ headerTitle: "Join or Start a Lobby" }}
+                    name="LobbyCreator"
+                    options={{ headerTitle: "Create a Lobby" }}
                   >
-                    {props => <CreateLobby {...props} user={user} auth={auth} db={db} />}
+                    {props => <LobbyCreator {...props} user={user} auth={auth} db={db} />}
                   </Stack.Screen>
                   <Stack.Screen
                     name="LobbyView"
