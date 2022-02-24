@@ -474,7 +474,7 @@ class LobbyView extends Component {
                   isHost && lobbyData.finalDecision && (
                     <Button
                       title="Reset Decision"
-                      disabled={isHost ? !lobbyData.location || !lobbyData.usersReady || lobbyData.usersReady.length === 0 : !lobbyData.finalDecisionReady}
+                      disabled={!lobbyData.location || !lobbyData.usersReady || lobbyData.usersReady.length === 0}
                       raised
                       titleStyle={{ color: ThemeColors.text, fontWeight: 'bold', fontSize: 25 }}
                       buttonStyle={{ backgroundColor: 'white', borderColor: 'lightgray', borderWidth: 0.5 }}
@@ -484,8 +484,8 @@ class LobbyView extends Component {
                   )
                 }
                 <Button
-                  title={lobbyData.finalDecision ? "Final Decision" : "Calculate Final Decision"}
-                  disabled={isHost ? !lobbyData.location || !lobbyData.usersReady || lobbyData.usersReady.length === 0 : !lobbyData.finalDecisionReady}
+                  title={isHost && !lobbyData.finalDecision ? "Calculate Final Decision" : "Final Decision"}
+                  disabled={isHost ? !lobbyData.location || !lobbyData.usersReady || lobbyData.usersReady.length === 0 : !lobbyData.finalDecision}
                   raised
                   titleStyle={{ color: 'white', fontWeight: 'bold', fontSize: 26 }}
                   buttonStyle={{ backgroundColor: ThemeColors.text }}
