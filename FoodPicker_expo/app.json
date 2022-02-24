@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "FoodPicker",
+    "name": "Food Picker",
     "slug": "FoodPicker",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -22,7 +22,8 @@
       "googleServicesFile": "./GoogleService-Info.plist",
       "buildNumber": "1.0.0",
       "config": {
-        "googleMapsApiKey": "AIzaSyB1q8bz0Sr14VhwhwKaUiinzUHZmwtj9oo"
+        "googleMapsApiKey": "AIzaSyB1q8bz0Sr14VhwhwKaUiinzUHZmwtj9oo",
+        "googleMobileAdsAppId": "ca-app-pub-1885494348989912~6684907829"
       }
     },
     "android": {
@@ -36,12 +37,13 @@
       "config": {
         "googleMaps": {
           "apiKey": "AIzaSyB1q8bz0Sr14VhwhwKaUiinzUHZmwtj9oo"
-        }
+        },
+        "googleMobileAdsAppId": "ca-app-pub-1885494348989912~7746708057"
       }
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
-    "description": ""
+    "description": "You and some friends can pick out some restaurants and get a suggestion that matches everyone's taste."
   }
 }

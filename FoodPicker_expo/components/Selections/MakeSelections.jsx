@@ -14,7 +14,8 @@ class MakeSelections extends Component {
   constructor(props) {
     super(props);
     const offset = Constants.platform.android ? 35 : 0;
-    const screenHeight = Dimensions.get('screen').height - offset;
+    const adBannerHeight = 60;
+    const screenHeight = Dimensions.get('screen').height - offset - adBannerHeight;
     const maxNumberOfSelections = 5
 
     this.state = {
@@ -203,6 +204,7 @@ class MakeSelections extends Component {
       <HeaderHeightContext.Consumer>
         {headerHeight => (
           <View
+            key={'make-selections-view'}
             style={{
               height: screenHeight - headerHeight,
               paddingHorizontal: 10,

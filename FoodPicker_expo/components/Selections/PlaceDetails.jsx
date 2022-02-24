@@ -15,7 +15,8 @@ class PlaceDetails extends Component {
     super(props);
 
     const offset = Constants.platform.android ? 35 : 0;
-    const screenHeight = Dimensions.get('screen').height - offset;
+    const adBannerHeight = 60;
+    const screenHeight = Dimensions.get('screen').height - offset - adBannerHeight;
 
     this.state = {
       loading: true,
@@ -153,7 +154,6 @@ class PlaceDetails extends Component {
           <View
             style={{
               height: screenHeight - headerHeight,
-              backgroundColor: ThemeColors.text,
             }}
           >
             {
@@ -173,6 +173,8 @@ class PlaceDetails extends Component {
                       borderRadius: 10,
                       margin: 10,
                       elevation: 2,
+                      borderWidth: 1.5,
+                      borderColor: 'lightgray'
                     }}
                   >
                     <Text h4 style={{ textAlign: 'center', marginBottom: 5 }}>{place?.name}</Text>

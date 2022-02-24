@@ -14,7 +14,8 @@ class UserSelections extends Component {
   constructor(props) {
     super(props);
     const offset = Constants.platform.android ? 48 : 0;
-    const screenHeight = Dimensions.get('screen').height - offset;
+    const adBannerHeight = 60;
+    const screenHeight = Dimensions.get('screen').height - offset - adBannerHeight;
 
     this.state = {
       screenHeight: screenHeight,
@@ -166,7 +167,7 @@ class UserSelections extends Component {
       <HeaderHeightContext.Consumer>
         {headerHeight => (
           <View
-            key={0}
+            key={'user-selection-view'}
             style={{
               height: screenHeight - headerHeight,
               paddingHorizontal: 10,
@@ -181,14 +182,14 @@ class UserSelections extends Component {
                 </>
               ) : (
                 <View>
-                  <Text style={{ textAlign: 'center', marginTop: 5, fontWeight: '600', fontSize: 30, fontWeight: 'normal' }}>{userDisplayName}</Text>
+                  <Text style={{ textAlign: 'center', marginTop: 5, marginBottom: 10, fontWeight: '600', fontSize: 30, fontWeight: 'normal' }}>{userDisplayName}</Text>
                   <ScrollView>
                     {
                       selectedFoodChoices?.data?.selections?.map((foodChoice, i) => {
                         if (selectedFoodChoices?.data?.selections?.length <= 2) {
                           return (
                             <Tile
-                              key={i}
+                              key={'food-choice-' + i}
                               width={'94%'}
                               title={foodChoice.name}
                               titleStyle={{ textAlign: 'left', fontSize: 18, fontWeight: 'bold', marginTop: -5 }}
@@ -262,6 +263,7 @@ class UserSelections extends Component {
                             <TouchableOpacity
                               onLongPress={() => !isDisabled && this.removeFoodChoice(foodChoice)}
                               onPress={() => this.props.navigation.navigate("PlaceDetails", { foodChoice })}
+                              key={'food-choice-' + i}
                             >
                               <Card
                                 containerStyle={{

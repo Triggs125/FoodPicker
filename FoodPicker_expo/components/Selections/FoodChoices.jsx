@@ -4,6 +4,7 @@ import { View, Dimensions } from "react-native";
 import { Tile, Text, Icon } from 'react-native-elements';
 import Constants from 'expo-constants';
 import { getDistance } from 'geolib';
+import ThemeColors from "../../assets/ThemeColors";
 
 
 const propTypes = {
@@ -18,7 +19,8 @@ class FoodChoices extends Component {
     super(props);
 
     const offset = Constants.platform.android ? 35 : 0;
-    const screenHeight = Dimensions.get('screen').height - offset;
+    const adBannerHeight = 60;
+    const screenHeight = Dimensions.get('screen').height - offset - adBannerHeight;
 
     this.state = {
       screenHeight: screenHeight
@@ -108,11 +110,11 @@ class FoodChoices extends Component {
             const isSelected = this.isSelected(place);
             return (
               <Tile
-                key={i}
+                key={'food-choice-' + i}
                 width={'90%'}
                 disabled={selectedFoodChoices.length >= maxNumberOfSelections && !isSelected}
                 title={place.name}
-                titleStyle={{ textAlign: 'left', fontSize: 18, fontWeight: 'bold', marginTop: -5 }}
+                titleStyle={{ textAlign: 'left', fontSize: 18, fontWeight: 'bold', marginTop: -5, color: isSelected ? 'white' : 'black' }}
                 imageSrc={{ uri: place.photos[0] }}
                 containerStyle={{
                   marginBottom: 10,
@@ -121,60 +123,57 @@ class FoodChoices extends Component {
                   borderColor: 'gray',
                   backgroundColor: 'white',
                   overflow: 'hidden',
-                  elevation: isSelected || selectedFoodChoices.length >= 4 ? 0 : 6,
+                  elevation: isSelected || selectedFoodChoices.length >= maxNumberOfSelections ? 0 : 6,
                   height: screenHeight / 2.9,
                   alignSelf: 'center',
                 }}
                 wrapperStyle={{
                   margin: -15,
                 }}
-                contentContainerStyle={{ backgroundColor: isSelected ? "#aaa" : 'white' }}
+                contentContainerStyle={{ backgroundColor: isSelected ? ThemeColors.selection : 'white', paddingBottom: 10 }}
                 onPress={() => this.toggleSelection(place, isSelected)}
               >
                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                  <Text style={{ marginRight: 5, alignSelf: 'center' }}>{place.rating}</Text>
+                  <Text style={{ marginRight: 5, alignSelf: 'center', color: isSelected ? 'white' : 'black' }}>{place.rating}</Text>
                   <View style={{ flexDirection: 'row', marginRight: 5, alignSelf: 'center' }}>
                     {
                       this.stars(place.rating).map(star => star)
                     }
                   </View>
-                  <Text style={{ alignSelf: 'center', marginRight: 5 }}>{this.totalRatings(place.userRatingsTotal)}</Text>
+                  <Text style={{ alignSelf: 'center', marginRight: 5, color: isSelected ? 'white' : 'black' }}>{this.totalRatings(place.userRatingsTotal)}</Text>
+                  {
+                    place.priceLevel && place.priceLevel > 0 && (
+                      <>
+                        <Icon
+                          name="circle"
+                          type="font-awesome"
+                          size={5}
+                          color={isSelected ? 'white' : 'black'}
+                          style={{ alignSelf: 'center', marginRight: 5 }}
+                        />
+                        <Text style={{ flexDirection: 'row', marginRight: 5, alignSelf: 'center', color: isSelected ? 'white' : 'black' }}>
+                          {
+                            this.priceLevel(place.priceLevel)
+                          }
+                        </Text>
+                      </>
+                    )
+                  }
                   <Icon
                     name="circle"
                     type="font-awesome"
                     size={5}
-                    color='#333'
+                    color={isSelected ? 'white' : 'black'}
                     style={{ alignSelf: 'center', marginRight: 5 }}
                   />
-                  <Text style={{ flexDirection: 'row', marginRight: 5, alignSelf: 'center' }}>
-                    {
-                      this.priceLevel(place.priceLevel)
-                    }
-                  </Text>
-                  <Icon
-                    name="circle"
-                    type="font-awesome"
-                    size={5}
-                    color='#333'
-                    style={{ alignSelf: 'center', marginRight: 5 }}
-                  />
-                  <Text style={{ flexDirection: 'row', marginRight: 5, alignSelf: 'center' }}>
+                  <Text style={{ flexDirection: 'row', marginRight: 5, alignSelf: 'center', color: isSelected ? 'white' : 'black' }}>
                     {
                       `${this.distanceAway(place.coordinate)} mi`
                     }
                   </Text>
                 </View>
-                <View style={{ flexDirection: 'row', alignItems: 'center', marginVertical: 5, flexWrap: 'wrap' }}>
-                  <Text style={{ textTransform: 'capitalize', marginRight: 5 }}>{this.placeTypes(place.types)}</Text>
-                  <Icon
-                    name="circle"
-                    type="font-awesome"
-                    size={5}
-                    color='#333'
-                    style={{ alignSelf: 'center', marginRight: 5 }}
-                  />
-                  <Text>{place.vicinity}</Text>
-                </View>
+                <Text style={{ textTransform: 'capitalize', marginRight: 5, color: isSelected ? 'white' : 'black' }}>{this.placeTypes(place.types)}</Text>
+                <Text style={{ color: isSelected ? 'white' : 'black' }}>{place.vicinity}</Text>
               </Tile>
             );
           })

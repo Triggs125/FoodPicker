@@ -12,6 +12,7 @@ import { firebaseConfig } from './config';
 import ThemeColors from './assets/ThemeColors';
 import { UserColors } from './ColorContext';
 import { onAuthStateChanged } from "firebase/auth";
+import Constants from 'expo-constants';
 
 import Settings from './components/Settings';
 import Account from './components/Account/Account';
@@ -23,6 +24,12 @@ import EditFoodProfile from './components/FoodProfile/EditFoodProfile';
 import UserSelections from './components/Selections/UserSelections';
 import PlaceDetails from './components/Selections/PlaceDetails';
 import LobbyCreator from './components/Lobby/LobbyCreator';
+import LoadingSpinner from './components/LoadingSpinner';
+
+import {
+  AdMobBanner,
+  setTestDeviceIDAsync,
+} from 'expo-ads-admob';
 
 const Stack = createStackNavigator();
 
@@ -31,11 +38,11 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 
 export default function App() {
-  const [userColors, setUserColors] = useState({}); 
+  const [userColors, setUserColors] = useState({});
+  const [loading, setLoading] = useState(true); 
   const [user, setUser] = useState();
   const [lobbyData, setLobbyData] = useState();
   const [userLobbies, setUserLobbies] = useState();
-  const [userLobbiesUnsubscribe, setUserLobbiesUnsubscribe] = useState();
 
   const navColors = {
     colors: {
@@ -95,11 +102,27 @@ export default function App() {
     'Setting a timer for a long period of time'
   ]);
 
+  const adUnitId = !Constants.platform.web && __DEV__
+    ? "ca-app-pub-3940256099942544/6300978111"
+    : Constants.platform.android
+      ? "ca-app-pub-1885494348989912/3971948721"
+      : "ca-app-pub-1885494348989912/2737353131";
+
+  // console.log("Ad Unit", adUnitId);
+
+  setTestDeviceIDAsync('EMULATOR')
+    .then(() => {
+      console.log("Test Device ID set");
+      setLoading(false);
+    })
+
   onAuthStateChanged(auth, (authUser) => {
     setUser(authUser);
   });
 
-  return (
+  return loading ? (
+    <LoadingSpinner />
+  ) : (
     <ThemeProvider theme={themeProviderColors}>
       <UserColors.Provider value={{ userColors, setUserColors }}>
         <NavigationContainer
@@ -123,7 +146,7 @@ export default function App() {
                     onPress={() => props.navigation.navigate('Account')}
                   />
                 ),
-                headerTitleAlign: 'center'
+                headerTitleAlign: 'center',
               }
             }}
           >
@@ -202,6 +225,17 @@ export default function App() {
             }
           </Stack.Navigator>
         </NavigationContainer>
+        <AdMobBanner
+          adUnitId={adUnitId}
+          bannerSize={'fullBanner'}
+          servePersonalizedAds={false}
+          onAdViewDidReceiveAd={() => {
+            console.log('Advert loaded');
+          }}
+          onDidFailToReceiveAdWithError={(error) => {
+            console.error('Advert failed to load: ', error);
+          }}
+        />
       </UserColors.Provider>
     </ThemeProvider>
   )

@@ -8,14 +8,15 @@ import ThemeColors from "../../assets/ThemeColors";
 import { ScrollView, TouchableOpacity } from "react-native-gesture-handler";
 import PasswordValidator from 'password-validator';
 import Password from '../Utils/Password';
-import { addDoc, collection, doc } from "firebase/firestore";
+import { addDoc, arrayUnion, collection, doc, getDoc, getDocs, query, setDoc, updateDoc, where } from "firebase/firestore";
 
 class LobbyCreator extends Component {
   constructor(props) {
     super(props);
 
     const offset = Constants.platform.android ? 48 : 0;
-    const screenHeight = Dimensions.get('screen').height - offset;
+    const adBannerHeight = 60;
+    const screenHeight = Dimensions.get('screen').height - offset - adBannerHeight;
 
     var passwordSchema = new PasswordValidator();
     passwordSchema
@@ -23,29 +24,30 @@ class LobbyCreator extends Component {
       .is().max(50, " maximum of 50 characters")
       .has().not().spaces(0, " no spaces");
 
+    const lobby = props.route?.params?.lobbyData;
+
     this.state = {
       screenHeight,
-      lobbyName: "",
+      lobbyPath: lobby.path,
+      lobbyName: lobby.name || "",
       lobbyNameError: false,
       passwordFailures: [],
       passwordSchema,
-      passwordProtected: true,
+      passwordProtected: lobby.passwordProtected !== null ? lobby.passwordProtected : true,
       passwordText: "",
       passwordShowing: false,
-      location: undefined,
-      locationGeocodeAddress: undefined,
+      passwordInLobby: lobby.passwordProtected || false,
+      location: lobby.location,
+      locationGeocodeAddress: lobby.locationGeocodeAddress,
       locationError: false,
-      distance: undefined,
+      distance: lobby.distance,
       distanceError: false,
+      loading: false,
     }
 
     this.setLocationData = this.setLocationData.bind(this);
     this.createLobby = this.createLobby.bind(this);
     this.validateForm = this.validateForm.bind(this);
-  }
-
-  componentDidMount() {
-    
   }
 
   async createLobby() {
@@ -62,7 +64,6 @@ class LobbyCreator extends Component {
     let data = {
       active: true,
       host: this.props.user.uid,
-      name: 'Default Lobby',
       users: [this.props.user.uid],
       name: lobbyName,
       location,
@@ -71,7 +72,7 @@ class LobbyCreator extends Component {
       passwordProtected,
     };
     if (passwordProtected && passwordText.length > 0) {
-      const hashedPassword = this.props.hashPassword(passwordText)
+      const hashedPassword = this.props.hashPassword(passwordText);
       addDoc(collection(this.props.db, 'lobbies'), data) // create lobbies doc
       .then((docRef) => {
         addDoc(collection(this.props.db, 'lobby_passwords'), { // create passwords doc
@@ -99,6 +100,54 @@ class LobbyCreator extends Component {
     }
   }
 
+  updateLobby() {
+    if (!this.validateForm()) {
+      console.log("Form not valid")
+      return;
+    }
+    
+    const { lobbyData } = this.props.route?.params;
+    const { lobbyName, location, locationGeocodeAddress, distance, passwordProtected, passwordInLobby, passwordText } = this.state;
+    this.setState({ loading: true })
+    let data = {
+      active: true,
+      host: this.props.user.uid,
+      users: arrayUnion(this.props.user.uid),
+      name: lobbyName,
+      location,
+      locationGeocodeAddress,
+      distance,
+      passwordProtected,
+    };
+    
+    setDoc(lobbyData.ref, data)
+      .then(async () => {
+        if (passwordProtected && !passwordInLobby) {
+          const hashedPassword = this.props.hashPassword(passwordText);
+          const passwordDoc = (await getDocs(query(collection(this.props.db, 'lobby_passwords'), where('lobbyId', '==', lobbyData.ref.id)))).docs[0];
+          if (passwordDoc?.ref) {
+            await setDoc(passwordDoc.ref, {
+              passwordHash: hashedPassword,
+              lobbyId: lobbyData.ref.id,
+              lobbyPath: lobbyData.ref.path,
+            });
+          } else {
+            await addDoc(collection(this.props.db, 'lobby_passwords'), {
+              passwordHash: hashedPassword,
+              lobbyId: lobbyData.ref.id,
+              lobbyPath: lobbyData.ref.path,
+            });
+          }
+        }
+        this.setState({ loading: false });
+        this.props.navigation.goBack();
+      })
+      .catch(err => {
+        console.error("LobbyCreator::updateLobby", err);
+        this.setState({ loading: false });
+      })
+  }
+
   validateForm() {
     const {
       lobbyName, 
@@ -113,10 +162,6 @@ class LobbyCreator extends Component {
         ? passwordSchema.validate(passwordText, { list: true, details: true })
         : [];
     const validLocation = location && locationGeocodeAddress;
-
-    console.log("Distance", distance)
-    console.log("Distance error", !distance)
-    console.log("Location error", !validLocation)
 
     this.setState({
       passwordFailures,
@@ -146,14 +191,17 @@ class LobbyCreator extends Component {
     const {
       screenHeight,
       lobbyName, lobbyNameError,
-      passwordFailures, passwordProtected, passwordShowing, passwordText,
+      passwordFailures, passwordProtected, passwordShowing, passwordText, passwordInLobby,
       distanceError,
-      locationError,
+      locationError, location, locationGeocodeAddress, distance,
+      loading,
     } = this.state;
+    const lobbyData = this.props.route?.params?.lobbyData;
     return (
       <HeaderHeightContext.Consumer>
         {headerHeight => (
           <View
+            key={'lobby-creator-view'}
             style={{
               height: screenHeight - headerHeight,
               justifyContent: 'space-between',
@@ -165,6 +213,7 @@ class LobbyCreator extends Component {
                 placeholder="Lobby Name"
                 textContentType="name"
                 inputStyle={{ fontSize: 24, paddingLeft: 5 }}
+                disabled={loading}
                 leftIcon={
                   <Icon
                     name='solution1'
@@ -211,40 +260,54 @@ class LobbyCreator extends Component {
                 </View>
                 {
                   passwordProtected && (
-                    <Input
-                      placeholder="Password"
-                      textContentType="password"
-                      secureTextEntry={!passwordShowing}
-                      autoCapitalize='none'
-                      value={passwordText}
-                      leftIcon={
-                        <Icon
-                          name='key'
-                          type='font-awesome-5'
-                          size={18}
-                        />
-                      }
-                      rightIcon={
-                        <TouchableOpacity onPress={() => this.setState({ passwordShowing: !passwordShowing })}>
-                          <Text style={{ color: 'gray' }}>{passwordShowing ? 'hide' : 'show'}</Text>
-                        </TouchableOpacity>
-                      }
-                      onChangeText={(text) => this.setState({ passwordText: text })}
-                      inputStyle={{ fontSize: 24, paddingLeft: 5 }}
-                      containerStyle={{ marginTop: 10 }}
-                      errorMessage={passwordFailures.length > 0 ?
-                        "Password requirements:" +
-                        passwordFailures.flatMap((failure) => {
-                          return failure.message;
-                        }) + "."
-                        : ""
-                      }
-                    />
+                    !passwordInLobby ? (
+                      <Input
+                        placeholder="Password"
+                        textContentType="password"
+                        secureTextEntry={!passwordShowing}
+                        autoCapitalize='none'
+                        value={passwordText}
+                        leftIcon={
+                          <Icon
+                            name='key'
+                            type='font-awesome-5'
+                            size={18}
+                          />
+                        }
+                        rightIcon={
+                          <TouchableOpacity onPress={() => this.setState({ passwordShowing: !passwordShowing })}>
+                            <Text style={{ color: 'gray' }}>{passwordShowing ? 'hide' : 'show'}</Text>
+                          </TouchableOpacity>
+                        }
+                        onChangeText={(text) => this.setState({ passwordText: text })}
+                        inputStyle={{ fontSize: 24, paddingLeft: 5 }}
+                        containerStyle={{ marginTop: 10 }}
+                        errorMessage={passwordFailures.length > 0 ?
+                          "Password requirements:" +
+                          passwordFailures.flatMap((failure) => {
+                            return failure.message;
+                          }) + "."
+                          : ""
+                        }
+                      />
+                    ) : (
+                      <Button
+                        title="Change Password"
+                        raised
+                        titleStyle={{ fontSize: 24, color: 'white' }}
+                        buttonStyle={{ backgroundColor: ThemeColors.button }}
+                        containerStyle={{ marginVertical: 10, marginHorizontal: 5 }}
+                        onPress={() => this.setState({ passwordInLobby: false })}
+                      />
+                    )
                   )
                 }
               </View>
               <LocationView
                 {...this.props}
+                location={location}
+                locationGeocodeAddress={locationGeocodeAddress}
+                distance={distance}
                 setLocationData={this.setLocationData}
                 isHost={true}
                 loading={false}
@@ -254,20 +317,22 @@ class LobbyCreator extends Component {
             </ScrollView>
             <View>
               <Button
-                title="Create Lobby"
+                title={lobbyData ? "Update Lobby" : "Create Lobby"}
                 titleStyle={{ fontSize: 24 }}
+                loading={loading}
                 containerStyle={{ marginBottom: 10 }}
                 buttonStyle={{ backgroundColor: ThemeColors.button }}
                 raised
-                onPress={this.createLobby}
+                onPress={() => lobbyData ? this.updateLobby() : this.createLobby()}
               />
               <Button
                 title="Cancel"
                 type="clear"
                 raised
+                disabled={loading}
                 titleStyle={{ color: ThemeColors.text, fontSize: 24 }}
                 containerStyle={{ marginBottom: 20 }}
-                onPress={() => this.props.navigation.navigate("LobbyPicker")}
+                onPress={() => this.props.navigation.goBack()}
               />
             </View>
           </View>

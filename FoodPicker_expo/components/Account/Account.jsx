@@ -244,7 +244,8 @@ class Account extends Component {
 }
 
 const offset = Constants.platform.android ? 35 : 0;
-const screenHeight = Dimensions.get('screen').height - offset;
+const adBannerHeight = 60;
+const screenHeight = Dimensions.get('screen').height - offset - adBannerHeight;
 
 const styles = StyleSheet.create({
   container: {

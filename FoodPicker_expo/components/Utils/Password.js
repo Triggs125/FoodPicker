@@ -8,15 +8,11 @@ const Password = Component => props => {
   });
 
   const hashPassword = (password) => {
-    const salt = bcrypt.genSaltSync(10)
+    const salt = bcrypt.genSaltSync(10);
     return bcrypt.hashSync(password, salt);
   }
 
-  const comparePassword = (password, hashedPassword) => {
-    return bcrypt.compareSync(password, hashedPassword);
-  }
-
-  return <Component {...props} hashPassword={hashPassword} comparePassword={comparePassword} />
+  return <Component {...props} hashPassword={hashPassword} comparePassword={bcrypt.compare} />
 }
 
 export default Password;

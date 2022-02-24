@@ -2,6 +2,7 @@ import { Component } from "react";
 import { connectSearchBox } from "react-instantsearch-native";
 import { View, StyleSheet } from "react-native";
 import { Input, Icon, Button } from "react-native-elements";
+import ThemeColors from "../../assets/ThemeColors";
 
 class ConnectedSearchBox extends Component {
   render() {
@@ -9,9 +10,10 @@ class ConnectedSearchBox extends Component {
       <View style={{ display: 'flex', flexDirection: 'row' }}>
         <Button
           icon={<Icon name="refresh" type="font-awesome" />}
+          type='clear'
+          titleStyle={{ color: ThemeColors.button }}
           onPress={this.props.refreshHits}
           containerStyle={{ justifyContent: 'flex-start', paddingRight: 0, paddingTop: 3 }}
-          buttonStyle={{ backgroundColor: 'transparent' }}
         />
         <Input
           placeholder="Search for a Lobby"
