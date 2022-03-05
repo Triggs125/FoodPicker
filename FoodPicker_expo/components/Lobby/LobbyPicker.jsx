@@ -387,7 +387,9 @@ class LobbyPicker extends Component {
               <Card.Title style={styles.cardTitle}>Joined Lobbies</Card.Title>
               {
                 userLobbies && userLobbies.length > 0 &&
-                <Text style={{ fontSize: 12, marginBottom: 2, marginTop: -5, marginLeft: 5 }}>*Hold down your lobby to delete it</Text>
+                <Text style={{ fontSize: 12, marginBottom: 2, marginTop: -5, marginLeft: 5 }}>
+                  *Hold down <Text style={{ color: ThemeColors.text }}>your lobby</Text> to delete it
+                </Text>
               }
               {userLobbies?.map((lobby, i) => {
                 return this.lobbyComponent(lobby, i);
