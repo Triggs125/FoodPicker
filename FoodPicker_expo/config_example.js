@@ -11,6 +11,9 @@ export const firebaseConfig = {
   measurementId: ""
 };
 
+// ALGOLIA API Key from firebase
+export const ALGOLIA_SECRET = "";
+
 // API Key for google maps and nearby search
 export const GOOGLE_MAPS_API_KEY = "";
 
