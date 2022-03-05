@@ -1,0 +1,49 @@
+{
+  "expo": {
+    "name": "Food Picker",
+    "slug": "FoodPicker",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "updates": {
+      "fallbackToCacheTimeout": 0
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.driggs.foodpicker",
+      "googleServicesFile": "./GoogleService-Info.plist",
+      "buildNumber": "1.0.0",
+      "config": {
+        "googleMapsApiKey": "AIzaSyB1q8bz0Sr14VhwhwKaUiinzUHZmwtj9oo",
+        "googleMobileAdsAppId": "ca-app-pub-1885494348989912~6684907829"
+      }
+    },
+    "android": {
+      "package": "com.driggs.foodpicker",
+      "googleServicesFile": "./google-services.json",
+      "versionCode": 1,
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#FFFFFF"
+      },
+      "config": {
+        "googleMaps": {
+          "apiKey": "AIzaSyB1q8bz0Sr14VhwhwKaUiinzUHZmwtj9oo"
+        },
+        "googleMobileAdsAppId": "ca-app-pub-1885494348989912~7746708057"
+      }
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "description": "You and some friends can pick out some restaurants and get a suggestion that matches everyone's taste."
+  }
+}
