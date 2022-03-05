@@ -28,19 +28,19 @@ class LobbyCreator extends Component {
 
     this.state = {
       screenHeight,
-      lobbyPath: lobby.path,
-      lobbyName: lobby.name || "",
+      lobbyPath: lobby?.path,
+      lobbyName: lobby?.name || "",
       lobbyNameError: false,
       passwordFailures: [],
       passwordSchema,
-      passwordProtected: lobby.passwordProtected !== null ? lobby.passwordProtected : true,
+      passwordProtected: lobby?.passwordProtected !== undefined ? lobby?.passwordProtected : true,
       passwordText: "",
       passwordShowing: false,
-      passwordInLobby: lobby.passwordProtected || false,
-      location: lobby.location,
-      locationGeocodeAddress: lobby.locationGeocodeAddress,
+      passwordInLobby: lobby?.passwordProtected || false,
+      location: lobby?.location,
+      locationGeocodeAddress: lobby?.locationGeocodeAddress,
       locationError: false,
-      distance: lobby.distance,
+      distance: lobby?.distance,
       distanceError: false,
       loading: false,
     }
@@ -65,38 +65,42 @@ class LobbyCreator extends Component {
       active: true,
       host: this.props.user.uid,
       users: [this.props.user.uid],
-      name: lobbyName,
+      name: lobbyName.trim(),
       location,
       locationGeocodeAddress,
       distance,
       passwordProtected,
     };
-    if (passwordProtected && passwordText.length > 0) {
-      const hashedPassword = this.props.hashPassword(passwordText);
-      addDoc(collection(this.props.db, 'lobbies'), data) // create lobbies doc
-      .then((docRef) => {
-        addDoc(collection(this.props.db, 'lobby_passwords'), { // create passwords doc
-          passwordHash: hashedPassword,
-          lobbyId: docRef.id,
-          lobbyPath: docRef.path,
-        })
-        .then(() => {
-          this.setState({ loading: false });
-          this.props.navigation.goBack();
-          this.props.navigation.navigate('LobbyView', { lobbyRef: docRef });
-        });
-      })
-      .catch(err => {
-        this.setState({ loading: false });
-        console.error("LobbyCreator::createLobby::passwordHash", err);
-      });
-    } else {
-      addDoc(collection(this.props.db, 'lobbies'), data)
+    try {
+      if (passwordProtected) {
+        const hashedPassword = this.props.hashPassword(passwordText);
+        addDoc(collection(this.props.db, 'lobbies'), data) // create lobbies doc
         .then((docRef) => {
-          this.setState({ loading: false })
-          this.props.navigation.goBack();
-          this.props.navigation.navigate('LobbyView', { lobbyRef: docRef });
+          addDoc(collection(this.props.db, 'lobby_passwords'), { // create passwords doc
+            passwordHash: hashedPassword,
+            lobbyId: docRef.id,
+            lobbyPath: docRef.path,
+          })
+          .then(() => {
+            this.setState({ loading: false });
+            this.props.navigation.goBack();
+            this.props.navigation.navigate('LobbyView', { lobbyRef: docRef });
+          });
+        })
+        .catch(err => {
+          this.setState({ loading: false });
+          console.error("LobbyCreator::createLobby::passwordHash", err);
         });
+      } else {
+        addDoc(collection(this.props.db, 'lobbies'), data)
+          .then((docRef) => {
+            this.setState({ loading: false })
+            this.props.navigation.goBack();
+            this.props.navigation.navigate('LobbyView', { lobbyRef: docRef });
+          });
+      }
+    } catch(err) {
+      console.error("LobbyCreator::createLobby", err);
     }
   }
 
@@ -111,16 +115,14 @@ class LobbyCreator extends Component {
     this.setState({ loading: true })
     let data = {
       active: true,
-      host: this.props.user.uid,
-      users: arrayUnion(this.props.user.uid),
-      name: lobbyName,
+      name: lobbyName.trim(),
       location,
       locationGeocodeAddress,
       distance,
       passwordProtected,
     };
     
-    setDoc(lobbyData.ref, data)
+    setDoc(lobbyData.ref, data, { merge: true })
       .then(async () => {
         if (passwordProtected && !passwordInLobby) {
           const hashedPassword = this.props.hashPassword(passwordText);
@@ -331,7 +333,7 @@ class LobbyCreator extends Component {
                 raised
                 disabled={loading}
                 titleStyle={{ color: ThemeColors.text, fontSize: 24 }}
-                containerStyle={{ marginBottom: 20 }}
+                containerStyle={{ marginBottom: 10 }}
                 onPress={() => this.props.navigation.goBack()}
               />
             </View>

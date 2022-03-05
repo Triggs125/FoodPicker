@@ -9,6 +9,7 @@ import LoadingSpinner from "../LoadingSpinner";
 import ThemeColors from "../../assets/ThemeColors";
 import { TouchableOpacity } from "react-native-gesture-handler";
 import { Button } from "react-native-elements/dist/buttons/Button";
+import { PLACE_DETAILS_API_KEY } from "../../config";
 
 class PlaceDetails extends Component {
   constructor(props) {
@@ -40,7 +41,7 @@ class PlaceDetails extends Component {
   componentDidAppear() {
     const foodChoice = this.props.route?.params?.foodChoice;
     const url = "https://maps.googleapis.com/maps/api/place/details/json?place_id=" + foodChoice.id 
-    + '&key=' + 'AIzaSyABLEWTpgnHhloYv_JH301853XGEhVDpMc';;
+    + '&key=' + PLACE_DETAILS_API_KEY;;
 
     this.setState({ loading: true });
     fetch(url)
@@ -140,7 +141,7 @@ class PlaceDetails extends Component {
 
   render() {
     const { screenHeight, place } = this.state;
-    const GooglePicBaseUrl = `https://maps.googleapis.com/maps/api/place/photo?key=AIzaSyB1q8bz0Sr14VhwhwKaUiinzUHZmwtj9oo&maxwidth=400&photo_reference=`;
+    const GooglePicBaseUrl = `https://maps.googleapis.com/maps/api/place/photo?key=${PLACE_DETAILS_API_KEY}&maxwidth=400&photo_reference=`;
 
     const images = place?.photos?.map(photo => GooglePicBaseUrl + photo.photo_reference);
     const coordinate = {

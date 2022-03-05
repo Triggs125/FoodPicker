@@ -2,7 +2,7 @@ import { Component } from "react";
 import { Button, Icon, ListItem, Text, BottomSheet } from "react-native-elements";
 import * as Location from 'expo-location';
 import { View } from "react-native";
-import { googleApiKey } from "../../config";
+import { GOOGLE_MAPS_API_KEY, PLACE_DETAILS_API_KEY } from "../../config";
 import MapView, { Circle } from 'react-native-maps';
 import ThemeColors from "../../assets/ThemeColors";
 import Constants from 'expo-constants';
@@ -21,7 +21,7 @@ class LocationView extends Component {
       mapViewOpen: props.isHost === true && !props.locationGeocodeAddress,
       distanceChoicesOpen: false,
       locationSearchText: undefined,
-      loading: false,
+      loading: true,
     }
 
     this.setPlaceData = this.setPlaceData.bind(this);
@@ -73,7 +73,7 @@ class LocationView extends Component {
           console.log(`User ${this.props.user.uid} did not grant access to their location.`);
           return;
         }
-        Location.setGoogleApiKey(googleApiKey);
+        Location.setGoogleApiKey(PLACE_DETAILS_API_KEY);
         Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High })
           .then(location => {
             Location.reverseGeocodeAsync({ latitude: location.coords.latitude, longitude: location.coords.longitude })
@@ -135,7 +135,7 @@ class LocationView extends Component {
       <View style={{ borderWidth: 1.5, borderColor: 'lightgray', borderRadius: 10, overflow: 'hidden', backgroundColor: 'white', marginVertical: 10 }}>
         <View style={{ flexDirection: 'column', justifyContent: 'center' }}>
           <View>
-            <View style={{ flexDirection: 'row', justifyContent: 'flex-start', paddingLeft: 10 }}>
+            <View style={{ flexDirection: 'row', justifyContent: 'flex-start', paddingLeft: 15 }}>
               <Text style={{ fontSize: 20, paddingBottom: 2, textAlign: 'center', alignSelf: 'center' }}>
                 Distance:
               </Text>
@@ -188,9 +188,9 @@ class LocationView extends Component {
               )
             }
           </View>
-          <View style={{ marginBottom: 10 }}>
-            <View style={{ flexDirection: 'row', justifyContent: 'flex-start', paddingLeft: 10 }}>
-              <Text style={{ fontSize: 20, paddingBottom: 2, textAlign: 'center', alignSelf: 'center' }}>
+          <View style={{ marginBottom: 0 }}>
+            <View style={{ flexDirection: 'row', justifyContent: 'flex-start', paddingLeft: 15 }}>
+              <Text style={{ fontSize: 20, paddingBottom: 4, textAlign: 'center', alignSelf: 'center' }}>
                 Location:
               </Text>
               {
@@ -199,13 +199,13 @@ class LocationView extends Component {
                     title={location ? addressName : isHost ? 'Select a Location' : 'No Location Selected'}
                     titleStyle={{ textAlign: 'left', fontSize: 18, color: ThemeColors.text, marginRight: 10, overflow: 'scroll' }}
                     onPress={() => { !Constants.platform.web && this.setState({ mapViewOpen: !mapViewOpen }) }}
-                    buttonStyle={{ backgroundColor: 'transparent' }}
+                    buttonStyle={{ backgroundColor: 'transparent', paddingBottom: 10 }}
                     icon={!Constants.platform.web && location && <Icon name={mapViewOpen ? "angle-up" : "map-o"} type="font-awesome" />}
                     iconRight
                     containerStyle={{ alignSelf: 'center' }}
                   />
                 ) : (
-                  <View style={{ marginLeft: 10, alignContent: 'center' }}>
+                  <View style={{ marginLeft: 10, alignContent: 'center', marginTop: 5 }}>
                     <LoadingSpinner size="small" />
                   </View>
                 )
@@ -242,7 +242,7 @@ class LocationView extends Component {
                     <GooglePlacesAutocomplete
                       placeholder="Search Location"
                       onPress={(data, details = null) => this.setPlaceData(data, details)}
-                      query={{ key: "AIzaSyABLEWTpgnHhloYv_JH301853XGEhVDpMc", language: 'en' }}
+                      query={{ key: GOOGLE_MAPS_API_KEY, language: 'en' }}
                       fetchDetails={true}
                       listViewDisplayed={false}
                       keepResultsAfterBlur={true}

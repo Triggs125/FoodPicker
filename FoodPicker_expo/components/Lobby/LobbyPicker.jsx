@@ -41,38 +41,40 @@ class LobbyPicker extends Component {
 
   componentDidMount() {
     onAuthStateChanged(this.props.auth, () => {
-      if (this.state.userLobbiesUnsubscribe) {
-        this.state.userLobbiesUnsubscribe();
+      if (this.userLobbiesUnsubscribe) {
+        this.userLobbiesUnsubscribe();
       }
-      const userLobbiesUnsubscribe = this.userLobbiesUnsubscribe();
-      this.setState({ userLobbiesUnsubscribe });
+      this.userLobbiesSubscribe();
     });
     
-    if (this.props.user && !this.state.userLobbies) {
-      const userLobbiesUnsubscribe = this.userLobbiesUnsubscribe();
-      this.setState({ userLobbiesUnsubscribe });
+    if (this.props.user && !this.state.userLobbies && !this.userLobbiesUnsubscribe) {
+      this.userLobbiesSubscribe();
     }
 
     this.componentFocusUnsub = this.props.navigation.addListener('focus', () => {
       if (this.props.route?.params?.kickedFromLobby) {
         this.setState({ kickedMessage: true });
       }
+      if (!this.userLobbiesUnsubscribe) {
+        this.userLobbiesSubscribe();
+      }
     })
 
     this.componentBlurUnsub = this.props.navigation.addListener('blur', () => {
       this.setState({ loading: false });
-      this.state.userLobbiesUnsubscribe && this.state.userLobbiesUnsubscribe();
+      this.userLobbiesUnsubscribe && this.userLobbiesUnsubscribe();
+      this.userLobbiesUnsubscribe = null;
     });
   }
 
   componentWillUnmount() {
-    const { userLobbiesUnsubscribe } = this.state;
-    userLobbiesUnsubscribe && userLobbiesUnsubscribe();
+    this.userLobbiesUnsubscribe && this.userLobbiesUnsubscribe();
+    this.userLobbiesUnsubscribe = null;
   }
 
-  userLobbiesUnsubscribe() {
+  userLobbiesSubscribe() {
     const { user, db } = this.props;
-    return onSnapshot(
+    const userLobbiesUnsubscribe = onSnapshot(
       query(
         collection(db, 'lobbies'),
         where('users', 'array-contains', user.uid),
@@ -92,6 +94,7 @@ class LobbyPicker extends Component {
         this.setState({ userLobbiesUnsubscribe: userLobbiesUnsubscribe });
       }
     );
+    this.userLobbiesUnsubscribe = userLobbiesUnsubscribe;
   }
 
   getLobbyRef(lobby) {
@@ -411,8 +414,8 @@ class LobbyPicker extends Component {
 
 const styles = StyleSheet.create({
   container: {
-    paddingLeft: 20,
-    paddingRight: 20,
+    paddingLeft: 10,
+    paddingRight: 10,
     height: '100%',
     display: 'flex',
     justifyContent: 'flex-start',

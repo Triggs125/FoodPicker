@@ -52,12 +52,11 @@ class FoodChoices extends Component {
     for (let i = fullStars + halfStar; i < 5; i++) {
       stars.push(<Icon name="star-o" type="font-awesome" color='gold' size={18} />)
     }
-    
     return stars;
   }
 
   totalRatings(num) {
-    if (!num || isNaN(num)) return;
+    if (!num || isNaN(num)) return "";
     return `(${Math.abs(num) > 999 ? Math.sign(num)*((Math.abs(num)/1000).toFixed(1)) + 'k' : Math.sign(num)*Math.abs(num)})`;
   }
 
@@ -103,7 +102,7 @@ class FoodChoices extends Component {
     const { screenHeight } = this.state;
 
     return (
-      <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', marginHorizontal: -10, marginVertical: 5 }}>
+      <View key={'food-choices'} style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', marginHorizontal: -10, marginVertical: 5 }}>
         {
           foodChoices?.map((place, i) => {
             if (i < choicesPageIndex * 2 || i >= choicesPageIndex * 2 + 2) return;
@@ -124,7 +123,7 @@ class FoodChoices extends Component {
                   backgroundColor: 'white',
                   overflow: 'hidden',
                   elevation: isSelected || selectedFoodChoices.length >= maxNumberOfSelections ? 0 : 6,
-                  height: screenHeight / 2.9,
+                  height: screenHeight / 2 - 150,
                   alignSelf: 'center',
                 }}
                 wrapperStyle={{
@@ -132,8 +131,9 @@ class FoodChoices extends Component {
                 }}
                 contentContainerStyle={{ backgroundColor: isSelected ? ThemeColors.selection : 'white', paddingBottom: 10 }}
                 onPress={() => this.toggleSelection(place, isSelected)}
+                onLongPress={() => this.props.navigation.navigate("PlaceDetails", { foodChoice: place })}
               >
-                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <View key={'food-choice-info'} style={{ flexDirection: 'row', alignItems: 'center' }}>
                   <Text style={{ marginRight: 5, alignSelf: 'center', color: isSelected ? 'white' : 'black' }}>{place.rating}</Text>
                   <View style={{ flexDirection: 'row', marginRight: 5, alignSelf: 'center' }}>
                     {
@@ -142,7 +142,7 @@ class FoodChoices extends Component {
                   </View>
                   <Text style={{ alignSelf: 'center', marginRight: 5, color: isSelected ? 'white' : 'black' }}>{this.totalRatings(place.userRatingsTotal)}</Text>
                   {
-                    place.priceLevel && place.priceLevel > 0 && (
+                    place.priceLevel !== undefined && place.priceLevel > 0 && (
                       <>
                         <Icon
                           name="circle"
@@ -172,8 +172,10 @@ class FoodChoices extends Component {
                     }
                   </Text>
                 </View>
-                <Text style={{ textTransform: 'capitalize', marginRight: 5, color: isSelected ? 'white' : 'black' }}>{this.placeTypes(place.types)}</Text>
-                <Text style={{ color: isSelected ? 'white' : 'black' }}>{place.vicinity}</Text>
+                <Text key={'food-choic-types'} style={{ textTransform: 'capitalize', marginRight: 5, color: isSelected ? 'white' : 'black' }}>
+                  {this.placeTypes(place.types)}
+                </Text>
+                <Text key={'food-choice-vicinity'} style={{ color: isSelected ? 'white' : 'black' }}>{place.vicinity}</Text>
               </Tile>
             );
           })

@@ -1,4 +1,3 @@
-import { doc, getDoc, getDocs, query } from "firebase/firestore";
 import { Component } from "react";
 import { connectInfiniteHits } from "react-instantsearch-native";
 

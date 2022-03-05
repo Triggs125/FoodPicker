@@ -9,6 +9,7 @@ import FoodPageNavigation from "./FoodPageNavigation";
 import LoadingSpinner from "../LoadingSpinner";
 import Constants from 'expo-constants';
 import { getDoc, doc } from "firebase/firestore";
+import { PLACE_DETAILS_API_KEY, GOOGLE_MAPS_API_KEY } from "../../config";
 
 class MakeSelections extends Component {
   constructor(props) {
@@ -119,7 +120,7 @@ class MakeSelections extends Component {
       + '&radius=' + radius
       + '&type=' + types
       // + '&keyword=restaurant'
-      + '&key=' + 'AIzaSyABLEWTpgnHhloYv_JH301853XGEhVDpMc';
+      + '&key=' + GOOGLE_MAPS_API_KEY;
     
     this.setState({ loading: true });
 
@@ -128,8 +129,8 @@ class MakeSelections extends Component {
         return res.json();
       })
       .then(res => {
-        var places = []
-        const GooglePicBaseUrl = `https://maps.googleapis.com/maps/api/place/photo?key=AIzaSyB1q8bz0Sr14VhwhwKaUiinzUHZmwtj9oo&maxwidth=400&photo_reference=`;
+        var places = [];
+        const GooglePicBaseUrl = `https://maps.googleapis.com/maps/api/place/photo?key=${PLACE_DETAILS_API_KEY}&maxwidth=400&photo_reference=`;
         for(let googlePlace of res.results) {
           var place = {};
           const coordinate = {
@@ -162,6 +163,7 @@ class MakeSelections extends Component {
       })
       .catch(error => {
         console.error("FoodChoices::fetchNearestPlacesFromGoogle", error);
+        this.setChoices([]);
       })
       .finally(() => {
         this.setState({ loading: false })
@@ -211,6 +213,7 @@ class MakeSelections extends Component {
               justifyContent: 'space-between',
             }}
           >
+            <Text ellipsizeMode="tail" style={{ margin: 10, textAlign: 'center', fontSize: 24, fontWeight: 'normal' }}>{addressName}</Text>
             {/* <FoodProfile
               {...this.props}
               selectedFoodProfile={this.setSelectedFoodProfile}
@@ -223,42 +226,41 @@ class MakeSelections extends Component {
               loading ? (
                 <LoadingSpinner />
               ) : (
-                <>
-                  <FoodChoices
-                    {...this.props}
-                    googleSearchText={googleSearchText}
-                    removeFoodChoice={this.removeFoodChoice}
-                    addFoodChoice={this.addFoodChoice}
-                    choicesPageIndex={choicesPageIndex}
-                    setChoices={this.setChoices}
-                    nextPageToken={nextPageToken}
-                    foodChoices={foodChoices}
-                    selectedFoodChoices={selectedFoodChoices}
-                    lobbyData={lobbyData}
-                    maxNumberOfSelections={maxNumberOfSelections}
-                  />
-                  <View style={{ justifyContent: 'space-between', flexDirection: 'row', marginTop: -8, paddingHorizontal: 10 }}>
-                    <Text>{addressName}</Text>
-                    <Text>Page {choicesPageIndex}</Text>
-                  </View>
-                </>
+                <FoodChoices
+                  {...this.props}
+                  googleSearchText={googleSearchText}
+                  removeFoodChoice={this.removeFoodChoice}
+                  addFoodChoice={this.addFoodChoice}
+                  choicesPageIndex={choicesPageIndex}
+                  setChoices={this.setChoices}
+                  nextPageToken={nextPageToken}
+                  foodChoices={foodChoices}
+                  selectedFoodChoices={selectedFoodChoices}
+                  lobbyData={lobbyData}
+                  maxNumberOfSelections={maxNumberOfSelections}
+                />
               )
             }
-            <FoodPageNavigation
-              {...this.props}
-              nextChoicesPage={this.nextChoicesPage}
-              lastChoicesPage={this.lastChoicesPage}
-              choicesPageIndex={choicesPageIndex}
-              clearSelections={this.clearSelections}
-              selectedFoodChoices={selectedFoodChoices}
-              lobbyData={lobbyData}
-              user={user}
-              maxNumberOfSelections={maxNumberOfSelections}
-            />
+            <View>
+              <View style={{ justifyContent: 'space-between', flexDirection: 'row', marginTop: -8, paddingHorizontal: 15 }}>
+                <Text>{''}</Text>
+                <Text>Page {choicesPageIndex}</Text>
+              </View>
+              <FoodPageNavigation
+                {...this.props}
+                nextChoicesPage={this.nextChoicesPage}
+                lastChoicesPage={this.lastChoicesPage}
+                choicesPageIndex={choicesPageIndex}
+                clearSelections={this.clearSelections}
+                selectedFoodChoices={selectedFoodChoices}
+                lobbyData={lobbyData}
+                user={user}
+                maxNumberOfSelections={maxNumberOfSelections}
+              />
+            </View>
           </View>
         )}
       </HeaderHeightContext.Consumer>
-      
     )
   }
 }
