@@ -26,13 +26,13 @@ import UserSelections from './components/Selections/UserSelections';
 import PlaceDetails from './components/Selections/PlaceDetails';
 import LobbyCreator from './components/Lobby/LobbyCreator';
 import LoadingSpinner from './components/LoadingSpinner';
+import AccountEdit from './components/Account/AccountEdit';
+import ForgotPassword from './components/Account/ForgotPassword';
 
 import {
   AdMobBanner,
   setTestDeviceIDAsync,
 } from 'expo-ads-admob';
-import AccountEdit from './components/Account/AccountEdit';
-import ForgotPassword from './components/Account/ForgotPassword';
 
 const Stack = createStackNavigator();
 
@@ -44,7 +44,7 @@ const prefix = Linking.createURL('/');
 
 export default function App() {
   const [userColors, setUserColors] = useState({});
-  const [loading, setLoading] = useState(true); 
+  const [loading, setLoading] = useState(true);
   const [user, setUser] = useState();
   const [lobbyData, setLobbyData] = useState();
   const [userLobbies, setUserLobbies] = useState();
@@ -147,8 +147,10 @@ export default function App() {
     })
   });
 
-  return loading ? (
-    <LoadingSpinner />
+  return loading === true ? (
+    <View>
+      <LoadingSpinner />
+    </View>
   ) : (
     <ThemeProvider theme={themeProviderColors}>
       <UserColors.Provider value={{ userColors, setUserColors }}>

@@ -130,7 +130,7 @@ class MakeSelections extends Component {
       })
       .then(res => {
         var places = []
-        const GooglePicBaseUrl = `https://maps.googleapis.com/maps/api/place/photo?key=AIzaSyB1q8bz0Sr14VhwhwKaUiinzUHZmwtj9oo&maxwidth=400&photo_reference=`;
+        const GooglePicBaseUrl = `https://maps.googleapis.com/maps/api/place/photo?key=${PLACE_DETAILS_API_KEY}&maxwidth=400&photo_reference=`;
         for(let googlePlace of res.results) {
           var place = {};
           const coordinate = {
