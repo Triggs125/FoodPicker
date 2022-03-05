@@ -40,11 +40,11 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-const prefix = Linking.createURL('/');
+// const prefix = Linking.createURL('/');
 
 export default function App() {
   const [userColors, setUserColors] = useState({});
-  const [loading, setLoading] = useState(true); 
+  const [loading, setLoading] = useState(false); 
   const [user, setUser] = useState();
   const [lobbyData, setLobbyData] = useState();
   const [userLobbies, setUserLobbies] = useState();
@@ -97,9 +97,9 @@ export default function App() {
     }
   }
 
-  const linking = {
-    prefixes: [prefix, 'https://my-food-picker.web.app/'],
-  };
+  // const linking = {
+  //   prefixes: [prefix, 'https://my-food-picker.web.app/'],
+  // };
 
   SplashScreen.preventAutoHideAsync();
   SplashScreen.hideAsync();
@@ -121,13 +121,11 @@ export default function App() {
 
   // console.log("Ad Unit", adUnitId);
 
-  __DEV__
-  ? setTestDeviceIDAsync('EMULATOR')
+  setTestDeviceIDAsync('EMULATOR')
     .then(() => {
       console.log("Test Device ID set");
       setLoading(false);
     })
-  : setLoading(false);
 
   onAuthStateChanged(auth, (authUser) => {
     if (!authUser) {
@@ -155,7 +153,7 @@ export default function App() {
         <NavigationContainer
           ref={navigationRef}
           theme={navColors}
-          linking={linking}
+          // linking={linking}
         >
           <Stack.Navigator
             initialRouteName="Account"
