@@ -1,11 +1,11 @@
 import { Component } from "react";
-import { Dimensions, SafeAreaView, StyleSheet, View } from 'react-native';
+import { Dimensions, KeyboardAvoidingViewBase, Keyboard, SafeAreaView, StyleSheet, View } from 'react-native';
 import Constants from 'expo-constants';
 import { Input, Button, Text, Icon, Overlay } from 'react-native-elements';
 import { GetUserFromDB } from '../Utils/firebase';
 import { signInWithEmailAndPassword, signOut } from 'firebase/auth';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { ScrollView, TouchableOpacity } from 'react-native-gesture-handler';
+import { ScrollView, TouchableOpacity, TouchableWithoutFeedback } from 'react-native-gesture-handler';
 import isEmail from 'validator/lib/isEmail';
 import { HeaderHeightContext } from '@react-navigation/elements';
 import ThemeColors from "../../assets/ThemeColors";
@@ -96,12 +96,33 @@ class Account extends Component {
   }
 
   userNotLoggedIn(headerHeight) {
-    const { emailAddressText, passwordText, emailAddressError, passwordShowing, loginError, generalError } = this.state;
+    const {
+      emailAddressText, passwordText, emailAddressError, passwordShowing, loginError, generalError
+    } = this.state;
 
     return (
       <View style={{ ...styles.container, height: screenHeight - headerHeight }}>
-        <Text style={{ textAlign: 'center', fontSize: 35 }}>Log In</Text>
         <View>
+          <Text style={{ textAlign: 'center', fontSize: 35 }}>Log In</Text>
+          <Text
+            style={{
+              textAlign: 'center',
+              fontSize: 16,
+              color: ThemeColors.text,
+              marginBottom: 10,
+              height: 20,
+              flexWrap: 'wrap'
+            }}
+          >
+            {
+              loginError &&
+              "Email or Password Incorrect."
+            }
+            {
+              generalError &&
+              "Error logging in. Please try again or contact support."
+            }
+          </Text>
           <Input
             placeholder="Email Address"
             textContentType="emailAddress"
@@ -143,71 +164,53 @@ class Account extends Component {
             inputStyle={styles.inputStyle}
             onChangeText={(text) => this.setState({ passwordText: text })}
           />
-          <Text
-            style={{
-              textAlign: 'center',
-              fontSize: 16,
-              color: 'red',
-              marginBottom: 10,
-              height: 20,
-              flexWrap: 'wrap'
-            }}
-          >
-            {
-              loginError &&
-              "Email or Password Incorrect."
-            }
-            {
-              generalError &&
-              "Error logging in. Please try again or contact support."
-            }
+          <View style={{ paddingHorizontal: 10 }}>
             <Button
               title="Forgot Password"
               type='clear'
               titleStyle={{
                 textAlign: 'center',
                 fontSize: 20,
-                marginTop: 10,
-                marginBottom: 10,
+                marginTop: 5,
+                marginBottom: 5,
                 color: ThemeColors.text,
               }}
+              containerStyle={{ marginBottom: -10 }}
               onPress={() => this.props.navigation.navigate('ForgotPassword')}
             />
-          </Text>
-        </View>
-        <View style={{ paddingHorizontal: 10 }}>
-          <Button
-            title="Sign in with FoodPicker"
-            raised={{}}
-            icon={{
-              name: 'home',
-              type: 'font-awesome',
-              color: 'white',
-              marginRight: 8
-            }}
-            titleStyle={{ fontWeight: '500', fontSize: 22 }}
-            buttonStyle={{
-              backgroundColor: '#E54040',
-              borderColor: 'transparent',
-              borderWidth: 0,
-              height: 60,
-            }}
-            containerStyle={{
-              width: '100%',
-              alignSelf: 'center',
-              marginTop: 10,
-              overflow: 'visible'
-            }}
-            onPress={() => { this.signIn(); }}
-          />
+            <Button
+              title="Sign in with FoodPicker"
+              raised={{}}
+              icon={{
+                name: 'home',
+                type: 'font-awesome',
+                color: 'white',
+                marginRight: 8
+              }}
+              titleStyle={{ fontWeight: '500', fontSize: 22 }}
+              buttonStyle={{
+                backgroundColor: '#E54040',
+                borderColor: 'transparent',
+                borderWidth: 0,
+                height: 60,
+              }}
+              containerStyle={{
+                width: '100%',
+                alignSelf: 'center',
+                marginTop: 10,
+                overflow: 'visible'
+              }}
+              onPress={() => { this.signIn(); }}
+            />
+          </View>
         </View>
         {/* <SignInWithGoogle /> */}
         <Text
           style={{
             textAlign: 'center',
             fontSize: 20,
-            marginTop: 40,
-            marginBottom: 40,
+            // marginTop: 40,
+            // marginBottom: 40,
             color: 'grey',
           }}
         >
