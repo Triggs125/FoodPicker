@@ -2,7 +2,7 @@ import { Component } from "react";
 import { Button, Icon, ListItem, Text, BottomSheet } from "react-native-elements";
 import * as Location from 'expo-location';
 import { View } from "react-native";
-import { googleApiKey } from "../../config";
+import { GOOGLE_MAPS_API_KEY, PLACE_DETAILS_API_KEY } from "../../config";
 import MapView, { Circle } from 'react-native-maps';
 import ThemeColors from "../../assets/ThemeColors";
 import Constants from 'expo-constants';
@@ -242,7 +242,7 @@ class LocationView extends Component {
                     <GooglePlacesAutocomplete
                       placeholder="Search Location"
                       onPress={(data, details = null) => this.setPlaceData(data, details)}
-                      query={{ key: "AIzaSyABLEWTpgnHhloYv_JH301853XGEhVDpMc", language: 'en' }}
+                      query={{ key: GOOGLE_MAPS_API_KEY, language: 'en' }}
                       fetchDetails={true}
                       listViewDisplayed={false}
                       keepResultsAfterBlur={true}

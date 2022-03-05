@@ -9,6 +9,7 @@ import FoodPageNavigation from "./FoodPageNavigation";
 import LoadingSpinner from "../LoadingSpinner";
 import Constants from 'expo-constants';
 import { getDoc, doc } from "firebase/firestore";
+import { PLACE_DETAILS_API_KEY, GOOGLE_MAPS_API_KEY } from "../../config";
 
 class MakeSelections extends Component {
   constructor(props) {
@@ -119,7 +120,7 @@ class MakeSelections extends Component {
       + '&radius=' + radius
       + '&type=' + types
       // + '&keyword=restaurant'
-      + '&key=' + 'AIzaSyABLEWTpgnHhloYv_JH301853XGEhVDpMc';
+      + '&key=' + GOOGLE_MAPS_API_KEY;
     
     this.setState({ loading: true });
 

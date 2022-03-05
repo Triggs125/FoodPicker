@@ -37,9 +37,11 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
+// const prefix = Linking.createURL('/');
+
 export default function App() {
   const [userColors, setUserColors] = useState({});
-  const [loading, setLoading] = useState(true); 
+  const [loading, setLoading] = useState(false); 
   const [user, setUser] = useState();
   const [lobbyData, setLobbyData] = useState();
   const [userLobbies, setUserLobbies] = useState();
@@ -92,6 +94,10 @@ export default function App() {
     }
   }
 
+  // const linking = {
+  //   prefixes: [prefix, 'https://my-food-picker.web.app/'],
+  // };
+
   SplashScreen.preventAutoHideAsync();
   SplashScreen.hideAsync();
   const navigationRef = React.useRef();
@@ -128,6 +134,7 @@ export default function App() {
         <NavigationContainer
           ref={navigationRef}
           theme={navColors}
+          // linking={linking}
         >
           <Stack.Navigator
             initialRouteName="Account"
