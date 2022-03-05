@@ -61,6 +61,7 @@ class FoodPageNavigation extends Component {
         />
         <View>
           <Button
+            type='clear'
             title={`${this.props.selectedFoodChoices.length} / ${this.props.maxNumberOfSelections}`}
             titleStyle={{ marginLeft: 0, marginTop: 11, fontSize: 20, color: 'white', paddingRight: 7, fontWeight: 'bold' }}
             icon={

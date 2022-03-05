@@ -9,6 +9,7 @@ import { AddUserToDB } from '../Utils/firebase';
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ScrollView } from 'react-native-gesture-handler';
+import ThemeColors from '../../assets/ThemeColors';
 
 class CreateAccount extends Component {
   constructor(props) {
@@ -98,7 +99,7 @@ class CreateAccount extends Component {
 
     return (
       <SafeAreaView style={{ paddingTop: 10 }}>
-        <ScrollView style={styles.container}>
+        <ScrollView>
           <Input
             placeholder="First Name *"
             textContentType="name"
@@ -164,7 +165,7 @@ class CreateAccount extends Component {
             leftIcon={
               <Icon
                 name='key'
-                type='font-awesome'
+                type='font-awesome-5'
                 iconStyle={styles.inputIcon}
               />
             }
@@ -202,41 +203,44 @@ class CreateAccount extends Component {
               Email address already in use.
             </Text>
           }
-          <Button
-            title="Create Account"
-            raised
-            icon={{
-              name: 'user-plus',
-              type: 'font-awesome',
-              color: 'white',
-              marginRight: 8
-            }}
-            titleStyle={{ fontWeight: '500', fontSize: 22 }}
-            buttonStyle={{
-              backgroundColor: '#E54040',
-              borderColor: 'transparent',
-              borderWidth: 0,
-              height: 60,
-            }}
-            containerStyle={{
-              width: '100%',
-              alignSelf: 'center',
-              marginTop: 0,
-              overflow: 'visible'
-            }}
-            onPress={this.createAccount}
-          />
-          <Button
-            title="Sign In"
-            titleStyle={{
-              textAlign: 'center',
-              fontSize: 20,
-              marginTop: 10,
-              marginBottom: 10,
-              color: '#0645AD',
-            }}
-            onPress={() => this.props.navigation.navigate('Account')}
-          />
+          <View style={{ marginHorizontal: 10 }}>
+            <Button
+              title="Create Account"
+              raised
+              icon={{
+                name: 'user-plus',
+                type: 'font-awesome',
+                color: 'white',
+                marginRight: 8
+              }}
+              titleStyle={{ fontWeight: '500', fontSize: 22 }}
+              buttonStyle={{
+                backgroundColor: '#E54040',
+                borderColor: 'transparent',
+                borderWidth: 0,
+                height: 60,
+              }}
+              containerStyle={{
+                width: '100%',
+                alignSelf: 'center',
+                marginTop: 0,
+                overflow: 'visible'
+              }}
+              onPress={this.createAccount}
+            />
+            <Button
+              title="Sign In"
+              type='clear'
+              titleStyle={{
+                textAlign: 'center',
+                fontSize: 20,
+                marginTop: 10,
+                marginBottom: 10,
+                color: ThemeColors.text,
+              }}
+              onPress={() => this.props.navigation.navigate('Account')}
+            />
+          </View>
           {/* <Text
             style={{
               textAlign: 'center',
@@ -256,11 +260,6 @@ class CreateAccount extends Component {
 }
 
 const styles = {
-  container: {
-    paddingLeft: 20,
-    paddingRight: 20,
-    height: '100%',
-  },
   inputIcon: {
     paddingLeft: 10,
     color: 'black',

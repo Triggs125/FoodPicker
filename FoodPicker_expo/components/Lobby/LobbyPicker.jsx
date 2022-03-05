@@ -329,6 +329,7 @@ class LobbyPicker extends Component {
                 this.setState({ overlayLoading: false });
               })
             }}
+            loadingStyle={{ paddingVertical: 5 }}
             titleStyle={{ fontSize: 24 }}
             buttonStyle={{ backgroundColor: ThemeColors.button }}
           />

@@ -60,9 +60,9 @@ class UserSelections extends Component {
         loading: false,
       });
     },
-      err => {
-        console.error("UserSelections::componentAppeared", err);
-      });
+    err => {
+      console.error("UserSelections::componentAppeared", err);
+    });
   }
 
   componentWillUnmount() {
@@ -84,6 +84,7 @@ class UserSelections extends Component {
       if (usersReady.includes(user.uid)) {
         usersReady = usersReady.filter(uid => uid !== user.uid);
         await setDoc(lobbyData.ref, { usersReady: usersReady }, { merge: true });
+        this.props.navigation.navigate('LobbyView', { lobbyRef: lobbyData.ref });
       }
     }
   }
@@ -136,6 +137,7 @@ class UserSelections extends Component {
     if (types.length === 0) return typeNames;
     for (let i = 0; i < types.length; i++) {
       const type = types[i];
+      if (i >= 4) break;
       if (type.toLowerCase() === "restaurant") {
         typeNames += " " + type.replace('_', ' ') + ",";
         break;
@@ -264,17 +266,26 @@ class UserSelections extends Component {
                               onLongPress={() => !isDisabled && this.removeFoodChoice(foodChoice)}
                               onPress={() => this.props.navigation.navigate("PlaceDetails", { foodChoice })}
                               key={'food-choice-' + i}
+                              containerStyle={{ marginHorizontal: -5 }}
                             >
                               <Card
                                 containerStyle={{
                                   elevation: 6,
-                                  maxHeight: (screenHeight - headerHeight) / (2.3 + selectedFoodChoices.data.selections.length),
+                                  height: (screenHeight - headerHeight) / (2.3 + selectedFoodChoices.data.selections.length),
+                                  // minHeight: 99,
                                   marginBottom: 10,
                                   marginTop: 0,
+                                  marginHorizontal: 10,
                                   paddingTop: 10
                                 }}
                               >
-                                <Card.Title style={{ fontSize: 18, textAlign: 'left', marginBottom: 0 }}>{foodChoice.name}</Card.Title>
+                                <Card.Title
+                                  style={{ fontSize: 18, textAlign: 'left', marginBottom: 0 }}
+                                  ellipsizeMode='tail'
+                                  numberOfLines={1}
+                                >
+                                  {foodChoice.name}
+                                </Card.Title>
                                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                                   <Text style={{ marginRight: 5, alignSelf: 'center' }}>{foodChoice.rating}</Text>
                                   <View style={{ flexDirection: 'row', marginRight: 5, alignSelf: 'center' }}>
@@ -308,7 +319,13 @@ class UserSelections extends Component {
                                     }
                                   </Text>
                                 </View>
-                                <Text style={{ textTransform: 'capitalize', marginRight: 5 }}>{this.placeTypes(foodChoice.types)}</Text>
+                                <Text
+                                  style={{ textTransform: 'capitalize', marginRight: 5 }}
+                                  ellipsizeMode='tail'
+                                  numberOfLines={1}
+                                >
+                                  {this.placeTypes(foodChoice.types)}
+                                </Text>
                               </Card>
                             </TouchableOpacity>
                           );
