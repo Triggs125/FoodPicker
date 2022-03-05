@@ -7,12 +7,13 @@ import { createStackNavigator } from '@react-navigation/stack';
 import * as SplashScreen from 'expo-splash-screen';
 import { initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore';
+import { collection, getDocs, getFirestore, query, where } from 'firebase/firestore';
 import { firebaseConfig } from './config';
 import ThemeColors from './assets/ThemeColors';
 import { UserColors } from './ColorContext';
 import { onAuthStateChanged } from "firebase/auth";
 import Constants from 'expo-constants';
+import * as Linking from 'expo-linking';
 
 import Settings from './components/Settings';
 import Account from './components/Account/Account';
@@ -30,6 +31,8 @@ import {
   AdMobBanner,
   setTestDeviceIDAsync,
 } from 'expo-ads-admob';
+import AccountEdit from './components/Account/AccountEdit';
+import ForgotPassword from './components/Account/ForgotPassword';
 
 const Stack = createStackNavigator();
 
@@ -37,11 +40,11 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-// const prefix = Linking.createURL('/');
+const prefix = Linking.createURL('/');
 
 export default function App() {
   const [userColors, setUserColors] = useState({});
-  const [loading, setLoading] = useState(false); 
+  const [loading, setLoading] = useState(true); 
   const [user, setUser] = useState();
   const [lobbyData, setLobbyData] = useState();
   const [userLobbies, setUserLobbies] = useState();
@@ -94,9 +97,9 @@ export default function App() {
     }
   }
 
-  // const linking = {
-  //   prefixes: [prefix, 'https://my-food-picker.web.app/'],
-  // };
+  const linking = {
+    prefixes: [prefix, 'https://my-food-picker.web.app/'],
+  };
 
   SplashScreen.preventAutoHideAsync();
   SplashScreen.hideAsync();
@@ -114,16 +117,34 @@ export default function App() {
       ? "ca-app-pub-1885494348989912/3971948721"
       : "ca-app-pub-1885494348989912/2737353131";
 
+  // const adUnitId = "ca-app-pub-1885494348989912/3971948721";
+
   // console.log("Ad Unit", adUnitId);
 
-  setTestDeviceIDAsync('EMULATOR')
+  __DEV__
+  ? setTestDeviceIDAsync('EMULATOR')
     .then(() => {
       console.log("Test Device ID set");
       setLoading(false);
     })
+  : setLoading(false);
 
   onAuthStateChanged(auth, (authUser) => {
-    setUser(authUser);
+    if (!authUser) {
+      setUser(null);
+      return;
+    }
+    getDocs(query(collection(db, 'users'), where('uid', '==', authUser.uid)))
+    .then(docs => {
+      const user = docs.docs[0].data();
+      authUser.firstName = user.firstName;
+      authUser.lastName = user.lastName;
+      setUser(authUser);
+    })
+    .catch(err => {
+      console.log("App:onAuthStateChanged", err);
+      setUser(authUser)
+    })
   });
 
   return loading ? (
@@ -134,7 +155,7 @@ export default function App() {
         <NavigationContainer
           ref={navigationRef}
           theme={navColors}
-          // linking={linking}
+          linking={linking}
         >
           <Stack.Navigator
             initialRouteName="Account"
@@ -165,14 +186,26 @@ export default function App() {
             </Stack.Screen>
             <Stack.Screen
               name="CreateAccount"
-              options={{ headerTitle: 'Create an Account' }}
+              options={{ headerTitle: 'Create an Account', headerRight: () => {<></>} }}
             > 
               {props => <CreateAccount {...props} user={user} auth={auth} db={db} />}
+            </Stack.Screen>
+            <Stack.Screen
+              name="ForgotPassword"
+              options={{ headerTitle: 'Reset Password', headerRight: () => {<></>} }}
+            >
+              {props => <ForgotPassword {...props} user={user} auth={auth} db={db} />}
             </Stack.Screen>
             {
               // Cannot see these screens until the user is logged in
               user && (
                 <>
+                  <Stack.Screen
+                    name="AccountEdit"
+                    options={{ headerTitle: 'Create an Account' }}
+                  > 
+                    {props => <AccountEdit {...props} setUser={setUser} user={user} auth={auth} db={db} />}
+                  </Stack.Screen>
                   <Stack.Screen
                     name="Settings"
                     options={{ headerTitle: "Settings" }}
@@ -232,17 +265,19 @@ export default function App() {
             }
           </Stack.Navigator>
         </NavigationContainer>
-        <AdMobBanner
-          adUnitId={adUnitId}
-          bannerSize={'fullBanner'}
-          servePersonalizedAds={false}
-          onAdViewDidReceiveAd={() => {
-            console.log('Advert loaded');
-          }}
-          onDidFailToReceiveAdWithError={(error) => {
-            console.error('Advert failed to load: ', error);
-          }}
-        />
+        <View>
+          <AdMobBanner
+            adUnitId={adUnitId}
+            bannerSize={'fullBanner'}
+            servePersonalizedAds={false}
+            onAdViewDidReceiveAd={() => {
+              console.log('Advert loaded');
+            }}
+            onDidFailToReceiveAdWithError={(error) => {
+              console.error('Advert failed to load: ', error);
+            }}
+          />
+        </View>
       </UserColors.Provider>
     </ThemeProvider>
   )
