@@ -3,7 +3,6 @@
     "name": "Food Picker",
     "slug": "FoodPicker",
     "version": "1.0.0",
-    "scheme": "foodpicker",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "splash": {

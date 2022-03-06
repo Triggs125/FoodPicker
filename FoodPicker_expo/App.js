@@ -1,7 +1,7 @@
 import 'react-native-gesture-handler';
 import React, { useState } from 'react';
-import { StyleSheet, View, Image, LogBox } from 'react-native';
-import { Button, Icon, Text } from 'react-native-elements';
+import { View, LogBox } from 'react-native';
+import { Button } from 'react-native-elements';
 import { NavigationContainer, ThemeProvider } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import * as SplashScreen from 'expo-splash-screen';
@@ -13,7 +13,6 @@ import ThemeColors from './assets/ThemeColors';
 import { UserColors } from './ColorContext';
 import { onAuthStateChanged } from "firebase/auth";
 import Constants from 'expo-constants';
-import * as Linking from 'expo-linking';
 
 import Settings from './components/Settings';
 import Account from './components/Account/Account';
@@ -39,8 +38,6 @@ const Stack = createStackNavigator();
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
-
-const prefix = Linking.createURL('/');
 
 export default function App() {
   const [userColors, setUserColors] = useState({});
@@ -97,12 +94,8 @@ export default function App() {
     }
   }
 
-  const linking = {
-    prefixes: [prefix, 'https://my-food-picker.web.app/'],
-  };
-
   SplashScreen.preventAutoHideAsync();
-  SplashScreen.hideAsync();
+  setTimeout(SplashScreen.hideAsync, 2000);
   const navigationRef = React.useRef();
   
   // Ignore log notification by message
@@ -157,7 +150,6 @@ export default function App() {
         <NavigationContainer
           ref={navigationRef}
           theme={navColors}
-          linking={linking}
         >
           <Stack.Navigator
             initialRouteName="Account"

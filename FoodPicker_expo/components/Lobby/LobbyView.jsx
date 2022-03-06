@@ -1,7 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { collection, doc, getDocs, onSnapshot, query, setDoc, where } from "firebase/firestore";
 import { Component } from "react";
-import { Dimensions, StyleSheet, View } from "react-native";
+import { Dimensions, Share, StyleSheet, View } from "react-native";
 import { Card, Icon, Input, Text, Button, Overlay } from 'react-native-elements';
 import Constants from 'expo-constants';
 import { HeaderHeightContext } from '@react-navigation/elements';
@@ -83,8 +83,21 @@ class LobbyView extends Component {
     return lobbyUsers?.filter(user => lobbyData.usersReady?.includes(user.uid)).length;
   }
 
-  copyShareLink() {
-
+  async share() {
+    const { lobbyData } = this.state;
+    const url = 'https://my-food-picker.web.app/' + "LobbyPicker/" + lobbyData.ref.id;
+    Share.share({
+      url: url,
+      message: "Help me choose what to eat by joining this Food Picker Lobby: " + url,
+      title: "Join this Food Picker Lobby!",
+    }, {
+      subject: "Food Picker Lobby",
+      dialogTitle: "Food Picker Lobby",
+      tintColor: ThemeColors.text,
+    })
+    .catch(err => {
+      console.error("LobbyView:share", err);
+    });
   }
 
   userTitle(user, userReady, userIsHost) {
@@ -112,12 +125,7 @@ class LobbyView extends Component {
                 containerStyle={{ marginRight: 5, alignSelf: 'center' }}
               />
             ) : (
-              <Icon
-                name="person-add"
-                size={20}
-                color='transparent'
-                containerStyle={{ marginRight: 5, alignSelf: 'center' }}
-              />
+              <Text>{''}</Text>
             )
           )
         }
@@ -311,6 +319,74 @@ class LobbyView extends Component {
     this.props.navigation.navigate("PlaceDetails", { foodChoice: this.state.lobbyData.finalDecision, finalSelection: true });
   }
 
+  removeUserOverlay() {
+    const {
+      removeUserOverlay, removeUserOverlayUser, removeUserOverlayLoading, removeUserOverlayError,
+    } = this.state;
+    return (
+      <Overlay
+        isVisible={removeUserOverlay}
+        overlayStyle={{ width: ScreenWidth - 20, borderRadius: 10 }}
+        onBackdropPress={() => {
+          this.setState({
+            removeUserOverlay: false,
+            removeUserOverlayUser: null,
+            removeUserOverlayLoading: false,
+          });
+        }}
+      >
+        <Text
+          style={{ fontSize: 24, textAlign: 'center', marginTop: 10, marginBottom: 20 }}
+        >
+          {`${removeUserOverlayUser?.firstName}${removeUserOverlayUser?.lastName ?? " " + removeUserOverlayUser?.lastName}`}
+        </Text>
+        {
+          removeUserOverlayError && (
+            <Text>Error removing the user. Please try again or contact support.</Text>
+          )
+        }
+        <Button
+          title="Remove User"
+          loading={removeUserOverlayLoading}
+          titleStyle={{ fontSize: 24 }}
+          buttonStyle={{ backgroundColor: ThemeColors.button }}
+          onPress={() => {
+            this.setState({ removeUserOverlayLoading: true });
+            this.removeUser(removeUserOverlayUser)
+              .then(() => {
+                this.setState({
+                  removeUserOverlay: false,
+                  removeUserOverlayUser: null,
+                  removeUserOverlayLoading: false,
+                  removeUserOverlayError: false,
+                });
+              })
+              .catch(err => {
+                console.log("LobbyView::RemoveUserOverlay", err);
+                this.setState({
+                  removeUserOverlayLoading: false,
+                  removeUserOverlayError: true,
+                });
+              });
+          }}
+        />
+        <Button
+          title="Cancel"
+          type="clear"
+          disabled={removeUserOverlayLoading}
+          titleStyle={{ color: ThemeColors.text, fontSize: 24 }}
+          onPress={() => {
+            this.setState({
+              removeUserOverlay: false,
+              removeUserOverlayUser: null,
+              overlayPasswordLoading: false,
+            });
+          }}
+        />
+      </Overlay>
+    );
+  }
+
   render() {
     const {
       lobbyData, lobbyName, lobbyUsers, isHost, screenHeight, loading,
@@ -334,65 +410,7 @@ class LobbyView extends Component {
               justifyContent: 'space-between',
             }}
           >
-            <Overlay
-              isVisible={removeUserOverlay}
-              overlayStyle={{ width: ScreenWidth - 20, borderRadius: 10 }}
-              onBackdropPress={() => {
-                this.setState({
-                  removeUserOverlay: false,
-                  removeUserOverlayUser: null,
-                  removeUserOverlayLoading: false,
-                });
-              }}
-            >
-              <Text
-                style={{ fontSize: 24, textAlign: 'center', marginTop: 10, marginBottom: 20 }}
-              >
-                {`${removeUserOverlayUser?.firstName}${removeUserOverlayUser?.lastName ?? " " + removeUserOverlayUser?.lastName}`}
-              </Text>
-              {
-                removeUserOverlayError && (
-                  <Text>Error removing the user. Please try again or contact support.</Text>
-                )
-              }
-              <Button
-                title="Remove User"
-                loading={removeUserOverlayLoading}
-                titleStyle={{ fontSize: 24 }}
-                buttonStyle={{ backgroundColor: ThemeColors.button }}
-                onPress={() => {
-                  this.setState({ removeUserOverlayLoading: true });
-                  this.removeUser(removeUserOverlayUser)
-                    .then(() => {
-                      this.setState({
-                        removeUserOverlay: false,
-                        removeUserOverlayUser: null,
-                        removeUserOverlayLoading: false,
-                      });
-                    })
-                    .catch(err => {
-                      console.log("LobbyView::RemoveUserOverlay", err);
-                      this.setState({
-                        removeUserOverlayLoading: false,
-                        removeUserOverlayError: true,
-                      });
-                    });
-                }}
-              />
-              <Button
-                title="Cancel"
-                type="clear"
-                disabled={removeUserOverlayLoading}
-                titleStyle={{ color: ThemeColors.text, fontSize: 24 }}
-                onPress={() => {
-                  this.setState({
-                    removeUserOverlay: false,
-                    removeUserOverlayUser: null,
-                    overlayPasswordLoading: false,
-                  });
-                }}
-              />
-            </Overlay>
+            {this.removeUserOverlay()}
             <View style={{ display: 'flex', flexDirection: "row", justifyContent: 'space-between', width: ScreenWidth - 20 }}>
               <Button
                 buttonStyle={{ backgroundColor: 'transparent' }}
@@ -406,8 +424,9 @@ class LobbyView extends Component {
                 {lobbyName}
               </Text>
               <Button
-                buttonStyle={{ backgroundColor: 'transparent' }}
-                onPress={this.copyShareLink()}
+                type='clear'
+                titleStyle={{ color: ThemeColors.text }}
+                onPress={() => this.share()}
                 icon={<Icon name="share" type="font-awesome" />}
               />
             </View>
@@ -423,7 +442,7 @@ class LobbyView extends Component {
                 isHost={isHost}
                 loading={loading}
               />
-              <View style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', marginBottom: 10 }}>
+              <View style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', marginBottom: 10, marginTop: -10 }}>
                 <Card containerStyle={{ marginHorizontal: 0, borderRadius: 10, borderColor: 'lightgray' }}>
                   <Card.Title>People Ready: {this.numberOfUsersReady()} of {lobbyUsers?.length}</Card.Title>
                   <Card.Divider />
@@ -435,8 +454,23 @@ class LobbyView extends Component {
                     lobbyUsers &&
                     lobbyUsers
                     .sort((userA, userB) => {
-                      if (userA.uid === lobbyData.host) return -1;
-                      if (userB.uid === lobbyData.host) return 1;
+                      const userAReady = lobbyData.usersReady?.includes(userA.uid);
+                      const userBReady = lobbyData.usersReady?.includes(userB.uid);
+                      if (
+                        userB.uid === lobbyData.host 
+                        || userBReady === true
+                      ) {
+                        return 1;
+                      }
+                      
+                      if (
+                        userA.uid === lobbyData.host
+                        || userA.uid === this.props.user.uid
+                        || userAReady === true
+                      ) {
+                        return -1;
+                      }
+
                       return 0;
                     })
                     .map((user, i) => {
