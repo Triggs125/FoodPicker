@@ -73,7 +73,7 @@ class LocationView extends Component {
           console.log(`User ${this.props.user.uid} did not grant access to their location.`);
           return;
         }
-        Location.setGoogleApiKey(googleApiKey);
+        Location.setGoogleApiKey(GOOGLE_MAPS_API_KEY);
         Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High })
           .then(location => {
             Location.reverseGeocodeAsync({ latitude: location.coords.latitude, longitude: location.coords.longitude })
@@ -189,7 +189,7 @@ class LocationView extends Component {
             }
           </View>
           <View>
-            <View style={{ flexDirection: 'row', justifyContent: 'flex-start', paddingLeft: 10 }}>
+            <View style={{ flexDirection: 'row', justifyContent: 'flex-start', paddingLeft: 10, marginBottom: loading ? 5 : 0 }}>
               <Text style={{ fontSize: 20, paddingBottom: 2, textAlign: 'center', alignSelf: 'center' }}>
                 Location:
               </Text>
@@ -205,7 +205,7 @@ class LocationView extends Component {
                     containerStyle={{ alignSelf: 'center' }}
                   />
                 ) : (
-                  <View style={{ marginLeft: 10, alignContent: 'center' }}>
+                  <View style={{ marginLeft: 10, alignContent: 'center', marginTop: 5 }}>
                     <LoadingSpinner size="small" />
                   </View>
                 )

@@ -40,7 +40,7 @@
     "web": {
       "favicon": "./assets/favicon.png"
     },
-    "description": "Join your friends in picking a restaurant to go to!",
+    "description": "Join your friends in choosing a restaurant together!",
     "githubUrl": "https://github.com/Triggs125/FoodPicker"
   }
 }

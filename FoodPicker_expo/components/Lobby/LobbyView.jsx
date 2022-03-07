@@ -42,10 +42,17 @@ class LobbyView extends Component {
     if (this.props.route?.params.lobbyRef) {
       this.componentDidAppear();
     }
-    this.props.navigation.addListener('blur', () => {
-      this.componentFocusUnsub && this.componentFocusUnsub();
-      this.state.unsubscribeLobby && this.state.unsubscribeLobby();
-    })
+    if (this.navState === undefined) {
+      this.navState = this.props.navigation.addListener('state', (e) => {
+        const index = e.data.state.index;
+        // 2 - 4 encompass all the lobby view pages
+        // Only unsub to the lobby view if the lobby pages are out of focus
+        if (![2,3,4].includes(index)) {
+          this.componentFocusUnsub && this.componentFocusUnsub();
+          this.state.unsubscribeLobby && this.state.unsubscribeLobby();
+        }
+      });
+    }
   }
 
   componentDidAppear() {
@@ -76,6 +83,9 @@ class LobbyView extends Component {
   componentWillUnmount() {
     this.state.unsubscribeLobby && this.state.unsubscribeLobby();
     this.componentFocusUnsub && this.componentFocusUnsub();
+    if (this.navState !== undefined) {
+      this.navState();
+    }
   }
 
   numberOfUsersReady() {
@@ -85,10 +95,9 @@ class LobbyView extends Component {
 
   async share() {
     const { lobbyData } = this.state;
-    const url = 'https://my-food-picker.web.app/' + "LobbyPicker/" + lobbyData.ref.id;
+    const lobbyName = "lobbies/" + lobbyData.ref.id;
     Share.share({
-      url: url,
-      message: "Help me choose what to eat by joining this Food Picker Lobby: " + url,
+      message: "Help me choose which restaurant to choose. After logging into the app, paste this into the search box: " + lobbyName,
       title: "Join this Food Picker Lobby!",
     }, {
       subject: "Food Picker Lobby",
@@ -395,7 +404,7 @@ class LobbyView extends Component {
 
     const { user } = this.props;
 
-    if (!loading && !lobbyData.users.includes(user.uid)) {
+    if (!loading && !lobbyData.users?.includes(user.uid)) {
       this.props.navigation.navigate("LobbyPicker", { kickedFromLobby: true });
     }
 
@@ -508,7 +517,7 @@ class LobbyView extends Component {
                   isHost && lobbyData.finalDecision && (
                     <Button
                       title="Reset Decision"
-                      disabled={!lobbyData.location || !lobbyData.usersReady || lobbyData.usersReady.length === 0}
+                      disabled={!lobbyData.finalDecision}
                       raised
                       titleStyle={{ color: ThemeColors.text, fontWeight: 'bold', fontSize: 25 }}
                       buttonStyle={{ backgroundColor: 'white', borderColor: 'lightgray', borderWidth: 0.5 }}
@@ -519,7 +528,7 @@ class LobbyView extends Component {
                 }
                 <Button
                   title={isHost && !lobbyData.finalDecision ? "Calculate Final Decision" : "Final Decision"}
-                  disabled={isHost ? !lobbyData.location || !lobbyData.usersReady || lobbyData.usersReady.length === 0 : !lobbyData.finalDecision}
+                  disabled={isHost ? !lobbyData.finalDecision && lobbyData.usersReady?.length === 0 : !lobbyData.finalDecision}
                   raised
                   titleStyle={{ color: 'white', fontWeight: 'bold', fontSize: 26 }}
                   buttonStyle={{ backgroundColor: ThemeColors.text }}
