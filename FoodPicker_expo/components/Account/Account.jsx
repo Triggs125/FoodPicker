@@ -166,19 +166,6 @@ class Account extends Component {
           />
           <View style={{ paddingHorizontal: 10 }}>
             <Button
-              title="Forgot Password"
-              type='clear'
-              titleStyle={{
-                textAlign: 'center',
-                fontSize: 20,
-                marginTop: 5,
-                marginBottom: 5,
-                color: ThemeColors.text,
-              }}
-              containerStyle={{ marginBottom: -10 }}
-              onPress={() => this.props.navigation.navigate('ForgotPassword')}
-            />
-            <Button
               title="Sign in with FoodPicker"
               raised={{}}
               icon={{
@@ -201,6 +188,19 @@ class Account extends Component {
                 overflow: 'visible'
               }}
               onPress={() => { this.signIn(); }}
+            />
+            <Button
+              title="Forgot Password"
+              type='clear'
+              titleStyle={{
+                textAlign: 'center',
+                fontSize: 20,
+                marginTop: 5,
+                marginBottom: 5,
+                color: ThemeColors.text,
+              }}
+              containerStyle={{ marginBottom: -10 }}
+              onPress={() => this.props.navigation.navigate('ForgotPassword')}
             />
           </View>
         </View>
@@ -263,7 +263,7 @@ class Account extends Component {
 
 const offset = Constants.platform.android ? 35 : 0;
 const adBannerHeight = 60;
-const screenHeight = Dimensions.get('screen').height - offset - adBannerHeight;
+const screenHeight = Dimensions.get('screen').height - offset;
 
 const styles = StyleSheet.create({
   container: {

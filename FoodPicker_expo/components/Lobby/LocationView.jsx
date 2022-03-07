@@ -188,7 +188,7 @@ class LocationView extends Component {
               )
             }
           </View>
-          <View style={{ marginBottom: 10 }}>
+          <View>
             <View style={{ flexDirection: 'row', justifyContent: 'flex-start', paddingLeft: 10 }}>
               <Text style={{ fontSize: 20, paddingBottom: 2, textAlign: 'center', alignSelf: 'center' }}>
                 Location:

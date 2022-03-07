@@ -28,10 +28,10 @@ import LoadingSpinner from './components/LoadingSpinner';
 import AccountEdit from './components/Account/AccountEdit';
 import ForgotPassword from './components/Account/ForgotPassword';
 
-import {
-  AdMobBanner,
-  setTestDeviceIDAsync,
-} from 'expo-ads-admob';
+// import {
+//   AdMobBanner,
+//   setTestDeviceIDAsync,
+// } from 'expo-ads-admob';
 
 const Stack = createStackNavigator();
 
@@ -41,7 +41,7 @@ const db = getFirestore(app);
 
 export default function App() {
   const [userColors, setUserColors] = useState({});
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [user, setUser] = useState();
   const [lobbyData, setLobbyData] = useState();
   const [userLobbies, setUserLobbies] = useState();
@@ -114,13 +114,13 @@ export default function App() {
 
   // console.log("Ad Unit", adUnitId);
 
-  __DEV__
-  ? setTestDeviceIDAsync('EMULATOR')
-    .then(() => {
-      console.log("Test Device ID set");
-      setLoading(false);
-    })
-  : setLoading(false);
+  // __DEV__
+  // ? setTestDeviceIDAsync('EMULATOR')
+  //   .then(() => {
+  //     console.log("Test Device ID set");
+  //     setLoading(false);
+  //   })
+  // : setLoading(false);
 
   onAuthStateChanged(auth, (authUser) => {
     if (!authUser) {
@@ -259,7 +259,7 @@ export default function App() {
             }
           </Stack.Navigator>
         </NavigationContainer>
-        <View>
+        {/* <View>
           <AdMobBanner
             adUnitId={adUnitId}
             bannerSize={'fullBanner'}
@@ -271,7 +271,7 @@ export default function App() {
               console.error('Advert failed to load: ', error);
             }}
           />
-        </View>
+        </View> */}
       </UserColors.Provider>
     </ThemeProvider>
   )

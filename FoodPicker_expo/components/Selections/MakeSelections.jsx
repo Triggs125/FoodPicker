@@ -14,10 +14,10 @@ import { PLACE_DETAILS_API_KEY, GOOGLE_MAPS_API_KEY } from "../../config";
 class MakeSelections extends Component {
   constructor(props) {
     super(props);
-    const offset = Constants.platform.android ? 35 : 0;
+    const offset = Constants.platform.android ? 35 : -10;
     const adBannerHeight = 60;
-    const screenHeight = Dimensions.get('screen').height - offset - adBannerHeight;
-    const maxNumberOfSelections = 5
+    const screenHeight = Dimensions.get('screen').height - offset;
+    const maxNumberOfSelections = 5;
 
     this.state = {
       screenHeight: screenHeight,

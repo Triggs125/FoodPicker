@@ -17,7 +17,7 @@ class PlaceDetails extends Component {
 
     const offset = Constants.platform.android ? 35 : 0;
     const adBannerHeight = 60;
-    const screenHeight = Dimensions.get('screen').height - offset - adBannerHeight;
+    const screenHeight = Dimensions.get('screen').height - offset;
 
     this.state = {
       loading: true,

@@ -15,7 +15,7 @@ class UserSelections extends Component {
     super(props);
     const offset = Constants.platform.android ? 48 : 0;
     const adBannerHeight = 60;
-    const screenHeight = Dimensions.get('screen').height - offset - adBannerHeight;
+    const screenHeight = Dimensions.get('screen').height - offset;
 
     this.state = {
       screenHeight: screenHeight,

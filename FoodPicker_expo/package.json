@@ -1,5 +1,5 @@
 {
-  "name": "foodpicker_expo",
+  "name": "foodpicker",
   "version": "1.0.0",
   "main": "node_modules/expo/AppEntry.js",
   "scripts": {
@@ -23,7 +23,6 @@
     "@react-navigation/stack": "^6.0.11",
     "algoliasearch": "^4.12.1",
     "expo": "~44.0.0",
-    "expo-ads-admob": "~12.0.0",
     "expo-location": "~14.0.1",
     "expo-splash-screen": "~0.14.1",
     "expo-status-bar": "~1.2.0",
