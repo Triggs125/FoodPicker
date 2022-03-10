@@ -8,6 +8,7 @@ import { HeaderHeightContext } from '@react-navigation/elements';
 import { Tile, Text, Icon, Button, Card } from 'react-native-elements';
 import { getDistance } from 'geolib';
 import ThemeColors from "../../assets/ThemeColors";
+import { ScreenWidth } from "react-native-elements/dist/helpers";
 
 
 class UserSelections extends Component {
@@ -185,7 +186,7 @@ class UserSelections extends Component {
               ) : (
                 <View>
                   <Text
-                    style={{ textAlign: 'center', marginTop: 5, marginBottom: 10, fontWeight: '600', fontSize: 30, fontWeight: 'normal' }}
+                    style={{ textAlign: 'center', alignSelf: 'center', marginTop: 5, marginBottom: 10, fontWeight: '600', fontSize: 30, fontWeight: 'normal', width: ScreenWidth - 40 }}
                     ellipsizeMode='tail'
                     numberOfLines={1}
                   >
