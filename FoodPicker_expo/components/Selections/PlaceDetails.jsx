@@ -15,7 +15,7 @@ class PlaceDetails extends Component {
   constructor(props) {
     super(props);
 
-    const offset = Constants.platform.android ? 35 : 0;
+    const offset = Constants.platform.android ? 35 : 20;
     const adBannerHeight = 60;
     const screenHeight = Dimensions.get('screen').height - offset;
 
@@ -211,6 +211,18 @@ class PlaceDetails extends Component {
                           `${this.distanceAway(coordinate)} mi`
                         }
                       </Text>
+                      <Icon
+                        name="circle"
+                        type="font-awesome"
+                        size={5}
+                        color='#333'
+                        style={{ alignSelf: 'center', marginRight: 5 }}
+                      />
+                      <Text style={{ color: place.opennow ? 'green' : ThemeColors.text }}>
+                        {
+                          place.opennow ? "Open" : "Closed"
+                        }
+                      </Text>
                     </View>
                     <Text 
                       style={{
@@ -231,7 +243,16 @@ class PlaceDetails extends Component {
                   </View>
                 </View>
               ) : (
-                <LoadingSpinner />
+                <View
+                  style={{
+                    height: screenHeight - headerHeight,
+                    justifyContent: 'space-between'
+                  }}
+                >
+                  <Text>{''}</Text>
+                  <LoadingSpinner />
+                  <Text>{''}</Text>
+                </View>
               )
             }
             

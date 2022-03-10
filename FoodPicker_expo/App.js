@@ -45,6 +45,7 @@ export default function App() {
   const [user, setUser] = useState();
   const [lobbyData, setLobbyData] = useState();
   const [userLobbies, setUserLobbies] = useState();
+  const [kickedFromLobby, setKickedFromLobby] = useState(false);
 
   const navColors = {
     colors: {
@@ -100,15 +101,16 @@ export default function App() {
   
   // Ignore log notification by message
   LogBox.ignoreLogs([
-    'AsyncStorage',
-    'Setting a timer for a long period of time'
+    'AsyncStorage has been',
+    'Setting a timer for a long period of time',
+    'Using Math.random'
   ]);
 
-  const adUnitId = !Constants.platform.web && __DEV__
-    ? "ca-app-pub-3940256099942544/6300978111"
-    : Constants.platform.android
-      ? "ca-app-pub-1885494348989912/3971948721"
-      : "ca-app-pub-1885494348989912/2737353131";
+  // const adUnitId = !Constants.platform.web && __DEV__
+  //   ? "ca-app-pub-3940256099942544/6300978111"
+  //   : Constants.platform.android
+  //     ? "ca-app-pub-1885494348989912/3971948721"
+  //     : "ca-app-pub-1885494348989912/2737353131";
 
   // const adUnitId = "ca-app-pub-1885494348989912/3971948721";
 
@@ -129,13 +131,17 @@ export default function App() {
     }
     getDocs(query(collection(db, 'users'), where('uid', '==', authUser.uid)))
     .then(docs => {
-      const user = docs.docs[0].data();
-      authUser.firstName = user.firstName;
-      authUser.lastName = user.lastName;
+      const user = docs?.docs[0]?.data();
+      if (!user) {
+        setUser(authUser);
+        return;
+      }
+      authUser.firstName = user?.firstName;
+      authUser.lastName = user?.lastName;
       setUser(authUser);
     })
     .catch(err => {
-      console.log("App:onAuthStateChanged", err);
+      console.error("App:onAuthStateChanged", err);
       setUser(authUser)
     })
   });
@@ -210,7 +216,7 @@ export default function App() {
                     name="LobbyPicker"
                     options={{ headerTitle: "Join or Start a Lobby" }}
                   >
-                    {props => <LobbyPicker {...props} userLobbies={userLobbies} user={user} auth={auth} db={db} />}
+                    {props => <LobbyPicker {...props} userLobbies={userLobbies} user={user} auth={auth} db={db} kickedFromLobby={kickedFromLobby} setKickedFromLobby={setKickedFromLobby} />}
                   </Stack.Screen>
                   <Stack.Screen
                     name="LobbyCreator"
@@ -222,7 +228,7 @@ export default function App() {
                     name="LobbyView"
                     options={{ headerTitle: "Lobby" }}
                   >
-                    {props => <LobbyView {...props} user={user} auth={auth} db={db} setLobbyData={setLobbyData} />}
+                    {props => <LobbyView {...props} user={user} auth={auth} db={db} setLobbyData={setLobbyData} setKickedFromLobby={setKickedFromLobby} />}
                   </Stack.Screen>
                   <Stack.Screen
                     name="MakeSelections"

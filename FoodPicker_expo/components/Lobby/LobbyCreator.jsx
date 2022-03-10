@@ -317,11 +317,12 @@ class LobbyCreator extends Component {
                 distanceError={distanceError}
               />
             </ScrollView>
-            <View>
+            <View style={{ marginTop: 5 }}>
               <Button
                 title={lobbyData ? "Update Lobby" : "Create Lobby"}
                 titleStyle={{ fontSize: 24 }}
                 loading={loading}
+                loadingStyle={{ paddingVertical: 7 }}
                 containerStyle={{ marginBottom: 10 }}
                 buttonStyle={{ backgroundColor: ThemeColors.button }}
                 raised

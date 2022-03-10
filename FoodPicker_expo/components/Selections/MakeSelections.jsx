@@ -1,6 +1,6 @@
 import { Component } from "react";
 import { Dimensions, ScrollView, View } from "react-native";
-import { Card, Icon, Input, Text } from 'react-native-elements';
+import { Card, Icon, Input, Switch, Text } from 'react-native-elements';
 import { HeaderHeightContext } from '@react-navigation/elements';
 // import FoodProfile from "../FoodProfile/FoodProfile";
 // import GoogleFoodSearch from "./GoogleFoodSearch";
@@ -10,14 +10,17 @@ import LoadingSpinner from "../LoadingSpinner";
 import Constants from 'expo-constants';
 import { getDoc, doc } from "firebase/firestore";
 import { PLACE_DETAILS_API_KEY, GOOGLE_MAPS_API_KEY } from "../../config";
+import ThemeColors from "../../assets/ThemeColors";
 
 class MakeSelections extends Component {
   constructor(props) {
     super(props);
-    const offset = Constants.platform.android ? 35 : -10;
+    const offset = Constants.platform.android ? 35 : 0;
     const adBannerHeight = 60;
     const screenHeight = Dimensions.get('screen').height - offset;
     const maxNumberOfSelections = 5;
+
+    this.openNowFilter = true;
 
     this.state = {
       screenHeight: screenHeight,
@@ -26,7 +29,6 @@ class MakeSelections extends Component {
       selectedFoodChoices: [],
       foodChoices: [],
       choicesPageIndex: 0,
-      nextPageToken: undefined,
       tokenPage: -1,
       loading: true,
       maxNumberOfSelections: maxNumberOfSelections,
@@ -115,12 +117,16 @@ class MakeSelections extends Component {
     const longitude = lobbyData.location.longitude;
     const radius = Math.round(lobbyData.distance * 1609.344);
     const types = 'restaurant';
-    const url = 'https://maps.googleapis.com/maps/api/place/nearbysearch/json?'
+    let url = 'https://maps.googleapis.com/maps/api/place/nearbysearch/json?'
       + 'location=' + latitude + ',' + longitude
       + '&radius=' + radius
       + '&type=' + types
       // + '&keyword=restaurant'
       + '&key=' + GOOGLE_MAPS_API_KEY;
+
+    if (this.openNowFilter) {
+      url = url + '&opennow=true';
+    }
     
     this.setState({ loading: true });
 
@@ -129,7 +135,10 @@ class MakeSelections extends Component {
         return res.json();
       })
       .then(res => {
-        var places = []
+        if (res.status !== "OK") {
+          throw new Error(res.status);
+        }
+        var places = [];
         const GooglePicBaseUrl = `https://maps.googleapis.com/maps/api/place/photo?key=${PLACE_DETAILS_API_KEY}&maxwidth=400&photo_reference=`;
         for(let googlePlace of res.results) {
           var place = {};
@@ -155,7 +164,7 @@ class MakeSelections extends Component {
           place['vicinity'] = googlePlace.vicinity;
           place['userRatingsTotal'] = googlePlace.user_ratings_total ?? 0;
           place['photos'] = gallery;
-          place['opennow'] = googlePlace.opening_hours?.open_now ?? false
+          place['opennow'] = googlePlace.opening_hours?.open_now ?? false;
 
           places.push(place);
         }
@@ -165,7 +174,7 @@ class MakeSelections extends Component {
         console.error("FoodChoices::fetchNearestPlacesFromGoogle", error);
       })
       .finally(() => {
-        this.setState({ loading: false })
+        this.setState({ loading: false });
       });
   }
 
@@ -193,13 +202,7 @@ class MakeSelections extends Component {
       maxNumberOfSelections,
     } = this.state;
 
-    const { user } = this.props;
-
-    const { lobbyData } = this.props;
-
-    const addressName = lobbyData.locationGeocodeAddress &&
-      lobbyData.locationGeocodeAddress[0]?.city + ", " + 
-      lobbyData.locationGeocodeAddress[0]?.region;
+    const { user, lobbyData } = this.props;
 
     return (
       <HeaderHeightContext.Consumer>
@@ -208,7 +211,6 @@ class MakeSelections extends Component {
             key={'make-selections-view'}
             style={{
               height: screenHeight - headerHeight,
-              paddingHorizontal: 10,
               justifyContent: 'space-between',
             }}
           >
@@ -222,9 +224,44 @@ class MakeSelections extends Component {
             /> */}
             {
               loading ? (
-                <LoadingSpinner />
+                <>
+                  <Text>{''}</Text>
+                  <Text>{''}</Text>
+                  <LoadingSpinner />
+                  <Text>{''}</Text>
+                </>
               ) : (
                 <>
+                  <View
+                    style={{
+                      flexDirection: 'row',
+                      backgroundColor: 'white',
+                      borderRadius: 10,
+                      paddingHorizontal: 10,
+                      borderWidth: 1.5,
+                      borderColor: 'lightgray',
+                      marginTop: 10,
+                      marginHorizontal: 10,
+                      paddingVertical: 5
+                    }}
+                  >
+                    <Switch
+                      value={this.openNowFilter}
+                      color={ThemeColors.button}
+                      onValueChange={(value) => {
+                        this.openNowFilter = value;
+                        this.setState({ choicesPageIndex: 0 });
+                        this.fetchNearestPlacesFromGoogle();
+                      }}
+                    />
+                    <Text
+                      style={{ marginLeft: 10, alignSelf: 'center', fontSize: 22 }}
+                      ellipsizeMode='tail'
+                      numberOfLines={1}
+                    >
+                      Restaurants only open now?
+                    </Text>
+                  </View>
                   <FoodChoices
                     {...this.props}
                     googleSearchText={googleSearchText}
@@ -238,10 +275,6 @@ class MakeSelections extends Component {
                     lobbyData={lobbyData}
                     maxNumberOfSelections={maxNumberOfSelections}
                   />
-                  <View style={{ justifyContent: 'space-between', flexDirection: 'row', marginTop: -8, paddingHorizontal: 10 }}>
-                    <Text>{addressName}</Text>
-                    <Text>Page {choicesPageIndex}</Text>
-                  </View>
                 </>
               )
             }

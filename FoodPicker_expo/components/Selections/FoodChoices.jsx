@@ -6,6 +6,7 @@ import Constants from 'expo-constants';
 import { getDistance } from 'geolib';
 import ThemeColors from "../../assets/ThemeColors";
 import { HeaderHeightContext } from "@react-navigation/elements";
+import LoadingSpinner from "../LoadingSpinner";
 
 
 const propTypes = {
@@ -19,7 +20,7 @@ class FoodChoices extends Component {
   constructor(props) {
     super(props);
 
-    const offset = Constants.platform.android ? 35 : 0;
+    const offset = Constants.platform.android ? 35 : 20;
     const adBannerHeight = 60;
     const screenHeight = Dimensions.get('screen').height - offset;
 
@@ -118,6 +119,7 @@ class FoodChoices extends Component {
                     title={place.name}
                     titleStyle={{ textAlign: 'left', fontSize: 18, fontWeight: 'bold', marginTop: -5, color: isSelected ? 'white' : 'black' }}
                     imageSrc={{ uri: place.photos[0] }}
+                    imageContainerStyle={{ backgroundColor: 'red' }}
                     containerStyle={{
                       marginBottom: 10,
                       borderRadius: 10,
@@ -126,7 +128,7 @@ class FoodChoices extends Component {
                       backgroundColor: 'white',
                       overflow: 'hidden',
                       elevation: isSelected || selectedFoodChoices.length >= maxNumberOfSelections ? 0 : 6,
-                      height: (screenHeight - headerHeight - 150) / 2,
+                      height: (screenHeight - headerHeight - 220) / 2,
                       alignSelf: 'center',
                     }}
                     wrapperStyle={{
@@ -172,6 +174,18 @@ class FoodChoices extends Component {
                       <Text style={{ flexDirection: 'row', marginRight: 5, alignSelf: 'center', color: isSelected ? 'white' : 'black' }}>
                         {
                           `${this.distanceAway(place.coordinate)} mi`
+                        }
+                      </Text>
+                      <Icon
+                        name="circle"
+                        type="font-awesome"
+                        size={5}
+                        color={isSelected ? 'white' : 'black'}
+                        style={{ alignSelf: 'center', marginRight: 5 }}
+                      />
+                      <Text style={{ color: isSelected ? 'white' : place.opennow ? 'green' : ThemeColors.text }}>
+                        {
+                          place.opennow ? "Open" : "Closed"
                         }
                       </Text>
                     </View>

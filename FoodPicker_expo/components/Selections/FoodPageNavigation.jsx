@@ -36,69 +36,81 @@ class FoodPageNavigation extends Component {
   }
   
   render() {
+    const { lobbyData, choicesPageIndex } = this.props;
+
+    const addressName = lobbyData.locationGeocodeAddress &&
+      lobbyData.locationGeocodeAddress[0]?.city + ", " + 
+      lobbyData.locationGeocodeAddress[0]?.region;
+
     return (
-      <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 10, paddingHorizontal: 5 }}>
-        <Button
-          title="Last Page"
-          disabled={this.props.choicesPageIndex <= 0}
-          onPress={this.props.lastChoicesPage}
-          titleStyle={{ fontSize: 20, color: ThemeColors.text }}
-          buttonStyle={{
-            backgroundColor: 'white',
-            paddingLeft: 20,
-            paddingRight: 12,
-            borderRadius: 10,
-            borderTopLeftRadius: 25,
-            borderBottomLeftRadius: 25,
-          }}
-          raised
-          containerStyle={{
-            borderRadius: 10,
-            borderTopLeftRadius: 25,
-            borderBottomLeftRadius: 25,
-            marginVertical: 20
-          }}
-        />
-        <View>
-          <Button
-            type='clear'
-            title={`${this.props.selectedFoodChoices.length} / ${this.props.maxNumberOfSelections}`}
-            titleStyle={{ marginLeft: 0, marginTop: 11, fontSize: 20, color: 'white', paddingRight: 7, fontWeight: 'bold' }}
-            icon={
-              <Icon
-                name="shopping-bag"
-                type="foundation"
-                color='#333'
-                size={60}
-                containerStyle={{ marginHorizontal: 0, paddingLeft: 0, paddingRight: 11, marginRight: -58 }}
-              />
-            }
-            buttonStyle={{ padding: 0, backgroundColor: 'transparent', marginRight: 15 }}
-            containerStyle={{ paddingRight: 0, marginLeft: 15 }}
-            onPress={() => this.userSelectionPage()}
-          />
-          <Text style={{ marginTop: -7, fontWeight: 'bold', textAlign: 'center' }}>Finish</Text>
+      <View>
+        <View style={{ justifyContent: 'space-between', flexDirection: 'row', marginTop: -8, paddingHorizontal: 10 }}>
+          <Text>{addressName}</Text>
+          <Text>Page {choicesPageIndex + 1}</Text>
         </View>
-        <Button
-          title="Next Page"
-          onPress={this.props.nextChoicesPage}
-          titleStyle={{ fontSize: 20, color: 'white' }}
-          buttonStyle={{ 
-            backgroundColor: ThemeColors.text,
-            paddingRight: 20,
-            paddingLeft: 12,
-            borderRadius: 10,
-            borderTopRightRadius: 25,
-            borderBottomRightRadius: 25,
-          }}
-          raised
-          containerStyle={{
-            borderRadius: 10,
-            borderTopRightRadius: 25,
-            borderBottomRightRadius: 25,
-            marginVertical: 20
-          }}
-        />
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 10, paddingHorizontal: 5 }}>
+          <Button
+            title={"Last Page"}
+            // disabled={this.props.choicesPageIndex <= 0}
+            onPress={this.props.lastChoicesPage}
+            titleStyle={{ fontSize: 20, color: ThemeColors.text }}
+            buttonStyle={{
+              backgroundColor: 'white',
+              paddingLeft: 20,
+              paddingRight: 12,
+              borderRadius: 10,
+              borderTopLeftRadius: 25,
+              borderBottomLeftRadius: 25,
+            }}
+            raised
+            containerStyle={{
+              borderRadius: 10,
+              borderTopLeftRadius: 25,
+              borderBottomLeftRadius: 25,
+              marginVertical: 20
+            }}
+          />
+          <View>
+            <Button
+              type='clear'
+              title={`${this.props.selectedFoodChoices.length} / ${this.props.maxNumberOfSelections}`}
+              titleStyle={{ marginLeft: 0, marginTop: 11, fontSize: 20, color: 'white', paddingRight: 7, fontWeight: 'bold' }}
+              icon={
+                <Icon
+                  name="shopping-bag"
+                  type="foundation"
+                  color='#333'
+                  size={60}
+                  containerStyle={{ marginHorizontal: 0, paddingLeft: 0, paddingRight: 11, marginRight: -58 }}
+                />
+              }
+              buttonStyle={{ padding: 0, backgroundColor: 'transparent', marginRight: 15 }}
+              containerStyle={{ paddingRight: 0, marginLeft: 15 }}
+              onPress={() => this.userSelectionPage()}
+            />
+            <Text style={{ marginTop: -7, fontWeight: 'bold', textAlign: 'center' }}>Finish</Text>
+          </View>
+          <Button
+            title="Next Page"
+            onPress={this.props.nextChoicesPage}
+            titleStyle={{ fontSize: 20, color: 'white' }}
+            buttonStyle={{ 
+              backgroundColor: ThemeColors.text,
+              paddingRight: 20,
+              paddingLeft: 12,
+              borderRadius: 10,
+              borderTopRightRadius: 25,
+              borderBottomRightRadius: 25,
+            }}
+            raised
+            containerStyle={{
+              borderRadius: 10,
+              borderTopRightRadius: 25,
+              borderBottomRightRadius: 25,
+              marginVertical: 20
+            }}
+          />
+        </View>
       </View>
     )
   }

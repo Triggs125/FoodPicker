@@ -13,7 +13,7 @@ import ThemeColors from "../../assets/ThemeColors";
 class UserSelections extends Component {
   constructor(props) {
     super(props);
-    const offset = Constants.platform.android ? 48 : 0;
+    const offset = Constants.platform.android ? 48 : 20;
     const adBannerHeight = 60;
     const screenHeight = Dimensions.get('screen').height - offset;
 
@@ -184,36 +184,46 @@ class UserSelections extends Component {
                 </>
               ) : (
                 <View>
-                  <Text style={{ textAlign: 'center', marginTop: 5, marginBottom: 10, fontWeight: '600', fontSize: 30, fontWeight: 'normal' }}>{userDisplayName}</Text>
+                  <Text
+                    style={{ textAlign: 'center', marginTop: 5, marginBottom: 10, fontWeight: '600', fontSize: 30, fontWeight: 'normal' }}
+                    ellipsizeMode='tail'
+                    numberOfLines={1}
+                  >
+                    {userDisplayName}
+                  </Text>
+                  <Text style={{ fontSize: 10, paddingLeft: 12 }}>**Select Card to see the place details</Text>
+                  {
+                    !isDisabled &&
+                    <Text style={{ fontSize: 10, paddingLeft: 12, paddingBottom: 3 }}>**Hold down to delete</Text>
+                  }
                   <ScrollView>
                     {
                       selectedFoodChoices?.data?.selections?.map((foodChoice, i) => {
-                        if (selectedFoodChoices?.data?.selections?.length <= 2) {
-                          return (
-                            <Tile
-                              key={'food-choice-' + i}
-                              width={'94%'}
-                              title={foodChoice.name}
-                              titleStyle={{ textAlign: 'left', fontSize: 18, fontWeight: 'bold', marginTop: -5 }}
-                              imageSrc={{ uri: foodChoice.photos[0] }}
-                              imageContainerStyle={selectedFoodChoices?.data?.selections?.length <= 2 ? {} : { height: 0 }}
+                        return (
+                          <TouchableOpacity
+                            onLongPress={() => !isDisabled && this.removeFoodChoice(foodChoice)}
+                            onPress={() => this.props.navigation.navigate("PlaceDetails", { foodChoice })}
+                            key={'food-choice-' + i}
+                            containerStyle={{ marginHorizontal: -5 }}
+                          >
+                            <Card
                               containerStyle={{
-                                marginVertical: 10,
-                                borderRadius: 10,
-                                borderWidth: Constants.platform.ios ? 0.5 : 0,
-                                borderColor: 'gray',
-                                backgroundColor: 'white',
-                                overflow: 'hidden',
                                 elevation: 6,
-                                height: (screenHeight - headerHeight) / (0.8 + selectedFoodChoices.data.selections.length),
-                                alignSelf: 'center',
+                                height: 90,
+                                // minHeight: 99,
+                                marginBottom: 10,
+                                marginTop: 0,
+                                marginHorizontal: 10,
+                                paddingTop: 10
                               }}
-                              wrapperStyle={{
-                                margin: -15,
-                              }}
-                              onPress={() => this.props.navigation.navigate("PlaceDetails", { foodChoice })}
-                              onLongPress={() => !isDisabled && this.removeFoodChoice(foodChoice)}
                             >
+                              <Card.Title
+                                style={{ fontSize: 18, textAlign: 'left', marginBottom: 0 }}
+                                ellipsizeMode='tail'
+                                numberOfLines={1}
+                              >
+                                {foodChoice.name}
+                              </Card.Title>
                               <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                                 <Text style={{ marginRight: 5, alignSelf: 'center' }}>{foodChoice.rating}</Text>
                                 <View style={{ flexDirection: 'row', marginRight: 5, alignSelf: 'center' }}>
@@ -247,97 +257,19 @@ class UserSelections extends Component {
                                   }
                                 </Text>
                               </View>
-                              <View style={{ flexDirection: 'row', alignItems: 'center', marginVertical: 5, flexWrap: 'wrap' }}>
-                                <Text style={{ textTransform: 'capitalize', marginRight: 5 }}>{this.placeTypes(foodChoice.types)}</Text>
-                                <Icon
-                                  name="circle"
-                                  type="font-awesome"
-                                  size={5}
-                                  color='#333'
-                                  style={{ alignSelf: 'center', marginRight: 5 }}
-                                />
-                                <Text>{foodChoice.vicinity}</Text>
-                              </View>
-                            </Tile>
-                          );
-                        } else {
-                          return (
-                            <TouchableOpacity
-                              onLongPress={() => !isDisabled && this.removeFoodChoice(foodChoice)}
-                              onPress={() => this.props.navigation.navigate("PlaceDetails", { foodChoice })}
-                              key={'food-choice-' + i}
-                              containerStyle={{ marginHorizontal: -5 }}
-                            >
-                              <Card
-                                containerStyle={{
-                                  elevation: 6,
-                                  height: (screenHeight - headerHeight) / (2.3 + selectedFoodChoices.data.selections.length),
-                                  // minHeight: 99,
-                                  marginBottom: 10,
-                                  marginTop: 0,
-                                  marginHorizontal: 10,
-                                  paddingTop: 10
-                                }}
+                              <Text
+                                style={{ textTransform: 'capitalize', marginRight: 5 }}
+                                ellipsizeMode='tail'
+                                numberOfLines={1}
                               >
-                                <Card.Title
-                                  style={{ fontSize: 18, textAlign: 'left', marginBottom: 0 }}
-                                  ellipsizeMode='tail'
-                                  numberOfLines={1}
-                                >
-                                  {foodChoice.name}
-                                </Card.Title>
-                                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                                  <Text style={{ marginRight: 5, alignSelf: 'center' }}>{foodChoice.rating}</Text>
-                                  <View style={{ flexDirection: 'row', marginRight: 5, alignSelf: 'center' }}>
-                                    {
-                                      this.stars(foodChoice?.rating).map(star => star)
-                                    }
-                                  </View>
-                                  <Text style={{ alignSelf: 'center', marginRight: 5 }}>{this.totalRatings(foodChoice.userRatingsTotal)}</Text>
-                                  <Icon
-                                    name="circle"
-                                    type="font-awesome"
-                                    size={5}
-                                    color='#333'
-                                    style={{ alignSelf: 'center', marginRight: 5 }}
-                                  />
-                                  <Text style={{ flexDirection: 'row', marginRight: 5, alignSelf: 'center' }}>
-                                    {
-                                      this.priceLevel(foodChoice.priceLevel)
-                                    }
-                                  </Text>
-                                  <Icon
-                                    name="circle"
-                                    type="font-awesome"
-                                    size={5}
-                                    color='#333'
-                                    style={{ alignSelf: 'center', marginRight: 5 }}
-                                  />
-                                  <Text style={{ flexDirection: 'row', marginRight: 5, alignSelf: 'center' }}>
-                                    {
-                                      `${this.distanceAway(foodChoice.coordinate)} mi`
-                                    }
-                                  </Text>
-                                </View>
-                                <Text
-                                  style={{ textTransform: 'capitalize', marginRight: 5 }}
-                                  ellipsizeMode='tail'
-                                  numberOfLines={1}
-                                >
-                                  {this.placeTypes(foodChoice.types)}
-                                </Text>
-                              </Card>
-                            </TouchableOpacity>
-                          );
-                        }
+                                {this.placeTypes(foodChoice.types)}
+                              </Text>
+                            </Card>
+                          </TouchableOpacity>
+                        );
                       })
                     }
                   </ScrollView>
-                  <Text style={{ fontSize: 10, paddingLeft: 12 }}>**Select Card to see details</Text>
-                  {
-                    !isDisabled &&
-                    <Text style={{ fontSize: 10, paddingLeft: 12, paddingBottom: 3 }}>**Hold down to delete</Text>
-                  }
                 </View>
               )
             }

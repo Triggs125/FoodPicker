@@ -12,7 +12,7 @@ class AccountEdit extends Component {
   constructor(props) {
     super(props);
 
-    const offset = Constants.platform.android ? 50 : 0;
+    const offset = Constants.platform.android ? 50 : 20;
     const adBannerHeight = 60;
     const screenHeight = Dimensions.get('screen').height - offset;
 

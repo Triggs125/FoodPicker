@@ -1,7 +1,7 @@
 import { Component } from "react";
 import { Button, Icon, ListItem, Text, BottomSheet } from "react-native-elements";
 import * as Location from 'expo-location';
-import { View } from "react-native";
+import { KeyboardAvoidingView, View } from "react-native";
 import { GOOGLE_MAPS_API_KEY, PLACE_DETAILS_API_KEY } from "../../config";
 import MapView, { Circle } from 'react-native-maps';
 import ThemeColors from "../../assets/ThemeColors";
@@ -9,6 +9,7 @@ import Constants from 'expo-constants';
 import { GooglePlacesAutocomplete } from "react-native-google-places-autocomplete";
 import { ScrollView } from "react-native-gesture-handler";
 import LoadingSpinner from "../LoadingSpinner";
+import { ScreenWidth } from "react-native-elements/dist/helpers";
 
 class LocationView extends Component {
   constructor(props) {
@@ -78,7 +79,7 @@ class LocationView extends Component {
           .then(location => {
             Location.reverseGeocodeAsync({ latitude: location.coords.latitude, longitude: location.coords.longitude })
               .then(locationGeocodeAddress => {
-                const distance = this.props.distance || this.props.distance || this.distances[1];
+                const distance = this.props.distance || this.distances[1];
                 const coords = { longitude: location.coords.longitude, latitude: location.coords.latitude };
                 this.props.setLocationData(coords, locationGeocodeAddress, distance);
                 this.setState({ location: coords, locationGeocodeAddress, distance });
@@ -140,8 +141,22 @@ class LocationView extends Component {
                 Distance:
               </Text>
               <Button
-                title={distance ? `${distance} miles` : isHost ? 'Select a Distance' : 'No Distance Selected'}
-                titleStyle={{ textAlign: 'left', fontSize: 18, color: ThemeColors.text, marginRight: 10, overflow: 'scroll' }}
+                title={
+                  <Text
+                    ellipsizeMode='tail'
+                    numberOfLines={1}
+                    style={{
+                      textAlign: 'left',
+                      fontSize: 18,
+                      fontWeight: 'normal',
+                      color: ThemeColors.text,
+                      marginRight: 5,
+                    }}
+                  >
+                    {distance ? `${distance} mile${distance === 1 ? '' : 's'}` : isHost ? 'Select a Distance' : 'No Distance Selected'}
+                  </Text>
+                }
+                titleStyle={{ textAlign: 'left', fontSize: 18, color: ThemeColors.text, marginRight: 10 }}
                 buttonStyle={{ backgroundColor: 'transparent' }}
                 containerStyle={{ alignSelf: 'center' }}
                 icon={!Constants.platform.web && distance && isHost && <Icon name={distanceChoicesOpen ? "angle-up" : "angle-down"} type="font-awesome" />}
@@ -154,7 +169,7 @@ class LocationView extends Component {
                     return (
                       <ListItem key={i} onPress={() => this.changeDistance(distance)}>
                         <ListItem.Content>
-                          <ListItem.Title style={{ textAlign: 'center' }}>{`${distance} miles`}</ListItem.Title>
+                          <ListItem.Title style={{ textAlign: 'center' }}>{`${distance} mile${distance === 1 ? '' : 's'}`}</ListItem.Title>
                         </ListItem.Content>
                       </ListItem>
                     );
@@ -196,8 +211,22 @@ class LocationView extends Component {
               {
                 !loading ? (
                   <Button
-                    title={location ? addressName : isHost ? 'Select a Location' : 'No Location Selected'}
-                    titleStyle={{ textAlign: 'left', fontSize: 18, color: ThemeColors.text, marginRight: 10, overflow: 'scroll' }}
+                    title={
+                      <Text 
+                        ellipsizeMode='tail'
+                        numberOfLines={1}
+                        style={{
+                          textAlign: 'left',
+                          fontSize: 18,
+                          fontWeight: 'normal',
+                          color: ThemeColors.text,
+                          marginRight: 5,
+                          maxWidth: ScreenWidth - 175
+                        }}
+                      >
+                        {location ? addressName : isHost ? 'Select a Location' : 'No Location Selected'}
+                      </Text>
+                    }
                     onPress={() => { !Constants.platform.web && this.setState({ mapViewOpen: !mapViewOpen }) }}
                     buttonStyle={{ backgroundColor: 'transparent' }}
                     icon={!Constants.platform.web && location && <Icon name={mapViewOpen ? "angle-up" : "map-o"} type="font-awesome" />}
@@ -230,7 +259,7 @@ class LocationView extends Component {
           {
             (mapViewOpen && isHost) && // Location search for host only
               (!Constants.platform.web ? // Mobile
-                (<View style={{ flexDirection: "row", alignSelf: 'stretch' }}>
+                (<KeyboardAvoidingView style={{ flexDirection: "row", alignSelf: 'stretch' }}>
                   <Button
                     icon={<Icon name="my-location" type="MaterialIcons" />}
                     buttonStyle={{ backgroundColor: 'transparent' }}
@@ -246,13 +275,17 @@ class LocationView extends Component {
                       fetchDetails={true}
                       listViewDisplayed={false}
                       keepResultsAfterBlur={true}
+                      GooglePlacesSearchQuery={{
+                        rankby: 'distance',
+                      }}
+                      debounce={200}
                       // requestUrl={{
                       //   useOnPlatform: 'web',
                       //   url: 'https://cors-anywhere.herokuapp.com/https://maps.googleapis.com/maps/api',
                       // }}
                     />
                   </ScrollView>
-                </View>
+                </KeyboardAvoidingView>
               ) : ( // Web View
                 <View>
                 </View>

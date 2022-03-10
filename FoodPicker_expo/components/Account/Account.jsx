@@ -9,6 +9,7 @@ import { ScrollView, TouchableOpacity, TouchableWithoutFeedback } from 'react-na
 import isEmail from 'validator/lib/isEmail';
 import { HeaderHeightContext } from '@react-navigation/elements';
 import ThemeColors from "../../assets/ThemeColors";
+import { ScreenWidth } from "react-native-elements/dist/helpers";
 
 class Account extends Component {
   constructor(props) {
@@ -53,10 +54,10 @@ class Account extends Component {
   userLoggedIn(headerHeight) {
     return (
       <View style={{ ...styles.container, height: screenHeight - headerHeight }}>
-        <View style={{ paddingHorizontal: 10 }}>
+        <View style={{ paddingHorizontal: 10, justifyContent: 'center' }}>
           <Icon name="user-circle" type="font-awesome" iconStyle={{ fontSize: 180 }} />
           <Text
-            style={{ textAlign: 'center', fontSize: 30, marginTop: 15 }}
+            style={{ textAlign: 'center', fontSize: 30, marginTop: 15, width: ScreenWidth - 50, alignSelf: 'center' }}
             ellipsizeMode='tail'
             numberOfLines={1}
           >
@@ -275,7 +276,7 @@ const styles = StyleSheet.create({
   inputIcon: {
     paddingLeft: 10,
     color: 'black',
-    fontSize: 18,
+    fontSize: 20,
   },
   inputStyle: {
     fontSize: 20,

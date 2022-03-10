@@ -54,10 +54,13 @@ class LobbyPicker extends Component {
     }
 
     this.componentFocusUnsub = this.props.navigation.addListener('focus', () => {
-      if (this.props.route?.params?.kickedFromLobby) {
-        this.setState({ kickedMessage: true });
+      if (this.props.kickedFromLobby) {
+        this.setState({ kickedMessage: true }, () => {
+          this.setState({ kickedMessage: false });
+          this.props.setKickedFromLobby(false);
+        });
       }
-    })
+    });
 
     this.componentBlurUnsub = this.props.navigation.addListener('blur', () => {
       this.setState({ loading: false });
@@ -106,7 +109,13 @@ class LobbyPicker extends Component {
           lobby.passwordProtected &&
           <Icon name="lock" size={18} containerStyle={{ marginRight: 5, alignSelf: 'center' }} />
         }
-        <Text style={{ ...styles.name, alignSelf: 'center', color: userOwned ? ThemeColors.text : 'black' }}>{lobby.name}</Text>
+        <Text
+          style={{ ...styles.name, alignSelf: 'center', color: userOwned ? ThemeColors.text : 'black' }}
+          ellipsizeMode='tail'
+          numberOfLines={1}
+        >
+          {lobby.name}
+        </Text>
       </View>
     )
   }
@@ -128,7 +137,7 @@ class LobbyPicker extends Component {
         icon={lobby?.arrow === false ? <></> : <Icon name="angle-right" type="font-awesome" />}
         iconRight
         onPress={async () => {
-          if (lobby.passwordProtected) {
+          if (lobby.passwordProtected && lobby.host !== this.props.user.uid) {
             try {
               const passwordHash = (await getDocs(
                 query(
@@ -186,10 +195,6 @@ class LobbyPicker extends Component {
     } = this.state;
     return (
       <SafeAreaView>
-        {
-          loading &&
-          <LoadingSpinner />
-        }
         <Overlay
           isVisible={removeLobbyOverlay}
           overlayStyle={{ width: ScreenWidth - 20, borderRadius: 10 }}
@@ -414,8 +419,8 @@ class LobbyPicker extends Component {
 
 const styles = StyleSheet.create({
   container: {
-    paddingLeft: 20,
-    paddingRight: 20,
+    paddingLeft: 10,
+    paddingRight: 10,
     height: '100%',
     display: 'flex',
     justifyContent: 'flex-start',

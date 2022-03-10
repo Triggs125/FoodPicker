@@ -1,6 +1,6 @@
 import { Component } from 'react';
-import { SafeAreaView, View } from 'react-native';
-import { Input, Text, Icon, Button } from 'react-native-elements';
+import { View, Dimensions, KeyboardAvoidingView } from 'react-native';
+import { Input, Text, Icon, Button, Switch } from 'react-native-elements';
 import PasswordValidator from 'password-validator';
 import isAlpha from 'validator/lib/isAlpha';
 import isEmail from 'validator/lib/isEmail';
@@ -9,6 +9,8 @@ import { AddUserToDB } from '../Utils/firebase';
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ScrollView } from 'react-native-gesture-handler';
+import Constants from 'expo-constants';
+import { HeaderHeightContext } from '@react-navigation/elements';
 import ThemeColors from '../../assets/ThemeColors';
 
 class CreateAccount extends Component {
@@ -24,7 +26,12 @@ class CreateAccount extends Component {
       .has().digits(1, " at least 1 number")
       .has().not().spaces(0, " no spaces");
 
+    const offset = Constants.platform.android ? 48 : 10;
+    const adBannerHeight = 60;
+    const screenHeight = Dimensions.get('screen').height - offset;
+
     this.state = {
+      screenHeight,
       firstNameError: false,
       firstNameText: "",
       lastNameText: "",
@@ -68,7 +75,7 @@ class CreateAccount extends Component {
    * @returns {Boolean} If there were validation errors
    */
   formValidation() {
-    const { firstNameText, emailAddressText, passwordText, passwordValidator } = this.state;
+    const { firstNameText, emailAddressText, passwordText, passwordValidator, oldEnoughValue } = this.state;
 
     // First Name Validation
     const validFirstName = isAlpha(firstNameText);
@@ -79,13 +86,19 @@ class CreateAccount extends Component {
     // Password Validation
     const passwordFailures = passwordValidator.validate(passwordText, { list: true, details: true });
 
-    this.setState({ passwordFailures: passwordFailures, firstNameError: !validFirstName, emailAddressError: !validEmailAddress });
+    this.setState({ 
+      passwordFailures: passwordFailures,
+      firstNameError: !validFirstName,
+      emailAddressError: !validEmailAddress,
+      oldEnoughError: !oldEnoughValue,
+    });
 
-    return passwordFailures.length === 0 && validFirstName && validEmailAddress;
+    return passwordFailures.length === 0 && validFirstName && validEmailAddress && oldEnoughValue;
   }
 
   render() {
     const {
+      screenHeight,
       firstNameError, 
       firstNameText,
       lastNameText,
@@ -94,167 +107,201 @@ class CreateAccount extends Component {
       passwordText,
       passwordShowing,
       passwordFailures,
-      emailExistsError
+      emailExistsError,
+      oldEnoughValue,
+      oldEnoughError,
     } = this.state;
 
     return (
-      <SafeAreaView style={{ paddingTop: 10 }}>
-        <ScrollView>
-          <Input
-            placeholder="First Name *"
-            textContentType="name"
-            leftIcon={
-              <Icon
-                name='user'
-                type='font-awesome'
-                iconStyle={{
-                  ...styles.inputIcon,
-                  marginLeft: 2,
-                  marginRight: 3,
+      <HeaderHeightContext.Consumer>
+        {headerHeight => (
+          <KeyboardAvoidingView style={{ height: screenHeight - headerHeight, justifyContent: 'space-between' }}>
+            <View>
+              <Input
+                placeholder="First Name"
+                textContentType="name"
+                label="First Name *"
+                labelStyle={{ color: ThemeColors.text }}
+                leftIcon={
+                  <Icon
+                    name='user'
+                    type='font-awesome'
+                    iconStyle={{
+                      ...styles.inputIcon,
+                      marginLeft: 2,
+                      marginRight: 3,
+                    }}
+                  />
+                }
+                value={firstNameText}
+                inputStyle={styles.inputStyle}
+                containerStyle={{
+                  marginTop: 15
                 }}
+                errorMessage={firstNameError ? "Please enter a valid first name" : ""}
+                onChangeText={(text) => this.setState({ firstNameText: text })}
               />
-            }
-            value={firstNameText}
-            inputStyle={styles.inputStyle}
-            containerStyle={{
-              marginTop: 15
-            }}
-            errorMessage={firstNameError ? "Please enter a valid first name" : ""}
-            onChangeText={(text) => this.setState({ firstNameText: text })}
-          />
-          <Input
-            placeholder="Last Name"
-            textContentType="name"
-            value={lastNameText}
-            leftIcon={
-              <Icon
-                name='user'
-                type='font-awesome'
-                iconStyle={{
-                  ...styles.inputIcon,
-                  marginLeft: 2,
-                  marginRight: 3,
+              <Input
+                placeholder="Last Name"
+                textContentType="name"
+                label="Last Name"
+                labelStyle={{ color: ThemeColors.text }}
+                value={lastNameText}
+                leftIcon={
+                  <Icon
+                    name='user'
+                    type='font-awesome'
+                    iconStyle={{
+                      ...styles.inputIcon,
+                      marginLeft: 2,
+                      marginRight: 3,
+                    }}
+                  />
+                }
+                inputStyle={styles.inputStyle}
+                onChangeText={(text) => this.setState({ lastNameText: text })}
+              />
+              <Input
+                placeholder="Email Address"
+                textContentType="emailAddress"
+                label="Email Address *"
+                labelStyle={{ color: ThemeColors.text }}
+                autoCapitalize='none'
+                value={emailAddressText}
+                leftIcon={
+                  <Icon
+                    name='envelope'
+                    type='font-awesome'
+                    iconStyle={styles.inputIcon}
+                  />
+                }
+                inputStyle={styles.inputStyle}
+                errorMessage={emailAddressError ? "Please enter a valid email address" : ""}
+                onChangeText={(text) => this.setState({ emailAddressText: text })}
+              />
+              <Input
+                placeholder="Password"
+                textContentType="password"
+                label="Password *"
+                labelStyle={{ color: ThemeColors.text }}
+                autoCapitalize="none"
+                secureTextEntry={!passwordShowing}
+                value={passwordText}
+                leftIcon={
+                  <Icon
+                    name='key'
+                    type='font-awesome-5'
+                    iconStyle={styles.inputIcon}
+                  />
+                }
+                rightIcon={
+                  <Icon
+                    name={passwordShowing ? 'eye-slash' : 'eye'}
+                    type='font-awesome'
+                    iconStyle={styles.inputIcon}
+                    onPress={() => this.setState({ passwordShowing: !passwordShowing })}
+                  />
+                }
+                inputStyle={styles.inputStyle}
+                containerStyle={{
+                  marginBottom: 5
                 }}
+                errorMessage={passwordFailures.length > 0 ?
+                    "Password requirements:" +
+                    passwordFailures.flatMap((failure) => {
+                      return failure.message;
+                    }) + "."
+                    : ""
+                }
+                onChangeText={(text) => this.setState({ passwordText: text })}
               />
-            }
-            inputStyle={styles.inputStyle}
-            onChangeText={(text) => this.setState({ lastNameText: text })}
-          />
-          <Input
-            placeholder="Email Address *"
-            textContentType="emailAddress"
-            autoCapitalize='none'
-            value={emailAddressText}
-            leftIcon={
-              <Icon
-                name='envelope'
-                type='font-awesome'
-                iconStyle={styles.inputIcon}
+              {
+                emailExistsError &&
+                <Text
+                  style={{
+                    textAlign: 'center',
+                    fontSize: 16,
+                    marginBottom: 10,
+                    color: 'red',
+                  }}
+                >
+                  Email address already in use.
+                </Text>
+              }
+              <View>
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    marginHorizontal: 10,
+                  }}
+                >
+                  <Switch
+                    value={oldEnoughValue}
+                    color={ThemeColors.button}
+                    onValueChange={(value) => this.setState({ oldEnoughValue: value, oldEnoughError: false })}
+                  />
+                  <Text style={{ marginLeft: 10, alignSelf: 'center', fontSize: 22 }}>Are you 13 or older?</Text>
+                </View>
+                <Text
+                  style={{ color: 'red', marginLeft: 15, fontSize: 12 }}
+                >
+                  {oldEnoughError && "You must be 13 years old or older to create an account."}
+                </Text>
+              </View>
+            </View>
+            <View style={{ marginHorizontal: 10 }}>
+              <Button
+                title="Create Account"
+                raised
+                icon={{
+                  name: 'user-plus',
+                  type: 'font-awesome',
+                  color: 'white',
+                  marginRight: 8
+                }}
+                titleStyle={{ fontWeight: '500', fontSize: 22 }}
+                buttonStyle={{
+                  backgroundColor: '#E54040',
+                  borderColor: 'transparent',
+                  borderWidth: 0,
+                  height: 60,
+                }}
+                containerStyle={{
+                  width: '100%',
+                  alignSelf: 'center',
+                  marginTop: 0,
+                  overflow: 'visible'
+                }}
+                onPress={this.createAccount}
               />
-            }
-            inputStyle={styles.inputStyle}
-            errorMessage={emailAddressError ? "Please enter a valid email address" : ""}
-            onChangeText={(text) => this.setState({ emailAddressText: text })}
-          />
-          <Input
-            placeholder="Password *"
-            textContentType="password"
-            autoCapitalize="none"
-            secureTextEntry={!passwordShowing}
-            value={passwordText}
-            leftIcon={
-              <Icon
-                name='key'
-                type='font-awesome-5'
-                iconStyle={styles.inputIcon}
+              <Button
+                title="Sign In"
+                type='clear'
+                titleStyle={{
+                  textAlign: 'center',
+                  fontSize: 20,
+                  marginTop: 10,
+                  marginBottom: 10,
+                  color: ThemeColors.text,
+                }}
+                onPress={() => this.props.navigation.navigate('Account')}
               />
-            }
-            rightIcon={
-              <Icon
-                name={passwordShowing ? 'eye-slash' : 'eye'}
-                type='font-awesome'
-                iconStyle={styles.inputIcon}
-                onPress={() => this.setState({ passwordShowing: !passwordShowing })}
-              />
-            }
-            inputStyle={styles.inputStyle}
-            containerStyle={{
-              marginBottom: 5
-            }}
-            errorMessage={passwordFailures.length > 0 ?
-                "Password requirements:" +
-                passwordFailures.flatMap((failure) => {
-                  return failure.message;
-                }) + "."
-                : ""
-            }
-            onChangeText={(text) => this.setState({ passwordText: text })}
-          />
-          {
-            emailExistsError &&
-            <Text
+            </View>
+            {/* <Text
               style={{
                 textAlign: 'center',
-                fontSize: 16,
-                marginBottom: 10,
-                color: 'red',
+                fontSize: 20,
+                marginTop: 30,
+                marginBottom: 40,
+                color: 'grey',
               }}
             >
-              Email address already in use.
+              - OR -
             </Text>
-          }
-          <View style={{ marginHorizontal: 10 }}>
-            <Button
-              title="Create Account"
-              raised
-              icon={{
-                name: 'user-plus',
-                type: 'font-awesome',
-                color: 'white',
-                marginRight: 8
-              }}
-              titleStyle={{ fontWeight: '500', fontSize: 22 }}
-              buttonStyle={{
-                backgroundColor: '#E54040',
-                borderColor: 'transparent',
-                borderWidth: 0,
-                height: 60,
-              }}
-              containerStyle={{
-                width: '100%',
-                alignSelf: 'center',
-                marginTop: 0,
-                overflow: 'visible'
-              }}
-              onPress={this.createAccount}
-            />
-            <Button
-              title="Sign In"
-              type='clear'
-              titleStyle={{
-                textAlign: 'center',
-                fontSize: 20,
-                marginTop: 10,
-                marginBottom: 10,
-                color: ThemeColors.text,
-              }}
-              onPress={() => this.props.navigation.navigate('Account')}
-            />
-          </View>
-          {/* <Text
-            style={{
-              textAlign: 'center',
-              fontSize: 20,
-              marginTop: 30,
-              marginBottom: 40,
-              color: 'grey',
-            }}
-          >
-            - OR -
-          </Text>
-          <SignInWithGoogle auth={this.props.auth} /> */}
-        </ScrollView>
-      </SafeAreaView>
+            <SignInWithGoogle auth={this.props.auth} /> */}
+          </KeyboardAvoidingView>
+        )}
+      </HeaderHeightContext.Consumer>
     );
   }
 }
@@ -263,7 +310,7 @@ const styles = {
   inputIcon: {
     paddingLeft: 10,
     color: 'black',
-    fontSize: 24,
+    fontSize: 20,
   },
   inputStyle: {
     fontSize: 20,
