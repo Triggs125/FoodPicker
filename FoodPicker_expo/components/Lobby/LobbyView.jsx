@@ -460,7 +460,7 @@ class LobbyView extends Component {
                   onPress={() => isHost && this.props.navigation.navigate("LobbyCreator", { lobbyData })}
                 />
                 <Text
-                  style={{ fontSize: 24, width: ScreenWidth - 100, alignSelf: 'center', textAlign: 'center' }}
+                  style={{ fontSize: 24, width: ScreenWidth - 120, alignSelf: 'center', textAlign: 'center' }}
                   ellipsizeMode='tail'
                   numberOfLines={1}
                 >

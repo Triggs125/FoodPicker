@@ -110,7 +110,7 @@ class LobbyPicker extends Component {
           <Icon name="lock" size={18} containerStyle={{ marginRight: 5, alignSelf: 'center' }} />
         }
         <Text
-          style={{ ...styles.name, alignSelf: 'center', color: userOwned ? ThemeColors.text : 'black' }}
+          style={{ ...styles.name, alignSelf: 'center', color: userOwned ? ThemeColors.text : 'black', width: ScreenWidth - 100 - (lobby.passwordProtected ? 25 : 0) }}
           ellipsizeMode='tail'
           numberOfLines={1}
         >
