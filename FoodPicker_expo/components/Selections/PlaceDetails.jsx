@@ -2,14 +2,16 @@ import { Component } from "react";
 import { Dimensions, Linking, View } from "react-native";
 import Constants from 'expo-constants';
 import { HeaderHeightContext } from '@react-navigation/elements';
-import { Text, Icon } from "react-native-elements";
+import { Text, Icon, Tab, TabView, ListItem, Avatar } from "react-native-elements";
 import { SliderBox } from 'react-native-image-slider-box';
 import { getDistance } from 'geolib';
 import LoadingSpinner from "../LoadingSpinner";
 import ThemeColors from "../../assets/ThemeColors";
-import { TouchableOpacity } from "react-native-gesture-handler";
+import { ScrollView, TouchableOpacity } from "react-native-gesture-handler";
 import { Button } from "react-native-elements/dist/buttons/Button";
 import { PLACE_DETAILS_API_KEY } from "../../config";
+import { ScreenHeight, ScreenWidth } from "react-native-elements/dist/helpers";
+import call from 'react-native-phone-call'
 
 class PlaceDetails extends Component {
   constructor(props) {
@@ -21,7 +23,8 @@ class PlaceDetails extends Component {
 
     this.state = {
       loading: true,
-      screenHeight: screenHeight
+      screenHeight: screenHeight,
+      tabIndex: 0,
     }
   }
 
@@ -41,14 +44,15 @@ class PlaceDetails extends Component {
   componentDidAppear() {
     const foodChoice = this.props.route?.params?.foodChoice;
     const url = "https://maps.googleapis.com/maps/api/place/details/json?place_id=" + foodChoice.id 
-    + '&key=' + 'AIzaSyABLEWTpgnHhloYv_JH301853XGEhVDpMc';;
+    + '&key=' + PLACE_DETAILS_API_KEY;
 
     this.setState({ loading: true });
     fetch(url)
       .then(res => {
         return res.json();
       })
-      .then(res => {        
+      .then(res => {
+        
         this.setState({ place: res.result });
       })
       .catch(error => {
@@ -68,16 +72,16 @@ class PlaceDetails extends Component {
 
     // Gets the number of full stars to display
     for (let i = 0; i < fullStars; i++) {
-      stars.push(<Icon name="star" type="font-awesome" color='gold' size={18} />);
+      stars.push(<Icon name="star" type="font-awesome" color='gold' size={20} />);
     }
 
     // Adds a half star if the rating decimal is .5 or above
     if (halfStar) {
-      stars.push(<Icon name="star-half-full" type="font-awesome" color='gold' size={18} />);
+      stars.push(<Icon name="star-half-full" type="font-awesome" color='gold' size={20} />);
     }
 
     for (let i = fullStars + halfStar; i < 5; i++) {
-      stars.push(<Icon name="star-o" type="font-awesome" color='gold' size={18} />)
+      stars.push(<Icon name="star-o" type="font-awesome" color='gold' size={20} />)
     }
     
     return stars;
@@ -130,17 +134,22 @@ class PlaceDetails extends Component {
   }
 
   clickPlaceLink(url) {
-    Linking.canOpenURL(url).then(supported => {
+    Linking.canOpenURL(url)
+    .then(supported => {
       if (supported) {
         Linking.openURL(url);
       } else {
-        console.info("Don't know how to open URL:", url);
+        console.error("Don't know how to open URL:" + url);
       }
     });
   }
 
+  callNumber(formatted_phone_number) {
+    Linking.openURL(`tel:${formatted_phone_number}`);
+  }
+
   render() {
-    const { screenHeight, place } = this.state;
+    const { screenHeight, place, tabIndex } = this.state;
     const GooglePicBaseUrl = `https://maps.googleapis.com/maps/api/place/photo?key=${PLACE_DETAILS_API_KEY}&maxwidth=400&photo_reference=`;
 
     const images = place?.photos?.map(photo => GooglePicBaseUrl + photo.photo_reference);
@@ -152,96 +161,201 @@ class PlaceDetails extends Component {
     return (
       <HeaderHeightContext.Consumer>
         {headerHeight => (
-          <View
+          <ScrollView
             style={{
               height: screenHeight - headerHeight,
             }}
           >
             {
               place ? (
-                <View>
+                <>
                   <SliderBox
                     images={images}
                     dotColor={ThemeColors.text}
                     imageLoadingColor={ThemeColors.text}
                     circleLoop
                   />
-                  <View
-                    style={{
-                      paddingHorizontal: 20,
-                      paddingVertical: 10,
-                      backgroundColor: 'white',
+                  <Tab
+                    value={tabIndex}
+                    onChange={(i) => this.setState({ tabIndex: i })}
+                    indicatorStyle={{
+                      backgroundColor: 'lightgray',
+                      height: 5,
                       borderRadius: 10,
-                      margin: 10,
-                      elevation: 2,
-                      borderWidth: 1.5,
-                      borderColor: 'lightgray'
                     }}
+                    variant="primary"
                   >
-                    <Text h4 style={{ textAlign: 'center', marginBottom: 5 }}>{place?.name}</Text>
-                    <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }}>
-                      <Text style={{ marginRight: 5, alignSelf: 'center' }}>{place.rating}</Text>
-                      <View style={{ flexDirection: 'row', marginRight: 5, alignSelf: 'center' }}>
+                    <Tab.Item
+                      title="Details"
+                      titleStyle={{ fontSize: 18 }}
+                      buttonStyle={{ backgroundColor: ThemeColors.text }}
+                    />
+                    <Tab.Item
+                      title="Reviews"
+                      titleStyle={{ fontSize: 18 }}
+                      buttonStyle={{ backgroundColor: ThemeColors.text }}
+                    />
+                  </Tab>
+                  <TabView
+                    value={tabIndex}
+                    onChange={(i) => this.setState({ tabIndex: i })}
+                    animationType="spring"
+                  >
+                    <TabView.Item style={{ width: '100%' }}>
+                      <View style={{ paddingHorizontal: 10 }}>
+                        <Text h3 h3Style={{ textAlign: 'center', paddingBottom: 5, paddingTop: 10 }}>{place?.name}</Text>
+                        <View style={{ flexDirection: 'row', justifyContent: 'center', paddingVertical: 5 }}>
+                          <Text
+                            style={{
+                              fontWeight: 'normal',
+                              marginRight: 5,
+                              alignSelf: 'center',
+                              fontSize: 18
+                            }}
+                          >
+                            {place?.rating}
+                          </Text>
+                          <Text style={{ flexDirection: 'row', marginRight: 5, alignSelf: 'center' }}>
+                            {
+                              this.stars(place?.rating)
+                            }
+                          </Text>
+                          <Text
+                            style={{
+                              fontWeight: 'normal',
+                              alignSelf: 'center',
+                              marginRight: 5,
+                              fontSize: 18
+                            }}
+                          >
+                            {this.totalRatings(place?.user_ratings_total)}
+                          </Text>
+                          <Icon
+                            name="circle"
+                            type="font-awesome"
+                            size={5}
+                            color='#333'
+                            style={{
+                              marginRight: 5,
+                              paddingTop: 10,
+                            }}
+                          />
+                          <Text
+                            style={{
+                              flexDirection: 'row',
+                              marginRight: 5,
+                              alignSelf: 'center',
+                              fontSize: 18
+                            }}
+                          >
+                            {
+                              this.priceLevel(place?.price_level)
+                            }
+                          </Text>
+                          <Icon
+                            name="circle"
+                            type="font-awesome"
+                            size={5}
+                            color='#333'
+                            style={{
+                              marginRight: 5,
+                              paddingTop: 10,
+                            }}
+                          />
+                          <Text style={{ flexDirection: 'row', marginRight: 5, alignSelf: 'center', fontSize: 18 }}>
+                            {
+                              `${this.distanceAway(coordinate)} mi`
+                            }
+                          </Text>
+                        </View>
+                        <Text
+                          style={{
+                            color: place?.opening_hours.open_now ? 'green' : ThemeColors.text,
+                            fontSize: 18,
+                            alignSelf: 'center',
+                            paddingVertical: 5,
+                          }}
+                        >
+                          {
+                            place?.opening_hours.open_now ? "Open" : "Closed"
+                          }
+                        </Text>
+                        <Text
+                          style={{
+                            textAlign: 'center',
+                            fontSize: 18,
+                            textTransform: 'capitalize',
+                            paddingVertical: 5,
+                          }}
+                        >
+                          {this.placeTypes(place?.types)}
+                        </Text>
+                        <View style={{ flexDirection: 'row', justifyContent: 'space-evenly', marginTop: 10 }}>
+                          <Button
+                            title={'Call'}
+                            titleStyle={{ fontSize: 20, color: 'black'}}
+                            containerStyle={{ marginTop: 5, marginBottom: 10 }}
+                            icon={<Icon name="phone-alt" type="font-awesome-5" />}
+                            iconPosition='top'
+                            onPress={() => this.callNumber(place.formatted_phone_number)}
+                          />
+                          <Button
+                            title={'Directions'}
+                            titleStyle={{ fontSize: 20, color: 'black'}}
+                            containerStyle={{ marginTop: 5, marginBottom: 10 }}
+                            icon={<Icon name="map" type="font-awesome-5" />}
+                            iconPosition='top'
+                            onPress={() => this.clickPlaceLink(place?.url)}
+                          />
+                          <Button
+                            title={'Website'}
+                            titleStyle={{ fontSize: 20, color: 'black'}}
+                            containerStyle={{ marginTop: 5, marginBottom: 10 }}
+                            icon={<Icon name="globe-americas" type="font-awesome-5" />}
+                            iconPosition='top'
+                            onPress={() => this.clickPlaceLink(place?.website)}
+                          />
+                        </View>
+                      </View>
+                    </TabView.Item>
+                    <TabView.Item>
+                      <View style={{ paddingHorizontal: 10, paddingTop: 10 }}>
+                        <Text
+                          h4
+                          h4Style={{
+                            width: ScreenWidth,
+                            textAlign: 'center'
+                          }}
+                        >
+                          Average Review: {place?.rating} {this.totalRatings(place.user_ratings_total)}
+                        </Text>
                         {
-                          this.stars(place.rating).map(star => star)
+                          place?.reviews?.map(review => {
+                            return (
+                              <>
+                                <ListItem>
+                                  <Avatar source={{ uri: review.profile_photo_url }} />
+                                  <ListItem.Title>{review.author_name}</ListItem.Title>
+                                </ListItem>
+                                <ListItem containerStyle={{ marginTop: -10, paddingTop: 5 }}>
+                                  <View style={{ flexDirection: 'row' }}>
+                                    <Text>{this.stars(review.rating)}</Text>
+                                    <Text style={{ alignSelf: 'center' }}>   {review.relative_time_description}</Text>
+                                  </View>
+                                </ListItem>
+                                <ListItem containerStyle={{ marginTop: -10, paddingTop: 5 }}>
+                                  <ListItem.Title>
+                                    {review.text}
+                                  </ListItem.Title>
+                                </ListItem>
+                              </>
+                            );
+                          })
                         }
                       </View>
-                      <Text style={{ alignSelf: 'center', marginRight: 5 }}>{this.totalRatings(place.userRatingsTotal)}</Text>
-                      <Icon
-                        name="circle"
-                        type="font-awesome"
-                        size={5}
-                        color='#333'
-                        style={{ alignSelf: 'center', marginRight: 5 }}
-                      />
-                      <Text style={{ flexDirection: 'row', marginRight: 5, alignSelf: 'center' }}>
-                        {
-                          this.priceLevel(place.price_level)
-                        }
-                      </Text>
-                      <Icon
-                        name="circle"
-                        type="font-awesome"
-                        size={5}
-                        color='#333'
-                        style={{ alignSelf: 'center', marginRight: 5 }}
-                      />
-                      <Text style={{ flexDirection: 'row', marginRight: 5, alignSelf: 'center' }}>
-                        {
-                          `${this.distanceAway(coordinate)} mi`
-                        }
-                      </Text>
-                      <Icon
-                        name="circle"
-                        type="font-awesome"
-                        size={5}
-                        color='#333'
-                        style={{ alignSelf: 'center', marginRight: 5 }}
-                      />
-                      <Text style={{ color: place.opennow ? 'green' : ThemeColors.text }}>
-                        {
-                          place.opennow ? "Open" : "Closed"
-                        }
-                      </Text>
-                    </View>
-                    <Text 
-                      style={{
-                        textAlign: 'center',
-                        fontSize: 18, 
-                        textTransform: 'capitalize', 
-                        marginRight: 5 
-                      }}
-                    >
-                      {this.placeTypes(place.types)}
-                    </Text>
-                    <Text style={{ fontSize: 18, textAlign: 'center' }}>{place.vicinity}</Text>
-                    <Button
-                      title="Google Page"
-                      titleStyle={{ fontSize: 20, color: 'blue' }}
-                      onPress={() => this.clickPlaceLink(place.url)}
-                    />
-                  </View>
-                </View>
+                    </TabView.Item>
+                  </TabView>
+                </>
               ) : (
                 <View
                   style={{
@@ -255,8 +369,7 @@ class PlaceDetails extends Component {
                 </View>
               )
             }
-            
-          </View>
+          </ScrollView>
         )}
       </HeaderHeightContext.Consumer>
     );
@@ -264,3 +377,82 @@ class PlaceDetails extends Component {
 }
 
 export default PlaceDetails;
+
+
+{/* <View
+  style={{
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    backgroundColor: 'white',
+    borderRadius: 10,
+    margin: 10,
+    elevation: 2,
+    borderWidth: 1.5,
+    borderColor: 'lightgray'
+  }}
+  >
+  <Text h4 style={{ textAlign: 'center', marginBottom: 5 }}>{place?.name}</Text>
+  <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }}>
+    <Text style={{ marginRight: 5, alignSelf: 'center' }}>{place.rating}</Text>
+    <Text style={{ flexDirection: 'row', marginRight: 5, alignSelf: 'center' }}>
+      {
+        this.stars(place.rating).map(star => star)
+      }
+    </Text>
+    <Text style={{ alignSelf: 'center', marginRight: 5 }}>{this.totalRatings(place.userRatingsTotal)}</Text>
+    <Icon
+      name="circle"
+      type="font-awesome"
+      size={5}
+      color='#333'
+      style={{ alignSelf: 'center', marginRight: 5 }}
+    />
+    <Text style={{ flexDirection: 'row', marginRight: 5, alignSelf: 'center' }}>
+      {
+        this.priceLevel(place.price_level)
+      }
+    </Text>
+    <Icon
+      name="circle"
+      type="font-awesome"
+      size={5}
+      color='#333'
+      style={{ alignSelf: 'center', marginRight: 5 }}
+    />
+    <Text style={{ flexDirection: 'row', marginRight: 5, alignSelf: 'center' }}>
+      {
+        `${this.distanceAway(coordinate)} mi`
+      }
+    </Text>
+    <Icon
+      name="circle"
+      type="font-awesome"
+      size={5}
+      color='#333'
+      style={{ alignSelf: 'center', marginRight: 5 }}
+    />
+    <Text style={{ color: place.opening_hours.open_now ? 'green' : ThemeColors.text }}>
+      {
+        place.opening_hours.open_now ? "Open" : "Closed"
+      }
+    </Text>
+  </View>
+  <Text 
+    style={{
+      textAlign: 'center',
+      fontSize: 18, 
+      textTransform: 'capitalize', 
+      marginRight: 5 
+    }}
+  >
+    {this.placeTypes(place.types)}
+  </Text>
+  <Text style={{ fontSize: 18, textAlign: 'center' }}>{place.vicinity}</Text>
+  </View>
+  <View>
+  <Button
+    title="Google Page"
+    titleStyle={{ fontSize: 20, color: ThemeColors.text }}
+    onPress={() => this.clickPlaceLink(place.url)}
+  />
+  </View> */}

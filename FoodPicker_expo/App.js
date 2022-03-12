@@ -202,7 +202,7 @@ export default function App() {
                 <>
                   <Stack.Screen
                     name="AccountEdit"
-                    options={{ headerTitle: 'Create an Account' }}
+                    options={{ headerTitle: 'Edit Account' }}
                   > 
                     {props => <AccountEdit {...props} setUser={setUser} user={user} auth={auth} db={db} />}
                   </Stack.Screen>
@@ -214,7 +214,7 @@ export default function App() {
                   </Stack.Screen>
                   <Stack.Screen
                     name="LobbyPicker"
-                    options={{ headerTitle: "Join or Start a Lobby" }}
+                    options={{ headerTitle: "Join or Create a Lobby" }}
                   >
                     {props => <LobbyPicker {...props} userLobbies={userLobbies} user={user} auth={auth} db={db} kickedFromLobby={kickedFromLobby} setKickedFromLobby={setKickedFromLobby} />}
                   </Stack.Screen>
@@ -256,7 +256,7 @@ export default function App() {
                   </Stack.Screen>
                   <Stack.Screen
                     name="PlaceDetails"
-                    options={{ headerTitle: "Place Details" }}
+                    options={{ headerTitle: "Place Details", cardStyle: { backgroundColor: 'white' } }}
                   >
                     {props => <PlaceDetails {...props} user={user} auth={auth} db={db} lobbyData={lobbyData} />}
                   </Stack.Screen>

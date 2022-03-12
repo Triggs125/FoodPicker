@@ -235,14 +235,9 @@ class MakeSelections extends Component {
                   <View
                     style={{
                       flexDirection: 'row',
-                      backgroundColor: 'white',
                       borderRadius: 10,
                       paddingHorizontal: 10,
-                      borderWidth: 1.5,
-                      borderColor: 'lightgray',
-                      marginTop: 10,
-                      marginHorizontal: 10,
-                      paddingVertical: 5
+                      paddingTop: 5
                     }}
                   >
                     <Switch
@@ -255,11 +250,11 @@ class MakeSelections extends Component {
                       }}
                     />
                     <Text
-                      style={{ marginLeft: 10, alignSelf: 'center', fontSize: 22 }}
+                      style={{ marginLeft: 10, alignSelf: 'center', fontSize: 20 }}
                       ellipsizeMode='tail'
                       numberOfLines={1}
                     >
-                      Restaurants only open now?
+                      Only open now?
                     </Text>
                   </View>
                   <FoodChoices

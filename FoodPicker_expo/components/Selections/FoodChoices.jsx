@@ -142,7 +142,7 @@ class FoodChoices extends Component {
                       <Text style={{ marginRight: 5, alignSelf: 'center', color: isSelected ? 'white' : 'black' }}>{place.rating}</Text>
                       <View style={{ flexDirection: 'row', marginRight: 5, alignSelf: 'center' }}>
                         {
-                          this.stars(place.rating).map(star => star)
+                          this.stars(place.rating)
                         }
                       </View>
                       <Text style={{ alignSelf: 'center', marginRight: 5, color: isSelected ? 'white' : 'black' }}>{this.totalRatings(place.userRatingsTotal)}</Text>

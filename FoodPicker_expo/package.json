@@ -26,6 +26,7 @@
     "expo-location": "~14.0.1",
     "expo-splash-screen": "~0.14.1",
     "expo-status-bar": "~1.2.0",
+    "expo-updates": "~0.11.6",
     "firebase": "^9.6.5",
     "geolib": "^3.3.3",
     "isaac": "0.0.5",
@@ -44,6 +45,7 @@
     "react-native-image-slider-box": "^1.1.17",
     "react-native-maps": "0.29.4",
     "react-native-paper": "^4.11.2",
+    "react-native-phone-call": "^1.0.9",
     "react-native-picker-select": "^8.0.4",
     "react-native-reanimated": "^2.3.2",
     "react-native-safe-area-context": "3.3.2",
@@ -51,8 +53,7 @@
     "react-native-vector-icons": "^9.1.0",
     "react-native-web": "0.17.1",
     "styled-components": "^5.3.3",
-    "validator": "^13.7.0",
-    "expo-updates": "~0.11.6"
+    "validator": "^13.7.0"
   },
   "devDependencies": {
     "@babel/core": "^7.12.9"

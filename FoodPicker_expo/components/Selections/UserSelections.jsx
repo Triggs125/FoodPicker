@@ -229,7 +229,7 @@ class UserSelections extends Component {
                                 <Text style={{ marginRight: 5, alignSelf: 'center' }}>{foodChoice.rating}</Text>
                                 <View style={{ flexDirection: 'row', marginRight: 5, alignSelf: 'center' }}>
                                   {
-                                    this.stars(foodChoice?.rating).map(star => star)
+                                    this.stars(foodChoice?.rating)
                                   }
                                 </View>
                                 <Text style={{ alignSelf: 'center', marginRight: 5 }}>{this.totalRatings(foodChoice.userRatingsTotal)}</Text>
