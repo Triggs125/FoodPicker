@@ -134,6 +134,7 @@ class PlaceDetails extends Component {
   }
 
   clickPlaceLink(url) {
+    console.log("Link Clicked")
     Linking.canOpenURL(url)
     .then(supported => {
       if (supported) {
@@ -145,7 +146,11 @@ class PlaceDetails extends Component {
   }
 
   callNumber(formatted_phone_number) {
-    Linking.openURL(`tel:${formatted_phone_number}`);
+    if (Platform.OS === 'android') {
+      Linking.openURL(`tel:${formatted_phone_number}`);
+    } else {
+      Linking.openURL(`telprompt:${formatted_phone_number}`);
+    }
   }
 
   render() {
@@ -161,7 +166,7 @@ class PlaceDetails extends Component {
     return (
       <HeaderHeightContext.Consumer>
         {headerHeight => (
-          <ScrollView
+          <View
             style={{
               height: screenHeight - headerHeight,
             }}
@@ -179,9 +184,11 @@ class PlaceDetails extends Component {
                     value={tabIndex}
                     onChange={(i) => this.setState({ tabIndex: i })}
                     indicatorStyle={{
-                      backgroundColor: 'lightgray',
+                      backgroundColor: 'white',
                       height: 5,
-                      borderRadius: 10,
+                      borderRadius: 1,
+                      borderBottomWidth: 1,
+                      borderBottomColor: 'lightgray'
                     }}
                     variant="primary"
                   >
@@ -195,13 +202,17 @@ class PlaceDetails extends Component {
                       titleStyle={{ fontSize: 18 }}
                       buttonStyle={{ backgroundColor: ThemeColors.text }}
                     />
+                    <Tab.Item
+                      title="Hours"
+                      titleStyle={{ fontSize: 18 }}
+                      buttonStyle={{ backgroundColor: ThemeColors.text }}
+                    />
                   </Tab>
                   <TabView
                     value={tabIndex}
-                    onChange={(i) => this.setState({ tabIndex: i })}
                     animationType="spring"
                   >
-                    <TabView.Item style={{ width: '100%' }}>
+                    <TabView.Item>
                       <View style={{ paddingHorizontal: 10 }}>
                         <Text h3 h3Style={{ textAlign: 'center', paddingBottom: 5, paddingTop: 10 }}>{place?.name}</Text>
                         <View style={{ flexDirection: 'row', justifyContent: 'center', paddingVertical: 5 }}>
@@ -271,7 +282,7 @@ class PlaceDetails extends Component {
                         <Text
                           style={{
                             color: place?.opening_hours.open_now ? 'green' : ThemeColors.text,
-                            fontSize: 18,
+                            fontSize: 22,
                             alignSelf: 'center',
                             paddingVertical: 5,
                           }}
@@ -294,15 +305,15 @@ class PlaceDetails extends Component {
                           <Button
                             title={'Call'}
                             titleStyle={{ fontSize: 20, color: 'black'}}
-                            containerStyle={{ marginTop: 5, marginBottom: 10 }}
-                            icon={<Icon name="phone-alt" type="font-awesome-5" />}
+                            containerStyle={{ marginTop: 5, marginBottom: 10, width: 120 }}
+                            icon={<Icon onPress={() => this.callNumber(place.formatted_phone_number)} name="phone-alt" type="font-awesome-5" />}
                             iconPosition='top'
                             onPress={() => this.callNumber(place.formatted_phone_number)}
                           />
                           <Button
                             title={'Directions'}
                             titleStyle={{ fontSize: 20, color: 'black'}}
-                            containerStyle={{ marginTop: 5, marginBottom: 10 }}
+                            containerStyle={{ marginTop: 5, marginBottom: 10, width: 120 }}
                             icon={<Icon name="map" type="font-awesome-5" />}
                             iconPosition='top'
                             onPress={() => this.clickPlaceLink(place?.url)}
@@ -310,7 +321,7 @@ class PlaceDetails extends Component {
                           <Button
                             title={'Website'}
                             titleStyle={{ fontSize: 20, color: 'black'}}
-                            containerStyle={{ marginTop: 5, marginBottom: 10 }}
+                            containerStyle={{ marginTop: 5, marginBottom: 10, width: 120 }}
                             icon={<Icon name="globe-americas" type="font-awesome-5" />}
                             iconPosition='top'
                             onPress={() => this.clickPlaceLink(place?.website)}
@@ -319,7 +330,7 @@ class PlaceDetails extends Component {
                       </View>
                     </TabView.Item>
                     <TabView.Item>
-                      <View style={{ paddingHorizontal: 10, paddingTop: 10 }}>
+                      <ScrollView style={{ paddingHorizontal: 10, paddingTop: 10 }}>
                         <Text
                           h4
                           h4Style={{
@@ -352,6 +363,29 @@ class PlaceDetails extends Component {
                             );
                           })
                         }
+                      </ScrollView>
+                    </TabView.Item>
+                    <TabView.Item>
+                      <View style={{ paddingHorizontal: 10, paddingTop: 10 }}>
+                        <Text
+                          style={{
+                            color: place?.opening_hours.open_now ? 'green' : ThemeColors.text,
+                            fontSize: 24,
+                            textAlign: 'center',
+                            marginBottom: 10,
+                          }}
+                        >
+                          {
+                            place?.opening_hours.open_now ? "Open Now" : "Closed"
+                          }
+                        </Text>
+                        {
+                          place?.opening_hours?.weekday_text?.map(weekday => {
+                            return (
+                              <Text h4>{weekday}</Text>
+                            )
+                          })
+                        }
                       </View>
                     </TabView.Item>
                   </TabView>
@@ -369,7 +403,7 @@ class PlaceDetails extends Component {
                 </View>
               )
             }
-          </ScrollView>
+          </View>
         )}
       </HeaderHeightContext.Consumer>
     );
@@ -377,82 +411,3 @@ class PlaceDetails extends Component {
 }
 
 export default PlaceDetails;
-
-
-{/* <View
-  style={{
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    backgroundColor: 'white',
-    borderRadius: 10,
-    margin: 10,
-    elevation: 2,
-    borderWidth: 1.5,
-    borderColor: 'lightgray'
-  }}
-  >
-  <Text h4 style={{ textAlign: 'center', marginBottom: 5 }}>{place?.name}</Text>
-  <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }}>
-    <Text style={{ marginRight: 5, alignSelf: 'center' }}>{place.rating}</Text>
-    <Text style={{ flexDirection: 'row', marginRight: 5, alignSelf: 'center' }}>
-      {
-        this.stars(place.rating).map(star => star)
-      }
-    </Text>
-    <Text style={{ alignSelf: 'center', marginRight: 5 }}>{this.totalRatings(place.userRatingsTotal)}</Text>
-    <Icon
-      name="circle"
-      type="font-awesome"
-      size={5}
-      color='#333'
-      style={{ alignSelf: 'center', marginRight: 5 }}
-    />
-    <Text style={{ flexDirection: 'row', marginRight: 5, alignSelf: 'center' }}>
-      {
-        this.priceLevel(place.price_level)
-      }
-    </Text>
-    <Icon
-      name="circle"
-      type="font-awesome"
-      size={5}
-      color='#333'
-      style={{ alignSelf: 'center', marginRight: 5 }}
-    />
-    <Text style={{ flexDirection: 'row', marginRight: 5, alignSelf: 'center' }}>
-      {
-        `${this.distanceAway(coordinate)} mi`
-      }
-    </Text>
-    <Icon
-      name="circle"
-      type="font-awesome"
-      size={5}
-      color='#333'
-      style={{ alignSelf: 'center', marginRight: 5 }}
-    />
-    <Text style={{ color: place.opening_hours.open_now ? 'green' : ThemeColors.text }}>
-      {
-        place.opening_hours.open_now ? "Open" : "Closed"
-      }
-    </Text>
-  </View>
-  <Text 
-    style={{
-      textAlign: 'center',
-      fontSize: 18, 
-      textTransform: 'capitalize', 
-      marginRight: 5 
-    }}
-  >
-    {this.placeTypes(place.types)}
-  </Text>
-  <Text style={{ fontSize: 18, textAlign: 'center' }}>{place.vicinity}</Text>
-  </View>
-  <View>
-  <Button
-    title="Google Page"
-    titleStyle={{ fontSize: 20, color: ThemeColors.text }}
-    onPress={() => this.clickPlaceLink(place.url)}
-  />
-  </View> */}
