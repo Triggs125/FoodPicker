@@ -1,7 +1,7 @@
 import 'react-native-gesture-handler';
 import React, { useState } from 'react';
 import { View, LogBox } from 'react-native';
-import { Button } from 'react-native-elements';
+import { Button, Image } from 'react-native-elements';
 import { NavigationContainer, ThemeProvider } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import * as SplashScreen from 'expo-splash-screen';
@@ -27,11 +27,6 @@ import LobbyCreator from './components/Lobby/LobbyCreator';
 import LoadingSpinner from './components/LoadingSpinner';
 import AccountEdit from './components/Account/AccountEdit';
 import ForgotPassword from './components/Account/ForgotPassword';
-
-// import {
-//   AdMobBanner,
-//   setTestDeviceIDAsync,
-// } from 'expo-ads-admob';
 
 const Stack = createStackNavigator();
 
@@ -106,24 +101,6 @@ export default function App() {
     'Using Math.random'
   ]);
 
-  // const adUnitId = !Constants.platform.web && __DEV__
-  //   ? "ca-app-pub-3940256099942544/6300978111"
-  //   : Constants.platform.android
-  //     ? "ca-app-pub-1885494348989912/3971948721"
-  //     : "ca-app-pub-1885494348989912/2737353131";
-
-  // const adUnitId = "ca-app-pub-1885494348989912/3971948721";
-
-  // console.log("Ad Unit", adUnitId);
-
-  // __DEV__
-  // ? setTestDeviceIDAsync('EMULATOR')
-  //   .then(() => {
-  //     console.log("Test Device ID set");
-  //     setLoading(false);
-  //   })
-  // : setLoading(false);
-
   onAuthStateChanged(auth, (authUser) => {
     if (!authUser) {
       setUser(null);
@@ -145,6 +122,10 @@ export default function App() {
       setUser(authUser)
     })
   });
+
+  if (Constants.platform.web) {
+    return (<Image source={'./assets/splash.png'} />)
+  }
 
   return loading === true ? (
     <View>
