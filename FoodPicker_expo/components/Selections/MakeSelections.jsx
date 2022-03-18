@@ -1,6 +1,6 @@
 import { Component } from "react";
-import { Dimensions, ScrollView, View } from "react-native";
-import { Card, Icon, Input, Switch, Text } from 'react-native-elements';
+import { Dimensions, View } from "react-native";
+import { Button, Icon, Switch, Text } from 'react-native-elements';
 import { HeaderHeightContext } from '@react-navigation/elements';
 // import FoodProfile from "../FoodProfile/FoodProfile";
 // import GoogleFoodSearch from "./GoogleFoodSearch";
@@ -8,7 +8,7 @@ import FoodChoices from "./FoodChoices";
 import FoodPageNavigation from "./FoodPageNavigation";
 import LoadingSpinner from "../LoadingSpinner";
 import Constants from 'expo-constants';
-import { getDoc, doc } from "firebase/firestore";
+import { getDoc, doc, setDoc } from "firebase/firestore";
 import { PLACE_DETAILS_API_KEY, GOOGLE_MAPS_API_KEY } from "../../config";
 import ThemeColors from "../../assets/ThemeColors";
 
@@ -44,6 +44,7 @@ class MakeSelections extends Component {
     this.lastChoicesPage = this.lastChoicesPage.bind(this);
     this.clearSelections = this.clearSelections.bind(this);
     this.getUserFoodSelections = this.getUserFoodSelections.bind(this);
+    this.userSelectionPage = this.userSelectionPage.bind(this);
   }
 
   componentDidMount() {
@@ -140,7 +141,6 @@ class MakeSelections extends Component {
     let places = foodChoices;
     if (nextPageToken != null) {
       url += "&pagetoken=" + nextPageToken;
-      console.log("Page token present");
     } else {
       places = [];
     }
@@ -212,6 +212,52 @@ class MakeSelections extends Component {
     }
   }
 
+  userSelectionPage() {
+    const { lobbyData, user, db } = this.props;
+    const { selectedFoodChoices } = this.state;
+    
+    this.setState({ loading: true });
+    // Add food selections to firestore
+    setDoc(doc(db, 'food_selections', `${lobbyData.ref.id}_${user.uid}`), {
+      lobbyId: lobbyData.ref.id,
+      uid: user.uid,
+      selections: selectedFoodChoices,
+    }, {
+      merge: false,
+    })
+    .then(() => {
+      // Add user to lobby usersReady list
+      const usersReady = lobbyData.usersReady || [];
+      if (!usersReady?.includes(user.uid)) {
+        console.log("Adding user to ready list")
+        setDoc(lobbyData.ref, { usersReady: [...usersReady, user.uid] }, { merge: true })
+        .then(() => {
+          this.clearSelections();
+
+          // Go to user's selection page
+          if (selectedFoodChoices.length === 0) {
+            this.props.navigation.navigate('LobbyView', { lobbyRef: lobbyData.ref });
+          } else {
+            this.props.navigation.navigate('UserSelections', { lobbyData: lobbyData, user: user });
+          }
+          this.setState({ loading: false });
+        });
+      } else {
+        // Go to user's selection page
+        if (selectedFoodChoices.length === 0) {
+          this.props.navigation.navigate('LobbyView', { lobbyRef: lobbyData.ref });
+        } else {
+          this.props.navigation.navigate('UserSelections', { lobbyData: lobbyData, user: user });
+        }
+        this.setState({ loading: false });
+      }
+    })
+    .catch((err) => {
+      console.error("MakeSelections::userSelectionPage", err);
+      this.setState({ loading: false });
+    });
+  }
+
   render() {
     const {
       screenHeight,
@@ -244,41 +290,93 @@ class MakeSelections extends Component {
               {...this.props}
               googleSearchText={this.setGoogleSearchText}
             /> */}
+            <View
+              style={{
+                flexDirection: 'row',
+                justifyContent: 'space-between',
+              }}
+            >
+              <View
+                style={{
+                  flexDirection: 'row',
+                  borderRadius: 10,
+                  paddingHorizontal: 10,
+                  paddingTop: 5,
+                  justifyContent: 'center'
+                }}
+              >
+                <Switch
+                  value={this.openNowFilter}
+                  color={ThemeColors.button}
+                  style={{ alignSelf: 'center' }}
+                  onValueChange={(value) => {
+                    this.openNowFilter = value;
+                    this.setState({ choicesPageIndex: 0 });
+                    this.fetchNearestPlacesFromGoogle([], null);
+                  }}
+                />
+                <Text
+                  style={{ marginLeft: 10, alignSelf: 'center', fontSize: 20 }}
+                  ellipsizeMode='tail'
+                  numberOfLines={1}
+                >
+                  Only open now?
+                </Text>
+              </View>
+              <View style={{ paddingLeft: 10, paddingBottom: 10 }}>
+                <Button
+                  type='solid'
+                  title={`${selectedFoodChoices?.length || 0} / ${maxNumberOfSelections}`}
+                  titleStyle={{
+                    marginLeft: 0,
+                    marginTop: 11,
+                    fontSize: 20,
+                    color: 'white',
+                    paddingRight: 7,
+                    fontWeight: 'bold',
+                  }}
+                  raised
+                  icon={
+                    <Icon
+                      name="shopping-bag"
+                      type="foundation"
+                      color='#333'
+                      size={60}
+                      containerStyle={{ marginHorizontal: 0, paddingLeft: 0, paddingRight: 11, marginRight: -58 }}
+                    />
+                  }
+                  containerStyle={{ marginRight: 15, marginTop: 23 }}
+                  buttonStyle={{
+                    padding: 0,
+                    marginBottom: -9,
+                    marginTop: -22,
+                    marginRight: -1,
+                    backgroundColor: 'transparent'
+                  }}
+                  onPress={this.userSelectionPage}
+                />
+              </View>
+            </View>
             {
               loading ? (
                 <>
-                  <Text>{''}</Text>
                   <Text>{''}</Text>
                   <LoadingSpinner />
                   <Text>{''}</Text>
                 </>
               ) : (
-                <>
-                  <View
+                <View
+                  style={{ justifyContent: 'center' }}
+                >
+                  <Text
                     style={{
-                      flexDirection: 'row',
-                      borderRadius: 10,
-                      paddingHorizontal: 10,
-                      paddingTop: 5
+                      fontSize: 12,
+                      marginLeft: 15,
+                      textAlign: 'center'
                     }}
                   >
-                    <Switch
-                      value={this.openNowFilter}
-                      color={ThemeColors.button}
-                      onValueChange={(value) => {
-                        this.openNowFilter = value;
-                        this.setState({ choicesPageIndex: 0 });
-                        this.fetchNearestPlacesFromGoogle([], null);
-                      }}
-                    />
-                    <Text
-                      style={{ marginLeft: 10, alignSelf: 'center', fontSize: 20 }}
-                      ellipsizeMode='tail'
-                      numberOfLines={1}
-                    >
-                      Only open now?
-                    </Text>
-                  </View>
+                    Pick 0 - 5 selections
+                  </Text>
                   <FoodChoices
                     {...this.props}
                     googleSearchText={googleSearchText}
@@ -288,17 +386,18 @@ class MakeSelections extends Component {
                     setChoices={this.setChoices}
                     nextPageToken={nextPageToken}
                     foodChoices={foodChoices}
-                    selectedFoodChoices={selectedFoodChoices}
                     lobbyData={lobbyData}
+                    selectedFoodChoices={selectedFoodChoices}
                     maxNumberOfSelections={maxNumberOfSelections}
                   />
-                </>
+                </View>
               )
             }
             <FoodPageNavigation
               {...this.props}
               nextChoicesPage={this.nextChoicesPage}
               lastChoicesPage={this.lastChoicesPage}
+              userSelectionPage={this.userSelectionPage}
               choicesPageIndex={choicesPageIndex}
               clearSelections={this.clearSelections}
               selectedFoodChoices={selectedFoodChoices}
@@ -306,6 +405,7 @@ class MakeSelections extends Component {
               lobbyData={lobbyData}
               user={user}
               maxNumberOfSelections={maxNumberOfSelections}
+              loading={loading}
             />
           </View>
         )}

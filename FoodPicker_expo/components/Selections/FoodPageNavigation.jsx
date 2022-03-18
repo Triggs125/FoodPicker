@@ -1,43 +1,12 @@
-import { doc, setDoc } from "firebase/firestore";
 import { Component } from "react";
-import { Dimensions, StyleSheet, View } from "react-native";
-import { Button, Card, Icon, Input, Text } from 'react-native-elements';
+import { View } from "react-native";
+import { Button, Text } from 'react-native-elements';
 import ThemeColors from '../../assets/ThemeColors';
 
 class FoodPageNavigation extends Component {
-  async userSelectionPage() {
-    const { lobbyData, user, selectedFoodChoices, db } = this.props;
-    
-    if (selectedFoodChoices.length > 0) {
-      try {
-        // Add food selections to firestore
-        await setDoc(doc(db, 'food_selections', `${lobbyData.ref.id}_${user.uid}`), {
-          lobbyId: lobbyData.ref.id,
-          uid: user.uid,
-          selections: selectedFoodChoices,
-        }, {
-          merge: false,
-        });
-
-        // Add user to lobby usersReady list
-        const usersReady = lobbyData.usersReady || [];
-        if (!usersReady?.includes(user.uid)) {
-          console.log("Adding user to ready list")
-          await setDoc(lobbyData.ref, { usersReady: [...usersReady, user.uid] }, { merge: true });
-        }
-
-        this.props.clearSelections();
-        // Go to user's selection page
-        this.props.navigation.navigate('UserSelections', { lobbyData: lobbyData, user: user });
-      } catch (err) {
-        console.error("FoodPageNavigation::userSelectionPage", err);
-      }
-    }
-  }
-  
   render() {
     const {
-      lobbyData, choicesPageIndex, foodChoices, lastChoicesPage, selectedFoodChoices, maxNumberOfSelections, nextChoicesPage
+      lobbyData, choicesPageIndex, foodChoices, lastChoicesPage, nextChoicesPage, userSelectionPage,
     } = this.props;
 
     const addressName = lobbyData.locationGeocodeAddress &&
@@ -46,7 +15,7 @@ class FoodPageNavigation extends Component {
 
     return (
       <View>
-        <View style={{ justifyContent: 'space-between', flexDirection: 'row', marginTop: -8, paddingHorizontal: 10 }}>
+        <View style={{ justifyContent: 'space-between', flexDirection: 'row', marginTop: -8, paddingHorizontal: 15 }}>
           <Text>{addressName}</Text>
           <Text>Page {choicesPageIndex + 1}</Text>
         </View>
@@ -69,29 +38,25 @@ class FoodPageNavigation extends Component {
               borderRadius: 10,
               borderTopLeftRadius: 25,
               borderBottomLeftRadius: 25,
-              marginVertical: 20
+              marginVertical: 20,
+              marginLeft: 5,
             }}
           />
-          <View>
-            <Button
-              type='clear'
-              title={`${selectedFoodChoices.length} / ${maxNumberOfSelections}`}
-              titleStyle={{ marginLeft: 0, marginTop: 11, fontSize: 20, color: 'white', paddingRight: 7, fontWeight: 'bold' }}
-              icon={
-                <Icon
-                  name="shopping-bag"
-                  type="foundation"
-                  color='#333'
-                  size={60}
-                  containerStyle={{ marginHorizontal: 0, paddingLeft: 0, paddingRight: 11, marginRight: -58 }}
-                />
-              }
-              buttonStyle={{ padding: 0, backgroundColor: 'transparent', marginRight: 15 }}
-              containerStyle={{ paddingRight: 0, marginLeft: 15 }}
-              onPress={() => this.userSelectionPage()}
-            />
-            <Text style={{ marginTop: -7, fontWeight: 'bold', textAlign: 'center' }}>Finish</Text>
-          </View>
+          <Button
+            title="Finish"
+            onPress={userSelectionPage}
+            titleStyle={{ fontSize: 20, color: 'white' }}
+            buttonStyle={{ 
+              backgroundColor: ThemeColors.text,
+              borderRadius: 10,
+              paddingHorizontal: 15
+            }}
+            raised
+            containerStyle={{
+              borderRadius: 10,
+              marginVertical: 20,
+            }}
+          />
           <Button
             title="Next Page"
             onPress={nextChoicesPage}
@@ -109,7 +74,8 @@ class FoodPageNavigation extends Component {
               borderRadius: 10,
               borderTopRightRadius: 25,
               borderBottomRightRadius: 25,
-              marginVertical: 20
+              marginVertical: 20,
+              marginRight: 5,
             }}
           />
         </View>

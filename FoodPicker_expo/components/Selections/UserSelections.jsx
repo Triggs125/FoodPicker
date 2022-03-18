@@ -211,11 +211,11 @@ class UserSelections extends Component {
                               containerStyle={{
                                 elevation: 6,
                                 height: 90,
-                                // minHeight: 99,
                                 marginBottom: 10,
                                 marginTop: 0,
                                 marginHorizontal: 10,
-                                paddingTop: 10
+                                paddingTop: 10,
+                                justifyContent: 'center'
                               }}
                             >
                               <Card.Title
