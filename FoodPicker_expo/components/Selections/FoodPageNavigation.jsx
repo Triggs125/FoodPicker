@@ -22,7 +22,7 @@ class FoodPageNavigation extends Component {
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 10, paddingHorizontal: 5 }}>
           <Button
             title={"Last Page"}
-            disabled={choicesPageIndex <= 0 || foodChoices.length >= 60}
+            disabled={foodChoices.length < 60 && choicesPageIndex === 0}
             onPress={lastChoicesPage}
             titleStyle={{ fontSize: 20, color: ThemeColors.text }}
             buttonStyle={{
@@ -60,6 +60,7 @@ class FoodPageNavigation extends Component {
           <Button
             title="Next Page"
             onPress={nextChoicesPage}
+            disabled={choicesPageIndex > foodChoices.length / 2 - 1}
             titleStyle={{ fontSize: 20, color: 'white' }}
             buttonStyle={{ 
               backgroundColor: ThemeColors.text,
