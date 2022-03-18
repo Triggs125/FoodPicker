@@ -11,6 +11,7 @@ import Constants from 'expo-constants';
 import { getDoc, doc, setDoc } from "firebase/firestore";
 import { PLACE_DETAILS_API_KEY, GOOGLE_MAPS_API_KEY } from "../../config";
 import ThemeColors from "../../assets/ThemeColors";
+import { TouchableOpacity } from "react-native-gesture-handler";
 
 class MakeSelections extends Component {
   constructor(props) {
@@ -323,38 +324,32 @@ class MakeSelections extends Component {
                   Only open now?
                 </Text>
               </View>
-              <View style={{ paddingLeft: 10, paddingBottom: 10 }}>
-                <Button
-                  type='solid'
-                  title={`${selectedFoodChoices?.length || 0} / ${maxNumberOfSelections}`}
-                  titleStyle={{
-                    marginLeft: 0,
-                    marginTop: 11,
-                    fontSize: 20,
-                    color: 'white',
-                    paddingRight: 7,
-                    fontWeight: 'bold',
-                  }}
-                  raised
-                  icon={
-                    <Icon
-                      name="shopping-bag"
-                      type="foundation"
-                      color='#333'
-                      size={60}
-                      containerStyle={{ marginHorizontal: 0, paddingLeft: 0, paddingRight: 11, marginRight: -58 }}
-                    />
-                  }
-                  containerStyle={{ marginRight: 15, marginTop: 23 }}
-                  buttonStyle={{
-                    padding: 0,
-                    marginBottom: -9,
-                    marginTop: -22,
-                    marginRight: -1,
-                    backgroundColor: 'transparent'
-                  }}
+              <View style={{ paddingRight: 15, paddingTop: 5 }}>
+                <TouchableOpacity
                   onPress={this.userSelectionPage}
-                />
+                >
+                  <Text style={{ textAlign: 'center', fontSize: 18 }}>Picks</Text>
+                  <Text
+                    style={{
+                      textAlign: 'center',
+                      fontSize: 20,
+                      fontWeight: 'bold'
+                    }}
+                  >
+                    {
+                      loading ? (
+                        <LoadingSpinner size="small" />
+                      ) : (
+                        <Text
+                          style={{ fontWeight: 'bold', color: ThemeColors.text }}
+                        >
+                          {selectedFoodChoices?.length || 0}
+                        </Text>
+                      )
+                    }
+                    {` / ${maxNumberOfSelections}`}
+                  </Text>
+                </TouchableOpacity>
               </View>
             </View>
             {
@@ -375,7 +370,7 @@ class MakeSelections extends Component {
                       textAlign: 'center'
                     }}
                   >
-                    Pick 0 - 5 selections
+                    Choose 0 - 5 selections
                   </Text>
                   <FoodChoices
                     {...this.props}
