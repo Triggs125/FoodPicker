@@ -141,7 +141,6 @@ class PlaceDetails extends Component {
   }
 
   clickPlaceLink(url) {
-    console.log("Link Clicked")
     Linking.canOpenURL(url)
     .then(supported => {
       if (supported) {

@@ -36,7 +36,9 @@ class FoodPageNavigation extends Component {
   }
   
   render() {
-    const { lobbyData, choicesPageIndex } = this.props;
+    const {
+      lobbyData, choicesPageIndex, foodChoices, lastChoicesPage, selectedFoodChoices, maxNumberOfSelections, nextChoicesPage
+    } = this.props;
 
     const addressName = lobbyData.locationGeocodeAddress &&
       lobbyData.locationGeocodeAddress[0]?.city + ", " + 
@@ -51,8 +53,8 @@ class FoodPageNavigation extends Component {
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 10, paddingHorizontal: 5 }}>
           <Button
             title={"Last Page"}
-            // disabled={this.props.choicesPageIndex <= 0}
-            onPress={this.props.lastChoicesPage}
+            disabled={choicesPageIndex <= 0 || foodChoices.length >= 60}
+            onPress={lastChoicesPage}
             titleStyle={{ fontSize: 20, color: ThemeColors.text }}
             buttonStyle={{
               backgroundColor: 'white',
@@ -73,7 +75,7 @@ class FoodPageNavigation extends Component {
           <View>
             <Button
               type='clear'
-              title={`${this.props.selectedFoodChoices.length} / ${this.props.maxNumberOfSelections}`}
+              title={`${selectedFoodChoices.length} / ${maxNumberOfSelections}`}
               titleStyle={{ marginLeft: 0, marginTop: 11, fontSize: 20, color: 'white', paddingRight: 7, fontWeight: 'bold' }}
               icon={
                 <Icon
@@ -92,7 +94,7 @@ class FoodPageNavigation extends Component {
           </View>
           <Button
             title="Next Page"
-            onPress={this.props.nextChoicesPage}
+            onPress={nextChoicesPage}
             titleStyle={{ fontSize: 20, color: 'white' }}
             buttonStyle={{ 
               backgroundColor: ThemeColors.text,

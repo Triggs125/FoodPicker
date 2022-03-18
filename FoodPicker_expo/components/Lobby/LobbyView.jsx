@@ -435,142 +435,142 @@ class LobbyView extends Component {
     return (
       <HeaderHeightContext.Consumer>
         {headerHeight => (
-          loading ? (
-            <View style={{ justifyContent: 'space-between', height: screenHeight - headerHeight }}>
-              <Text>{''}</Text>
-              <LoadingSpinner />
-              <Text>{''}</Text>
-            </View>
-          ) : (
+          <View
+            style={{
+              paddingHorizontal: 10,
+              paddingTop: 10,
+              height: screenHeight - headerHeight,
+              justifyContent: 'space-between',
+            }}
+          >
+            {this.removeUserOverlay()}
             <View
-              style={{
-                paddingHorizontal: 10,
-                paddingTop: 10,
-                height: screenHeight - headerHeight,
-                justifyContent: 'space-between',
-              }}
+              style={{ flexDirection: "row", justifyContent: 'space-between', width: ScreenWidth - 20 }}
             >
-              {this.removeUserOverlay()}
-              <View
-                style={{ flexDirection: "row", justifyContent: 'space-between', width: ScreenWidth - 20 }}
+              <Button
+                buttonStyle={{ backgroundColor: 'transparent' }}
+                icon={<Icon name="settings" color={isHost ? 'black' : 'transparent'} />}
+                onPress={() => isHost && this.props.navigation.navigate("LobbyCreator", { lobbyData })}
+              />
+              <Text
+                style={{ fontSize: 24, width: ScreenWidth - 120, alignSelf: 'center', textAlign: 'center' }}
+                ellipsizeMode='tail'
+                numberOfLines={1}
               >
-                <Button
-                  buttonStyle={{ backgroundColor: 'transparent' }}
-                  icon={<Icon name="settings" color={isHost ? 'black' : 'transparent'} />}
-                  onPress={() => isHost && this.props.navigation.navigate("LobbyCreator", { lobbyData })}
-                />
-                <Text
-                  style={{ fontSize: 24, width: ScreenWidth - 120, alignSelf: 'center', textAlign: 'center' }}
-                  ellipsizeMode='tail'
-                  numberOfLines={1}
-                >
-                  {lobbyName}
-                </Text>
-                <Button
-                  type='clear'
-                  titleStyle={{ color: ThemeColors.text }}
-                  onPress={() => this.share()}
-                  icon={<Icon name="share" type="font-awesome" />}
-                />
+                {lobbyName}
+              </Text>
+              <Button
+                type='clear'
+                titleStyle={{ color: ThemeColors.text }}
+                onPress={() => this.share()}
+                icon={<Icon name="share" type="font-awesome" />}
+              />
+            </View>
+            <ScrollView
+              showsVerticalScrollIndicator={false}
+            >
+              <LocationView
+                {...this.props}
+                setLocationData={this.setLocationData}
+                location={lobbyData?.location}
+                locationGeocodeAddress={lobbyData?.locationGeocodeAddress}
+                distance={lobbyData?.distance}
+                isHost={isHost}
+                loading={loading}
+              />
+              <View style={{ justifyContent: 'space-between', marginBottom: 10, marginTop: -10 }}>
+                <Card containerStyle={{ marginHorizontal: 0, borderRadius: 10, borderColor: 'lightgray' }}>
+                  <Card.Title>People Ready: {this.numberOfUsersReady() || 0} of {lobbyUsers?.length || 0}</Card.Title>
+                  <Card.Divider />
+                  {
+                    loading ? (
+                      <LoadingSpinner />
+                    ) : (
+                      <View>
+                        {
+                          isHost ? (
+                            <Text style={{ fontSize: 12, marginBottom: 2, marginTop: -5 }}>*Hold down user to remove them</Text>
+                          ) : (
+                            <Text style={{ fontSize: 12, marginBottom: 2, marginTop: -5 }}>*Hold down your user to remove yourself</Text>
+                          )
+                        }
+                        {
+                          lobbyUsers &&
+                          lobbyUsers
+                          .sort((userA, userB) => {
+                            const userAReady = lobbyData.usersReady?.includes(userA.uid);
+                            const userBReady = lobbyData.usersReady?.includes(userB.uid);
+                            // Host is always on top
+                            if (userB.uid === lobbyData.host) return 1;
+                            if (userA.uid === lobbyData.host) return -1;
+                            // Current user is always second
+                            if (userB.uid === this.props.user.uid) return 1;
+                            if (userA.uid === this.props.user.uid) return -1;
+                            // Group everyone that's ready next
+                            if (userBReady === true) return 1;
+                            if (userAReady === true) return -1;
+                            // Everyone not ready stays at the bottom
+                            return 0;
+                          })
+                          .map((user, i) => {
+                            const userReady = lobbyData.usersReady?.includes(user.uid);
+                            return (
+                              <Button
+                                title={this.userTitle(user, userReady, isHost)}
+                                key={i}
+                                raised={userReady}
+                                containerStyle={{ marginVertical: 1, borderWidth: Constants.platform.ios && userReady ? 0.3 : 0, borderColor: 'lightgray' }}
+                                buttonStyle={{ justifyContent: 'space-between', backgroundColor: 'transparent', paddingVertical: 5 }}
+                                onPress={() => userReady && this.props.navigation.navigate('UserSelections', { user: user })}
+                                onLongPress={() => {
+                                  ((isHost && user.uid !== lobbyData.host) || (user.uid === this.props.user.uid && user.uid !== lobbyData.host)) && this.setState({ removeUserOverlay: true, removeUserOverlayUser: user })
+                                }}
+                              />
+                            );
+                          })
+                        }
+                      </View>
+                    )
+                  }
+                </Card>
               </View>
-              <ScrollView
-                showsVerticalScrollIndicator={false}
-              >
-                <LocationView
-                  {...this.props}
-                  setLocationData={this.setLocationData}
-                  location={lobbyData?.location}
-                  locationGeocodeAddress={lobbyData?.locationGeocodeAddress}
-                  distance={lobbyData?.distance}
-                  isHost={isHost}
-                  loading={loading}
-                />
-                <View style={{ justifyContent: 'space-between', marginBottom: 10, marginTop: -10 }}>
-                  <Card containerStyle={{ marginHorizontal: 0, borderRadius: 10, borderColor: 'lightgray' }}>
-                    <Card.Title>People Ready: {this.numberOfUsersReady()} of {lobbyUsers?.length}</Card.Title>
-                    <Card.Divider />
-                    {
-                      isHost ? (
-                        <Text style={{ fontSize: 12, marginBottom: 2, marginTop: -5 }}>*Hold down user to remove them</Text>
-                      ) : (
-                        <Text style={{ fontSize: 12, marginBottom: 2, marginTop: -5 }}>*Hold down your user to remove yourself</Text>
-                      )
-                    }
-                    {
-                      lobbyUsers &&
-                      lobbyUsers
-                      .sort((userA, userB) => {
-                        const userAReady = lobbyData.usersReady?.includes(userA.uid);
-                        const userBReady = lobbyData.usersReady?.includes(userB.uid);
-                        // Host is always on top
-                        if (userB.uid === lobbyData.host) return 1;
-                        if (userA.uid === lobbyData.host) return -1;
-                        // Current user is always second
-                        if (userB.uid === this.props.user.uid) return 1;
-                        if (userA.uid === this.props.user.uid) return -1;
-                        // Group everyone that's ready next
-                        if (userBReady === true) return 1;
-                        if (userAReady === true) return -1;
-                        // Everyone not ready stays at the bottom
-                        return 0;
-                      })
-                      .map((user, i) => {
-                        const userReady = lobbyData.usersReady?.includes(user.uid);
-                        return (
-                          <Button
-                            title={this.userTitle(user, userReady, isHost)}
-                            key={i}
-                            raised={userReady}
-                            containerStyle={{ marginVertical: 1, borderWidth: Constants.platform.ios && userReady ? 0.3 : 0, borderColor: 'lightgray' }}
-                            buttonStyle={{ justifyContent: 'space-between', backgroundColor: 'transparent', paddingVertical: 5 }}
-                            onPress={() => userReady && this.props.navigation.navigate('UserSelections', { user: user })}
-                            onLongPress={() => {
-                              ((isHost && user.uid !== lobbyData.host) || (user.uid === this.props.user.uid && user.uid !== lobbyData.host)) && this.setState({ removeUserOverlay: true, removeUserOverlayUser: user })
-                            }}
-                          />
-                        );
-                      })
-                    }
-                  </Card>
-                </View>
-              </ScrollView>
-              <View style={{ marginBottom: 10, marginTop: 5 }}>
+            </ScrollView>
+            <View style={{ marginBottom: 10, marginTop: 5 }}>
+              <Button
+                title="Make Selections"
+                disabled={!lobbyData.location}
+                raised
+                titleStyle={{ color: 'white', fontWeight: 'bold', fontSize: 26 }}
+                buttonStyle={{ backgroundColor: ThemeColors.text }}
+                containerStyle={{ marginTop: 0 }}
+                onPress={() => this.props.navigation.navigate('MakeSelections')}
+              />
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                {
+                  isHost && lobbyData.finalDecision && (
+                    <Button
+                      title="Reset Decision"
+                      disabled={!lobbyData.finalDecision}
+                      raised
+                      titleStyle={{ color: ThemeColors.text, fontWeight: 'bold', fontSize: 25 }}
+                      buttonStyle={{ backgroundColor: 'white', borderColor: 'lightgray', borderWidth: 0.5 }}
+                      containerStyle={{ marginTop: 10, marginRight: 10, flex: 1 }}
+                      onPress={() => this.resetFinalDecision()}
+                    />
+                  )
+                }
                 <Button
-                  title="Make Selections"
-                  disabled={!lobbyData.location}
+                  title={isHost && !lobbyData.finalDecision ? "Calculate Final Decision" : "Final Decision"}
+                  disabled={isHost ? lobbyData.finalDecision === undefined && lobbyData.usersReady?.length === 0 : !lobbyData.finalDecision}
                   raised
                   titleStyle={{ color: 'white', fontWeight: 'bold', fontSize: 26 }}
                   buttonStyle={{ backgroundColor: ThemeColors.text }}
-                  containerStyle={{ marginTop: 0 }}
-                  onPress={() => this.props.navigation.navigate('MakeSelections')}
+                  containerStyle={{ marginTop: 10, flex: 1 }}
+                  onPress={() => lobbyData.finalDecision ? this.goToFinalDecision() : this.getFinalDecision()}
                 />
-                <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                  {
-                    isHost && lobbyData.finalDecision && (
-                      <Button
-                        title="Reset Decision"
-                        disabled={!lobbyData.finalDecision}
-                        raised
-                        titleStyle={{ color: ThemeColors.text, fontWeight: 'bold', fontSize: 25 }}
-                        buttonStyle={{ backgroundColor: 'white', borderColor: 'lightgray', borderWidth: 0.5 }}
-                        containerStyle={{ marginTop: 10, marginRight: 10, flex: 1 }}
-                        onPress={() => this.resetFinalDecision()}
-                      />
-                    )
-                  }
-                  <Button
-                    title={isHost && !lobbyData.finalDecision ? "Calculate Final Decision" : "Final Decision"}
-                    disabled={isHost ? lobbyData.finalDecision === undefined && lobbyData.usersReady?.length === 0 : !lobbyData.finalDecision}
-                    raised
-                    titleStyle={{ color: 'white', fontWeight: 'bold', fontSize: 26 }}
-                    buttonStyle={{ backgroundColor: ThemeColors.text }}
-                    containerStyle={{ marginTop: 10, flex: 1 }}
-                    onPress={() => lobbyData.finalDecision ? this.goToFinalDecision() : this.getFinalDecision()}
-                  />
-                </View>
               </View>
             </View>
-          )
+          </View>
         )}
       </HeaderHeightContext.Consumer>
     );

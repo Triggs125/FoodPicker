@@ -32,6 +32,7 @@ class MakeSelections extends Component {
       tokenPage: -1,
       loading: true,
       maxNumberOfSelections: maxNumberOfSelections,
+      nextPageToken: null,
     }
 
     this.setSelectedFoodProfile = this.setSelectedFoodProfile.bind(this);
@@ -51,6 +52,11 @@ class MakeSelections extends Component {
       this.fetchNearestPlacesFromGoogle();
       this.getUserFoodSelections();
     });
+
+    this.props.navigation.addListener('blur', () => {
+      this.setState({ nextPageToken: null, foodChoices: [], choicesPageIndex: 0 });
+    });
+
     if (lobbyData) {
       this.fetchNearestPlacesFromGoogle();
       this.getUserFoodSelections();
@@ -97,7 +103,12 @@ class MakeSelections extends Component {
     if (choicesPageIndex < Math.ceil(foodChoices.length / 2) - 1) {
       this.setState({ choicesPageIndex: choicesPageIndex + 1 });
     } else {
-      this.setState({ choicesPageIndex: 0 });
+      if (foodChoices.length < 60) {
+        this.fetchNearestPlacesFromGoogle();
+        this.setState({ choicesPageIndex: choicesPageIndex + 1 });
+      } else {
+        this.setState({ choicesPageIndex: 0 });
+      }
     }
   }
 
@@ -110,7 +121,10 @@ class MakeSelections extends Component {
     }
   }
 
-  async fetchNearestPlacesFromGoogle() {
+  async fetchNearestPlacesFromGoogle(
+    foodChoices = this.state.foodChoices,
+    nextPageToken = this.state.nextPageToken
+  ) {
     const { lobbyData } = this.props;
     
     const latitude = lobbyData.location.latitude;
@@ -121,8 +135,15 @@ class MakeSelections extends Component {
       + 'location=' + latitude + ',' + longitude
       + '&radius=' + radius
       + '&type=' + types
-      // + '&keyword=restaurant'
       + '&key=' + GOOGLE_MAPS_API_KEY;
+
+    let places = foodChoices;
+    if (nextPageToken != null) {
+      url += "&pagetoken=" + nextPageToken;
+      console.log("Page token present");
+    } else {
+      places = [];
+    }
 
     if (this.openNowFilter) {
       url = url + '&opennow=true';
@@ -138,7 +159,7 @@ class MakeSelections extends Component {
         if (res.status !== "OK") {
           throw new Error(res.status);
         }
-        var places = [];
+
         const GooglePicBaseUrl = `https://maps.googleapis.com/maps/api/place/photo?key=${PLACE_DETAILS_API_KEY}&maxwidth=400&photo_reference=`;
         for(let googlePlace of res.results) {
           var place = {};
@@ -149,7 +170,7 @@ class MakeSelections extends Component {
 
           var gallery = [];
           if (googlePlace.photos) {
-            for(let photo of googlePlace.photos) {
+            for(let photo of googlePlace.photos) { 
               var photoUrl = GooglePicBaseUrl + photo.photo_reference;
               gallery.push(photoUrl);
             }
@@ -169,6 +190,7 @@ class MakeSelections extends Component {
           places.push(place);
         }
         this.setChoices(places);
+        this.setState({ nextPageToken: res.next_page_token });
       })
       .catch(error => {
         console.error("FoodChoices::fetchNearestPlacesFromGoogle", error);
@@ -246,7 +268,7 @@ class MakeSelections extends Component {
                       onValueChange={(value) => {
                         this.openNowFilter = value;
                         this.setState({ choicesPageIndex: 0 });
-                        this.fetchNearestPlacesFromGoogle();
+                        this.fetchNearestPlacesFromGoogle([], null);
                       }}
                     />
                     <Text
@@ -280,6 +302,7 @@ class MakeSelections extends Component {
               choicesPageIndex={choicesPageIndex}
               clearSelections={this.clearSelections}
               selectedFoodChoices={selectedFoodChoices}
+              foodChoices={foodChoices}
               lobbyData={lobbyData}
               user={user}
               maxNumberOfSelections={maxNumberOfSelections}
@@ -287,7 +310,6 @@ class MakeSelections extends Component {
           </View>
         )}
       </HeaderHeightContext.Consumer>
-      
     )
   }
 }

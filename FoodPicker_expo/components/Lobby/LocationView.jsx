@@ -128,6 +128,8 @@ class LocationView extends Component {
     } = this.state;
     const { isHost, distanceError, locationError } = this.props;
 
+    const isLoading = loading || this.props.loading;
+
     const addressName = locationGeocodeAddress &&
       locationGeocodeAddress[0]?.city + ", " + 
       locationGeocodeAddress[0]?.region;
@@ -140,29 +142,38 @@ class LocationView extends Component {
               <Text style={{ fontSize: 20, paddingBottom: 2, textAlign: 'center', alignSelf: 'center' }}>
                 Distance:
               </Text>
-              <Button
-                title={
-                  <Text
-                    ellipsizeMode='tail'
-                    numberOfLines={1}
-                    style={{
-                      textAlign: 'left',
-                      fontSize: 18,
-                      fontWeight: 'normal',
-                      color: ThemeColors.text,
-                      marginRight: 5,
-                    }}
-                  >
-                    {distance ? `${distance} mile${distance === 1 ? '' : 's'}` : isHost ? 'Select a Distance' : 'No Distance Selected'}
-                  </Text>
-                }
-                titleStyle={{ textAlign: 'left', fontSize: 18, color: ThemeColors.text, marginRight: 10 }}
-                buttonStyle={{ backgroundColor: 'transparent' }}
-                containerStyle={{ alignSelf: 'center' }}
-                icon={!Constants.platform.web && distance && isHost && <Icon name={distanceChoicesOpen ? "angle-up" : "angle-down"} type="font-awesome" />}
-                iconRight
-                onPress={() => isHost && this.setState({ distanceChoicesOpen: !distanceChoicesOpen })}
-              />
+              {
+                isLoading ? (
+                  <View style={{ marginLeft: 10, alignContent: 'center', marginTop: 5, marginBottom: 10 }}>
+                    <LoadingSpinner size="small" />
+                  </View>
+                ) : (
+                  <Button
+                    title={
+                      <Text
+                        ellipsizeMode='tail'
+                        numberOfLines={1}
+                        style={{
+                          textAlign: 'left',
+                          fontSize: 18,
+                          fontWeight: 'normal',
+                          color: ThemeColors.text,
+                          marginRight: 5,
+                        }}
+                      >
+                        {distance ? `${distance} mile${distance === 1 ? '' : 's'}` : isHost ? 'Select a Distance' : 'No Distance Selected'}
+                      </Text>
+                    }
+                    titleStyle={{ textAlign: 'left', fontSize: 18, color: ThemeColors.text, marginRight: 10 }}
+                    buttonStyle={{ backgroundColor: 'transparent' }}
+                    containerStyle={{ alignSelf: 'center' }}
+                    icon={!Constants.platform.web && distance && isHost && <Icon name={distanceChoicesOpen ? "angle-up" : "angle-down"} type="font-awesome" />}
+                    iconRight
+                    onPress={() => isHost && this.setState({ distanceChoicesOpen: !distanceChoicesOpen })}
+                  />
+                )
+              }
+              
               <BottomSheet isVisible={distanceChoicesOpen}>
                 {
                   this.distances.map((distance, i) => {
@@ -204,12 +215,12 @@ class LocationView extends Component {
             }
           </View>
           <View>
-            <View style={{ flexDirection: 'row', justifyContent: 'flex-start', paddingLeft: 10, marginBottom: loading ? 5 : 0 }}>
+            <View style={{ flexDirection: 'row', justifyContent: 'flex-start', paddingLeft: 10, marginBottom: isLoading ? 5 : 0 }}>
               <Text style={{ fontSize: 20, paddingBottom: 2, textAlign: 'center', alignSelf: 'center' }}>
                 Location:
               </Text>
               {
-                !loading ? (
+                !isLoading ? (
                   <Button
                     title={
                       <Text 
@@ -234,7 +245,7 @@ class LocationView extends Component {
                     containerStyle={{ alignSelf: 'center' }}
                   />
                 ) : (
-                  <View style={{ marginLeft: 10, alignContent: 'center', marginTop: 5 }}>
+                  <View style={{ marginLeft: 10, alignContent: 'center', marginTop: 10, marginBottom: 5 }}>
                     <LoadingSpinner size="small" />
                   </View>
                 )
