@@ -1,12 +1,14 @@
-import { collection, doc, getDoc, getDocs, query, setDoc, where } from "firebase/firestore";
+import { collection, getDocs, query, setDoc, where } from "firebase/firestore";
+import { deleteUser } from "firebase/auth";
 import { Component } from "react";
 import { View, Dimensions } from "react-native";
-import { Input, Icon, Button, Text } from 'react-native-elements';
+import { Input, Icon, Button, Text, Overlay } from 'react-native-elements';
 import ThemeColors from "../../assets/ThemeColors";
 import Constants from 'expo-constants';
 import { HeaderHeightContext } from '@react-navigation/elements';
 import isAlpha from 'validator/lib/isAlpha';
 import { updateProfile } from 'firebase/auth';
+import { ScreenWidth } from "react-native-elements/dist/helpers";
 
 class AccountEdit extends Component {
   constructor(props) {
@@ -24,6 +26,9 @@ class AccountEdit extends Component {
       lastNameText: "",
       firstNameError: false,
       lastNameText: false,
+      removeAccountOverlayShowing: false,
+      removeAccountOverlayLoading: false,
+      removeAccountOverlayError: false,
     };
 
     this.componentDidAppear = this.componentDidAppear.bind(this);
@@ -102,6 +107,75 @@ class AccountEdit extends Component {
     return validFirstName && validLastName;
   }
 
+  removeAccount() {
+    return deleteUser(this.props.user)
+    .then(() => {
+      this.setState({
+        removeAccountOverlayShowing: false,
+        removeAccountOverlayLoading: false,
+      });
+      this.props.navigation.navigate("Account");
+    })
+    .catch(err => {
+      console.error("LobbyCreator::RemoveLobbyOverlay", err);
+      this.setState({
+        removeAccountOverlayLoading: false,
+        removeAccountOverlayError: true,
+      });
+    });;
+  }
+
+  removeAccountOverlay() {
+    const {
+      removeAccountOverlayShowing, removeAccountOverlayLoading, removeAccountOverlayError,
+      firstNameText, lastNameText
+    } = this.state;
+    return (
+      <Overlay
+        isVisible={removeAccountOverlayShowing}
+        overlayStyle={{ width: ScreenWidth - 20, borderRadius: 10 }}
+        onBackdropPress={() => {
+          this.setState({
+            removeAccountOverlayShowing: false,
+            removeAccountOverlayLoading: false,
+          });
+        }}
+      >
+        <Text
+          style={{ fontSize: 24, textAlign: 'center', marginTop: 10, marginBottom: 20 }}
+        >
+          {`${firstNameText}${lastNameText && ' ' + lastNameText}`}
+        </Text>
+        {
+          removeAccountOverlayError && (
+            <Text style={{ textAlign: 'center' }}>Error removing the user. Please try again or contact support.</Text>
+          )
+        }
+        <Button
+          title="Delete Account"
+          loading={removeAccountOverlayLoading}
+          titleStyle={{ fontSize: 24 }}
+          buttonStyle={{ backgroundColor: ThemeColors.button }}
+          onPress={() => {
+            this.setState({ removeAccountOverlayLoading: true });
+            this.removeAccount();
+          }}
+        />
+        <Button
+          title="Cancel"
+          type="clear"
+          disabled={removeAccountOverlayLoading}
+          titleStyle={{ color: ThemeColors.text, fontSize: 24 }}
+          onPress={() => {
+            this.setState({
+              removeAccountOverlayShowing: false,
+            });
+          }}
+        />
+      </Overlay>
+    );
+  }
+
   render() {
     const {
       firstNameText, lastNameText,
@@ -117,6 +191,7 @@ class AccountEdit extends Component {
       <HeaderHeightContext.Consumer>
         {headerHeight => (
           <View style={{ height: screenHeight - headerHeight, justifyContent: 'space-between' }}>
+            {this.removeAccountOverlay()}
             <View>
               <Text style={{ textAlign: 'center', color: ThemeColors.text }}>
                 { error && "Error loading or updating data. Please try again or contact support." }
@@ -185,6 +260,29 @@ class AccountEdit extends Component {
                   />
                 }
                 inputStyle={{ fontSize: 20 }}
+              />
+              <Button
+                title="Delete Account"
+                titleStyle={{
+                  color: ThemeColors.text,
+                  fontSize: 16,
+                }}
+                type="clear"
+                icon={
+                  <Icon
+                    name="warning"
+                    type="font-awesome"
+                    color={ThemeColors.text}
+                    style={{
+                      paddingRight: 10,
+                    }}
+                    size={20}
+                  />
+                }
+                containerStyle={{ marginTop: 20 }}
+                onPress={() => {
+                  this.setState({ removeAccountOverlayShowing: true });
+                }}
               />
             </View>
             <View style={{ marginBottom: 15, marginHorizontal: 10 }}>

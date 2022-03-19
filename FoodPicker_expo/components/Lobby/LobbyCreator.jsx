@@ -46,7 +46,6 @@ class LobbyCreator extends Component {
       loading: false,
       newLobby: lobby === undefined,
       removeLobbyOverlay: false,
-      removeLobbyOverlayLobby: null,
       removeLobbyOverlayLoading: false,
       removeLobbyOverlayError: false,
     }
@@ -240,7 +239,7 @@ class LobbyCreator extends Component {
                 this.props.navigation.navigate("LobbyPicker");
               })
               .catch(err => {
-                console.log("LobbyCreator::RemoveLobbyOverlay", err);
+                console.error("LobbyCreator::RemoveLobbyOverlay", err);
                 this.setState({
                   removeLobbyOverlayLoading: false,
                   removeLobbyOverlayError: true,
