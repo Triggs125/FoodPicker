@@ -1,10 +1,8 @@
 import { Component } from "react";
 import { SafeAreaView, StyleSheet, View } from 'react-native';
-import Constants from 'expo-constants';
 import { Button, Card, Icon, Overlay, Text, Input } from 'react-native-elements';
 import LoadingSpinner from '../LoadingSpinner';
-import { ScrollView, TouchableOpacity } from "react-native-gesture-handler";
-// import ThemeColors from '../../assets/ThemeColors';
+import { ScrollView } from "react-native-gesture-handler";
 import SearchAlgolia from "../Algolia/SearchAlgolia";
 import { collection, doc, getDocs, onSnapshot, query, setDoc, where, arrayUnion, updateDoc } from 'firebase/firestore';
 import { onAuthStateChanged } from 'firebase/auth';
@@ -60,6 +58,9 @@ class LobbyPicker extends Component {
           this.props.setKickedFromLobby(false);
         });
       }
+      this.state.userLobbiesUnsubscribe && this.state.userLobbiesUnsubscribe();
+      const userLobbiesUnsubscribe = this.userLobbiesUnsubscribe();
+      this.setState({ userLobbiesUnsubscribe });
     });
 
     this.componentBlurUnsub = this.props.navigation.addListener('blur', () => {
@@ -185,90 +186,175 @@ class LobbyPicker extends Component {
       });
   }
 
-  render() {
+  removeLobbyOverlay() {
     const {
-      loading, refresh, userLobbies,
-      openOverlay, overlayLobby, overlayPasswordText,
-      overlayPasswordShowing, overlayPasswordHash, overlayPasswordError,
-      overlayLoading, kickedMessage,
       removeLobbyOverlay, removeLobbyOverlayLobby, removeLobbyOverlayLoading, removeLobbyOverlayError
     } = this.state;
     return (
-      <SafeAreaView>
-        <Overlay
-          isVisible={removeLobbyOverlay}
-          overlayStyle={{ width: ScreenWidth - 20, borderRadius: 10 }}
-          onBackdropPress={() => {
+      <Overlay
+        isVisible={removeLobbyOverlay}
+        overlayStyle={{ width: ScreenWidth - 20, borderRadius: 10 }}
+        onBackdropPress={() => {
+          this.setState({
+            removeLobbyOverlay: false,
+            removeLobbyOverlayUser: null,
+            removeLobbyOverlayLoading: false,
+          });
+        }}
+      >
+        <Text
+          style={{ fontSize: 24, textAlign: 'center', marginTop: 10, marginBottom: 20 }}
+        >
+          {`${removeLobbyOverlayLobby?.name}`}
+        </Text>
+        {
+          removeLobbyOverlayError && (
+            <Text>Error removing the user. Please try again or contact support.</Text>
+          )
+        }
+        <Button
+          title="Remove Lobby"
+          loading={removeLobbyOverlayLoading}
+          titleStyle={{ fontSize: 24 }}
+          buttonStyle={{ backgroundColor: ThemeColors.button }}
+          onPress={() => {
+            this.setState({ removeLobbyOverlayLoading: true });
+            this.removeLobby(removeLobbyOverlayLobby)
+              .then(() => {
+                this.setState({
+                  removeLobbyOverlay: false,
+                  removeLobbyOverlayLobby: null,
+                  removeLobbyOverlayLoading: false,
+                });
+              })
+              .catch(err => {
+                console.log("LobbyView::RemoveLobbyOverlay", err);
+                this.setState({
+                  removeLobbyOverlayLoading: false,
+                  removeLobbyOverlayError: true,
+                });
+              });
+          }}
+        />
+        <Button
+          title="Cancel"
+          type="clear"
+          disabled={removeLobbyOverlayLoading}
+          titleStyle={{ color: ThemeColors.text, fontSize: 24 }}
+          onPress={() => {
             this.setState({
               removeLobbyOverlay: false,
-              removeLobbyOverlayUser: null,
-              removeLobbyOverlayLoading: false,
+              removeLobbyOverlayLobby: null,
             });
           }}
-        >
-          <Text
-            style={{ fontSize: 24, textAlign: 'center', marginTop: 10, marginBottom: 20 }}
-          >
-            {`${removeLobbyOverlayLobby?.name}`}
-          </Text>
-          {
-            removeLobbyOverlayError && (
-              <Text>Error removing the user. Please try again or contact support.</Text>
-            )
+        />
+      </Overlay>
+    );
+  }
+
+  kickedFromLobbyOverlay() {
+    const { kickedMessage } = this.state;
+    return (
+      <Overlay
+        isVisible={kickedMessage}
+        style={{ width: ScreenWidth - 20 }}
+      >
+        <Text style={{ fontSize: 20, marginBottom: 15, textAlign: 'center' }}>You have been kicked from the lobby</Text>
+        <Button
+          title="Continue"
+          titleStyle={{ fontSize: 24 }}
+          buttonStyle={{ backgroundColor: ThemeColors.button }}
+          onPress={() => this.setState({ kickedMessage: false })}
+        />
+      </Overlay>
+    )
+  }
+
+  passwordProtectedOverlay() {
+    const {
+      openOverlay, overlayLobby, overlayPasswordText,
+      overlayPasswordShowing, overlayPasswordHash, overlayPasswordError,
+      overlayLoading
+    } = this.state;
+    return (
+      <Overlay
+        isVisible={openOverlay}
+        overlayStyle={{ width: ScreenWidth - 20, borderRadius: 10 }}
+        onBackdropPress={() => {
+          this.setState({
+            openOverlay: false,
+            overlayLobby: null,
+            overlayPasswordText: "",
+            overlayPasswordShowing: false,
+            overlayPasswordHash: "",
+            overlayPasswordError: false,
+          });
+        }}
+      >
+        <Text style={{ fontSize: 24, textAlign: 'center' }}>{overlayLobby?.name}</Text>
+        <Input
+          placeholder="Password"
+          textContentType="password"
+          secureTextEntry={!overlayPasswordShowing}
+          autoCapitalize='none'
+          disabled={overlayLoading}
+          value={overlayPasswordText}
+          leftIcon={
+            <Icon
+              name='key'
+              type='font-awesome-5'
+              size={18}
+            />
           }
-          <Button
-            title="Remove Lobby"
-            loading={removeLobbyOverlayLoading}
-            titleStyle={{ fontSize: 24 }}
-            buttonStyle={{ backgroundColor: ThemeColors.button }}
-            onPress={() => {
-              this.setState({ removeLobbyOverlayLoading: true });
-              this.removeLobby(removeLobbyOverlayLobby)
-                .then(() => {
-                  this.setState({
-                    removeLobbyOverlay: false,
-                    removeLobbyOverlayLobby: null,
-                    removeLobbyOverlayLoading: false,
-                  });
-                })
-                .catch(err => {
-                  console.log("LobbyView::RemoveLobbyOverlay", err);
-                  this.setState({
-                    removeLobbyOverlayLoading: false,
-                    removeLobbyOverlayError: true,
-                  });
+          rightIcon={
+            <Button
+              title={overlayPasswordShowing ? 'hide' : 'show'}
+              type="clear"
+              titleStyle={{ color: 'gray' }}
+              onPress={() => this.setState({ overlayPasswordShowing: !overlayPasswordShowing })}
+            />
+          }
+          onChangeText={(text) => this.setState({ overlayPasswordText: text })}
+          inputStyle={{ fontSize: 24, paddingLeft: 5 }}
+          containerStyle={{ marginTop: 10 }}
+          errorMessage={overlayPasswordError ? "Incorrect Password. Please try again." : ""}
+        />
+        <Button
+          title="Open Lobby"
+          loading={overlayLoading}
+          onPress={() => {
+            this.setState({ overlayLoading: true, overlayPasswordError: false });
+            this.props.comparePassword(overlayPasswordText, overlayPasswordHash, (err, passwordCorrect) => {
+              if (err) {
+                console.error("LobbyPicker::Overlay::PasswordCompare", err);
+                return;
+              }
+              if (passwordCorrect && openOverlay) {
+                const lobbyRef = this.getLobbyRef(overlayLobby);
+                this.props.navigation.navigate('LobbyView', { lobbyRef });
+                this.setState({
+                  openOverlay: false,
+                  overlayLobby: null,
+                  overlayPasswordText: "",
+                  overlayPasswordShowing: false,
+                  overlayPasswordHash: "",
+                  overlayPasswordError: false,
                 });
-            }}
-          />
-          <Button
-            title="Cancel"
-            type="clear"
-            disabled={removeLobbyOverlayLoading}
-            titleStyle={{ color: ThemeColors.text, fontSize: 24 }}
-            onPress={() => {
-              this.setState({
-                removeLobbyOverlay: false,
-                removeLobbyOverlayLobby: null,
-              });
-            }}
-          />
-        </Overlay>
-        <Overlay
-          isVisible={kickedMessage}
-          style={{ width: ScreenWidth - 20 }}
-        >
-          <Text style={{ fontSize: 20, marginBottom: 15, textAlign: 'center' }}>You have been kicked from the lobby</Text>
-          <Button
-            title="Continue"
-            titleStyle={{ fontSize: 24 }}
-            buttonStyle={{ backgroundColor: ThemeColors.button }}
-            onPress={() => this.setState({ kickedMessage: false })}
-          />
-        </Overlay>
-        <Overlay
-          isVisible={openOverlay}
-          overlayStyle={{ width: ScreenWidth - 20, borderRadius: 10 }}
-          onBackdropPress={() => {
+              } else {
+                this.setState({ overlayPasswordError: true });
+              }
+              this.setState({ overlayLoading: false });
+            })
+          }}
+          loadingStyle={{ paddingVertical: 5 }}
+          titleStyle={{ fontSize: 24 }}
+          buttonStyle={{ backgroundColor: ThemeColors.button }}
+        />
+        <Button
+          title="Cancel"
+          type="clear"
+          titleStyle={{ color: ThemeColors.text, fontSize: 24 }}
+          onPress={() => {
             this.setState({
               openOverlay: false,
               overlayLobby: null,
@@ -278,82 +364,20 @@ class LobbyPicker extends Component {
               overlayPasswordError: false,
             });
           }}
-        >
-          <Text style={{ fontSize: 24, textAlign: 'center' }}>{overlayLobby?.name}</Text>
-          <Input
-            placeholder="Password"
-            textContentType="password"
-            secureTextEntry={!overlayPasswordShowing}
-            autoCapitalize='none'
-            disabled={overlayLoading}
-            value={overlayPasswordText}
-            leftIcon={
-              <Icon
-                name='key'
-                type='font-awesome-5'
-                size={18}
-              />
-            }
-            rightIcon={
-              <Button
-                title={overlayPasswordShowing ? 'hide' : 'show'}
-                type="clear"
-                titleStyle={{ color: 'gray' }}
-                onPress={() => this.setState({ overlayPasswordShowing: !overlayPasswordShowing })}
-              />
-            }
-            onChangeText={(text) => this.setState({ overlayPasswordText: text })}
-            inputStyle={{ fontSize: 24, paddingLeft: 5 }}
-            containerStyle={{ marginTop: 10 }}
-            errorMessage={overlayPasswordError ? "Incorrect Password. Please try again." : ""}
-          />
-          <Button
-            title="Open Lobby"
-            loading={overlayLoading}
-            onPress={() => {
-              this.setState({ overlayLoading: true, overlayPasswordError: false });
-              this.props.comparePassword(overlayPasswordText, overlayPasswordHash, (err, passwordCorrect) => {
-                if (err) {
-                  console.error("LobbyPicker::Overlay::PasswordCompare", err);
-                  return;
-                }
-                if (passwordCorrect && openOverlay) {
-                  const lobbyRef = this.getLobbyRef(overlayLobby);
-                  this.props.navigation.navigate('LobbyView', { lobbyRef });
-                  this.setState({
-                    openOverlay: false,
-                    overlayLobby: null,
-                    overlayPasswordText: "",
-                    overlayPasswordShowing: false,
-                    overlayPasswordHash: "",
-                    overlayPasswordError: false,
-                  });
-                } else {
-                  this.setState({ overlayPasswordError: true });
-                }
-                this.setState({ overlayLoading: false });
-              })
-            }}
-            loadingStyle={{ paddingVertical: 5 }}
-            titleStyle={{ fontSize: 24 }}
-            buttonStyle={{ backgroundColor: ThemeColors.button }}
-          />
-          <Button
-            title="Cancel"
-            type="clear"
-            titleStyle={{ color: ThemeColors.text, fontSize: 24 }}
-            onPress={() => {
-              this.setState({
-                openOverlay: false,
-                overlayLobby: null,
-                overlayPasswordText: "",
-                overlayPasswordShowing: false,
-                overlayPasswordHash: "",
-                overlayPasswordError: false,
-              });
-            }}
-          />
-        </Overlay>
+        />
+      </Overlay>
+    )
+  }
+
+  render() {
+    const {
+      loading, refresh, userLobbies,
+    } = this.state;
+    return (
+      <SafeAreaView>
+        {this.removeLobbyOverlay()}
+        {this.kickedFromLobbyOverlay()}
+        {this.passwordProtectedOverlay()}
         <View style={styles.container}>
           <Button
             title="Create a Lobby"

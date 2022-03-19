@@ -42,6 +42,7 @@ class CreateAccount extends Component {
       passwordShowing: false,
       passwordValidator: passwordSchema,
       emailExistsError: false,
+      loading: false,
     }
 
     this.createAccount = this.createAccount.bind(this);
@@ -49,22 +50,30 @@ class CreateAccount extends Component {
 
   async createAccount() {
     if (this.formValidation()) {
-      console.log("Valid Form");
-      try {
-        const res = await createUserWithEmailAndPassword(this.props.auth, this.state.emailAddressText, this.state.passwordText);
+      this.setState({ loading: true });
+      createUserWithEmailAndPassword(this.props.auth, this.state.emailAddressText, this.state.passwordText)
+      .then(async (res) => {
         const displayName = `${this.state.firstNameText}${this.state.lastNameText !== "" ? " " + this.state.lastNameText : ""}`;
         await updateProfile(this.props.auth.currentUser, {
           displayName: displayName
         });
         await AddUserToDB(this.props.db, res.user, this.state.firstNameText, this.state.lastNameText, displayName);
-        this.setState({ firstNameText: "", lastNameText: "", emailAddressText: "", passwordText: "", passwordShowing: false });
+        this.setState({
+          firstNameText: "",
+          lastNameText: "",
+          emailAddressText: "",
+          passwordText: "",
+          passwordShowing: false,
+          loading: false,
+        });
         this.props.navigation.navigate('LobbyPicker');
-      } catch (err) {
+      }).catch(err => {
         console.error("Account Creation Error:", err);
         if (err.code === "auth/email-already-in-use") {
           this.setState({ emailExistsError: true });
         }
-      }
+        this.setState({ loading: false });
+      });
     } else {
       console.log("Invalid Form");
     }
@@ -110,6 +119,7 @@ class CreateAccount extends Component {
       emailExistsError,
       oldEnoughValue,
       oldEnoughError,
+      loading,
     } = this.state;
 
     return (
@@ -176,7 +186,7 @@ class CreateAccount extends Component {
                   />
                 }
                 inputStyle={styles.inputStyle}
-                errorMessage={emailAddressError ? "Please enter a valid email address" : ""}
+                errorMessage={emailAddressError ? "Please enter a valid email address" : emailExistsError ? "Email address already in use" : ""}
                 onChangeText={(text) => this.setState({ emailAddressText: text })}
               />
               <Input
@@ -215,19 +225,6 @@ class CreateAccount extends Component {
                 }
                 onChangeText={(text) => this.setState({ passwordText: text })}
               />
-              {
-                emailExistsError &&
-                <Text
-                  style={{
-                    textAlign: 'center',
-                    fontSize: 16,
-                    marginBottom: 10,
-                    color: 'red',
-                  }}
-                >
-                  Email address already in use.
-                </Text>
-              }
               <View>
                 <View
                   style={{
@@ -248,11 +245,27 @@ class CreateAccount extends Component {
                   {oldEnoughError && "You must be 13 years old or older to create an account."}
                 </Text>
               </View>
+              {
+                (emailAddressError || emailExistsError || passwordFailures.length > 0 || firstNameError || oldEnoughError) && (
+                  <Text
+                    style={{
+                      color: "red",
+                      fontSize: 18,
+                      textAlign: 'center',
+                      marginTop: 10,
+                    }}
+                  >
+                    There are errors above. Please fix them before trying again.
+                  </Text>
+                )
+              }
             </View>
             <View style={{ marginHorizontal: 10 }}>
               <Button
                 title="Create Account"
                 raised
+                loading={loading}
+                loadingStyle={{ paddingVertical: 10 }}
                 icon={{
                   name: 'user-plus',
                   type: 'font-awesome',

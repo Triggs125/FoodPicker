@@ -1,6 +1,6 @@
 import { Component } from "react";
 import { Dimensions, StyleSheet, View } from "react-native";
-import { Card, Icon, Input, Text, Button, Switch } from 'react-native-elements';
+import { Card, Icon, Input, Text, Button, Switch, Overlay } from 'react-native-elements';
 import Constants from 'expo-constants';
 import { HeaderHeightContext } from '@react-navigation/elements';
 import LocationView from "./LocationView";
@@ -8,7 +8,8 @@ import ThemeColors from "../../assets/ThemeColors";
 import { ScrollView, TouchableOpacity } from "react-native-gesture-handler";
 import PasswordValidator from 'password-validator';
 import Password from '../Utils/Password';
-import { addDoc, collection, getDocs, query, setDoc, where } from "firebase/firestore";
+import { addDoc, collection, doc, getDocs, query, setDoc, where } from "firebase/firestore";
+import { ScreenWidth } from "react-native-elements/dist/helpers";
 
 class LobbyCreator extends Component {
   constructor(props) {
@@ -43,6 +44,11 @@ class LobbyCreator extends Component {
       distance: lobby?.distance,
       distanceError: false,
       loading: false,
+      newLobby: lobby === undefined,
+      removeLobbyOverlay: false,
+      removeLobbyOverlayLobby: null,
+      removeLobbyOverlayLoading: false,
+      removeLobbyOverlayError: false,
     }
 
     this.setLocationData = this.setLocationData.bind(this);
@@ -138,6 +144,7 @@ class LobbyCreator extends Component {
               passwordHash: hashedPassword,
               lobbyId: lobbyData.ref.id,
               lobbyPath: lobbyData.ref.path,
+              creator: this.props.user.uid,
             });
           }
         }
@@ -189,6 +196,79 @@ class LobbyCreator extends Component {
     this.setState(data);
   }
 
+  removeLobbyOverlay() {
+    const {
+      removeLobbyOverlay, removeLobbyOverlayLoading, removeLobbyOverlayError
+    } = this.state;
+    const lobbyData = this.props.route?.params?.lobbyData;
+    return (
+      <Overlay
+        isVisible={removeLobbyOverlay}
+        overlayStyle={{ width: ScreenWidth - 20, borderRadius: 10 }}
+        onBackdropPress={() => {
+          this.setState({
+            removeLobbyOverlay: false,
+            removeLobbyOverlayUser: null,
+            removeLobbyOverlayLoading: false,
+          });
+        }}
+      >
+        <Text
+          style={{ fontSize: 24, textAlign: 'center', marginTop: 10, marginBottom: 20 }}
+        >
+          {`${lobbyData?.name}`}
+        </Text>
+        {
+          removeLobbyOverlayError && (
+            <Text style={{ textAlign: 'center' }}>Error removing the user. Please try again or contact support.</Text>
+          )
+        }
+        <Button
+          title="Remove Lobby"
+          loading={removeLobbyOverlayLoading}
+          titleStyle={{ fontSize: 24 }}
+          buttonStyle={{ backgroundColor: ThemeColors.button }}
+          onPress={() => {
+            this.setState({ removeLobbyOverlayLoading: true });
+            this.removeLobby()
+              .then(() => {
+                this.setState({
+                  removeLobbyOverlay: false,
+                  removeLobbyOverlayLobby: null,
+                  removeLobbyOverlayLoading: false,
+                });
+                this.props.navigation.navigate("LobbyPicker");
+              })
+              .catch(err => {
+                console.log("LobbyCreator::RemoveLobbyOverlay", err);
+                this.setState({
+                  removeLobbyOverlayLoading: false,
+                  removeLobbyOverlayError: true,
+                });
+              });
+          }}
+        />
+        <Button
+          title="Cancel"
+          type="clear"
+          disabled={removeLobbyOverlayLoading}
+          titleStyle={{ color: ThemeColors.text, fontSize: 24 }}
+          onPress={() => {
+            this.setState({
+              removeLobbyOverlay: false,
+              removeLobbyOverlayLobby: null,
+            });
+          }}
+        />
+      </Overlay>
+    );
+  }
+
+  async removeLobby() {
+    const lobbyData = this.props.route?.params?.lobbyData;
+    return setDoc(doc(this.props.db, lobbyData.ref.path), { active: false }, { merge: true });
+  }
+
   render() {
     const {
       screenHeight,
@@ -197,8 +277,10 @@ class LobbyCreator extends Component {
       distanceError,
       locationError, location, locationGeocodeAddress, distance,
       loading,
+      newLobby,
     } = this.state;
     const lobbyData = this.props.route?.params?.lobbyData;
+    const ownsLobby = lobbyData?.host === this.props.user.uid;
     return (
       <HeaderHeightContext.Consumer>
         {headerHeight => (
@@ -210,6 +292,7 @@ class LobbyCreator extends Component {
               paddingHorizontal: 10,
             }}
           >
+            {this.removeLobbyOverlay()}
             <ScrollView>
               <Input
                 placeholder="Lobby Name"
@@ -316,6 +399,35 @@ class LobbyCreator extends Component {
                 locationError={locationError}
                 distanceError={distanceError}
               />
+              {
+                !newLobby && ownsLobby && (
+                  <Button
+                    title="Delete Lobby"
+                    titleStyle={{
+                      color: ThemeColors.text,
+                      fontSize: 20,
+                    }}
+                    type="clear"
+                    icon={
+                      <Icon
+                        name="warning"
+                        type="font-awesome"
+                        color={ThemeColors.text}
+                        style={{
+                          paddingRight: 10,
+                        }}
+                        size={20}
+                      />
+                    }
+                    containerStyle={{ marginTop: 20 }}
+                    onPress={() => {
+                      if (ownsLobby) {
+                        this.setState({ removeLobbyOverlay: true });
+                      }
+                    }}
+                  />
+                )
+              }
             </ScrollView>
             <View style={{ marginTop: 5 }}>
               <Button

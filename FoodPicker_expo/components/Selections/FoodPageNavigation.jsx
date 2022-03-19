@@ -60,7 +60,7 @@ class FoodPageNavigation extends Component {
           <Button
             title="Next Page"
             onPress={nextChoicesPage}
-            disabled={choicesPageIndex > foodChoices.length / 2 - 1}
+            disabled={choicesPageIndex >= Math.floor(foodChoices.length / 2)}
             titleStyle={{ fontSize: 20, color: 'white' }}
             buttonStyle={{ 
               backgroundColor: ThemeColors.text,

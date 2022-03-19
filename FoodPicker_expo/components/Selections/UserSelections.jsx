@@ -164,7 +164,7 @@ class UserSelections extends Component {
 
     const userDisplayName = user.displayName ? user.displayName : user.firstName + " " + user.lastName
 
-    const isDisabled = user.uid !== this.props.user.uid;
+    const isUserChoices = user.uid === this.props.user.uid;
 
     return (
       <HeaderHeightContext.Consumer>
@@ -186,7 +186,17 @@ class UserSelections extends Component {
               ) : (
                 <View>
                   <Text
-                    style={{ textAlign: 'center', alignSelf: 'center', marginTop: 5, marginBottom: 10, fontWeight: '600', fontSize: 30, fontWeight: 'normal', width: ScreenWidth - 40 }}
+                    style={{
+                      textAlign: 'center',
+                      alignSelf: 'center',
+                      marginTop: 5,
+                      marginBottom: 10,
+                      fontWeight: '600',
+                      fontSize: 30,
+                      fontWeight: 'normal',
+                      width: ScreenWidth - 40,
+                      color: isUserChoices ? ThemeColors.text : 'black'
+                    }}
                     ellipsizeMode='tail'
                     numberOfLines={1}
                   >
@@ -194,7 +204,7 @@ class UserSelections extends Component {
                   </Text>
                   <Text style={{ fontSize: 10, paddingLeft: 12 }}>**Select Card to see the place details</Text>
                   {
-                    !isDisabled &&
+                    isUserChoices &&
                     <Text style={{ fontSize: 10, paddingLeft: 12, paddingBottom: 3 }}>**Hold down to delete</Text>
                   }
                   <ScrollView>
@@ -202,7 +212,7 @@ class UserSelections extends Component {
                       selectedFoodChoices?.data?.selections?.map((foodChoice, i) => {
                         return (
                           <TouchableOpacity
-                            onLongPress={() => !isDisabled && this.removeFoodChoice(foodChoice)}
+                            onLongPress={() => isUserChoices && this.removeFoodChoice(foodChoice)}
                             onPress={() => this.props.navigation.navigate("PlaceDetails", { foodChoice })}
                             key={'food-choice-' + i}
                             containerStyle={{ marginHorizontal: -5 }}

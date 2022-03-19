@@ -34,6 +34,7 @@ class LobbyView extends Component {
     }
 
     this.setLocationData = this.setLocationData.bind(this);
+    this.goToFinalDecision = this.goToFinalDecision.bind(this);
   }
 
   componentDidMount() {
@@ -98,7 +99,7 @@ class LobbyView extends Component {
     const { lobbyData } = this.state;
     const lobbyName = "lobbies/" + lobbyData.ref.id;
     Share.share({
-      message: "Help me choose which restaurant to go to. After logging into the FoodPicker app, paste this into the search box: " + lobbyName,
+      message: "Join me in picking a restaurant to go to! After logging into the FoodPicker app, paste this into the lobby search box: " + lobbyName,
       title: "Join this Food Picker Lobby!",
     }, {
       subject: "Food Picker Lobby",
@@ -263,9 +264,9 @@ class LobbyView extends Component {
     const maxIds = this.getMax(ids);
 
     let matchingSelections = selections
-      .filter(s => {
-        return maxIds.includes(s.id);
-      });
+    .filter(s => {
+      return maxIds.includes(s.id);
+    });
     
     if (matchingSelections.length === 1) {
       return matchingSelections[0];
@@ -280,9 +281,9 @@ class LobbyView extends Component {
     const minRankedIds = this.getMax(minRankedObjects);
     
     matchingSelections = selections
-      .filter(s => {
-        return minRankedIds.includes(s.id);
-      });
+    .filter(s => {
+      return minRankedIds.includes(s.id);
+    });
 
     if (matchingSelections.length === 1) {
       return matchingSelections[0];
@@ -296,25 +297,26 @@ class LobbyView extends Component {
     const minDistanceIds = this.getMin(minDistancObjects);
     
     matchingSelections = selections
-      .filter(s => {
-        return minDistanceIds.includes(s.id);
-      });
+    .filter(s => {
+      return minDistanceIds.includes(s.id);
+    });
 
     if (matchingSelections.length === 1) {
+      console.log("Returning")
       return matchingSelections[0];
     }
     
     // Filter selections based on max rating
     const maxRatingObjects = {};
     matchingSelections.forEach(s => {
-      maxRatingObjects[id] = s.rating;
+      maxRatingObjects[s.id] = s.rating;
     });
     const maxRatingIds = this.getMax(maxRatingObjects);
-    
+
     matchingSelections = selections
-      .filter(s => {
-        return maxRatingIds.includes(s.id);
-      });
+    .filter(s => {
+      return maxRatingIds.includes(s.id);
+    });
 
     return matchingSelections[0];
   }
@@ -559,15 +561,29 @@ class LobbyView extends Component {
                     />
                   )
                 }
-                <Button
-                  title={isHost && !lobbyData.finalDecision ? "Calculate Final Decision" : "Final Decision"}
-                  disabled={isHost ? lobbyData.finalDecision === undefined && lobbyData.usersReady?.length === 0 : !lobbyData.finalDecision}
-                  raised
-                  titleStyle={{ color: 'white', fontWeight: 'bold', fontSize: 26 }}
-                  buttonStyle={{ backgroundColor: ThemeColors.text }}
-                  containerStyle={{ marginTop: 10, flex: 1 }}
-                  onPress={() => lobbyData.finalDecision ? this.goToFinalDecision() : this.getFinalDecision()}
-                />
+                {
+                  isHost ? (
+                    <Button
+                      title={lobbyData.finalDecision === undefined ? "Calculate Final Decision" : "Final Decision"}
+                      disabled={!(lobbyData.finalDecision !== undefined || lobbyData.usersReady?.length > 0)}
+                      raised
+                      titleStyle={{ color: 'white', fontWeight: 'bold', fontSize: 26 }}
+                      buttonStyle={{ backgroundColor: ThemeColors.text }}
+                      containerStyle={{ marginTop: 10, flex: 1 }}
+                      onPress={() => lobbyData.finalDecision ? this.goToFinalDecision() : this.getFinalDecision()}
+                    />
+                  ) : (
+                    <Button
+                      title={"Final Decision"}
+                      disabled={lobbyData.finalDecision === undefined}
+                      raised
+                      titleStyle={{ color: 'white', fontWeight: 'bold', fontSize: 26 }}
+                      buttonStyle={{ backgroundColor: ThemeColors.text }}
+                      containerStyle={{ marginTop: 10, flex: 1 }}
+                      onPress={this.goToFinalDecision}
+                    />
+                  )
+                }
               </View>
             </View>
           </View>

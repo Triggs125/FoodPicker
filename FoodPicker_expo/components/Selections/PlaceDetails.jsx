@@ -251,6 +251,7 @@ class PlaceDetails extends Component {
           <Text style={{
             fontSize: 16,
             textAlign: 'center',
+            paddingVertical: 5,
           }}>
             {place?.opening_hours?.weekday_text[dayOfWeek]}
           </Text>
@@ -260,7 +261,6 @@ class PlaceDetails extends Component {
               fontSize: 20,
               textTransform: 'capitalize',
               paddingVertical: 5,
-              marginTop: 5,
             }}
           >
             {this.placeTypes(place?.types)}
