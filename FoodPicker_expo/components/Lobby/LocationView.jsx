@@ -15,6 +15,8 @@ class LocationView extends Component {
   constructor(props) {
     super(props);
 
+    this.distances = [0.5, 1, 2, 5, 10, 20];
+
     this.state = {
       location: props.location,
       locationGeocodeAddress: props.locationGeocodeAddress,
@@ -93,10 +95,12 @@ class LocationView extends Component {
           })
           .catch(err => {
             console.error("LocationView::getUsersLocation::getCurrentPositionAsync", err);
+            this.setState({ loading: false });
           });
       })
       .catch(err => {
         console.error("LocationView::getUsersLocation::requestForegroundPermissionsAsync", err);
+        this.setState({ loading: false });
       });
   }
 
@@ -116,8 +120,6 @@ class LocationView extends Component {
         console.error("LocationView::setPlaceData::reverseGeocodeAsync", err);
       });
   }
-
-  distances = [0.5, 1, 2, 5, 10, 20]
 
   render() {
     const { 

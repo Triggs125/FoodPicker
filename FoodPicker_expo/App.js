@@ -163,7 +163,7 @@ export default function App() {
               name="Account"
               options={{ headerTitle: 'Account', headerRight: () => {<></>} }}
             >
-              {props => <Account {...props} user={user} auth={auth} db={db} />}
+              {props => <Account {...props} user={user} auth={auth} db={db} setLobbyData={setLobbyData} />}
             </Stack.Screen>
             <Stack.Screen
               name="CreateAccount"
