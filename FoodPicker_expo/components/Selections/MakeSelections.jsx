@@ -226,17 +226,20 @@ class MakeSelections extends Component {
     }, {
       merge: false,
     })
-    .then(() => {
+    .then(async () => {
       // Add user to lobby usersReady list
       const usersReady = lobbyData.usersReady || [];
       if (!usersReady?.includes(user.uid)) {
         console.log("Adding user to ready list")
         setDoc(lobbyData.ref, { usersReady: [...usersReady, user.uid] }, { merge: true })
-        .then(() => {
+        .then(async () => {
           this.clearSelections();
 
           // Go to user's selection page
           if (selectedFoodChoices.length === 0) {
+            // Remove user from lobby usersReady list
+            usersReady = usersReady.filter(uid => uid !== user.uid);
+            await setDoc(lobbyData.ref, { usersReady: usersReady }, { merge: true });
             this.props.navigation.navigate('LobbyView', { lobbyRef: lobbyData.ref });
           } else {
             this.props.navigation.navigate('UserSelections', { lobbyData: lobbyData, user: user });
