@@ -230,12 +230,10 @@ class MakeSelections extends Component {
       // Add user to lobby usersReady list
       const usersReady = lobbyData.usersReady || [];
       if (!usersReady?.includes(user.uid)) {
-        console.log("Adding user to ready list")
         setDoc(lobbyData.ref, { usersReady: [...usersReady, user.uid] }, { merge: true })
         .then(async () => {
           this.clearSelections();
 
-          // Go to user's selection page
           if (selectedFoodChoices.length === 0) {
             // Remove user from lobby usersReady list
             usersReady = usersReady.filter(uid => uid !== user.uid);
@@ -247,7 +245,6 @@ class MakeSelections extends Component {
           this.setState({ loading: false });
         });
       } else {
-        // Go to user's selection page
         if (selectedFoodChoices.length === 0) {
           this.props.navigation.navigate('LobbyView', { lobbyRef: lobbyData.ref });
         } else {
