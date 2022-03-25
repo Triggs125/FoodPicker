@@ -20,7 +20,7 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.driggs.foodpicker",
       "googleServicesFile": "./GoogleService-Info.plist",
-      "buildNumber": "1.0.0",
+      "buildNumber": "1.1.0",
       "config": {
         "googleMobileAdsAppId": "ca-app-pub-1885494348989912~6684907829"
       }
@@ -28,7 +28,7 @@
     "android": {
       "package": "com.driggs.foodpicker",
       "googleServicesFile": "./google-services.json",
-      "versionCode": 1,
+      "versionCode": 2,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#FFFFFF"
