@@ -29,26 +29,21 @@ class Account extends Component {
       passwordText: "",
       passwordShowing: false,
       emailAddressError: false,
-      randomRestaurantOverlayOpen: false,
-      randomRestaurantOverlayLoading: false,
-      randomRestaurantOverlayChoiceLoading: false,
-      randomRestaurantOverlayError: false,
+      randomRestaurantError: false,
+      randomRestaurantErrorDetails: '',
+      randomRestaurantErrorDetailsOpen: false,
+      randomRestaurantLoading: false,
     }
   }
 
   componentDidMount() {
-    this.props.navigation.addListener('focus', () => {
-      this.setState({ randomRestaurantOverlayOpen: false });
-    });
     this.props.navigation.addListener('blur', () => {
       this.setState({
-        randomRestaurantOverlayOpen: false,
-        location: undefined,
-        locationGeocodeAddress: undefined,
-        locationGeocodeAddress: undefined,
+        randomRestaurantError: false,
+        randomRestaurantErrorDetails: '',
+        randomRestaurantLoading: false,
       })
     });
-    this.getUserLocation();
   }
 
   async signIn() {
@@ -90,104 +85,95 @@ class Account extends Component {
   }
 
   getRandomRestaurant() {
-    const { location, distance } = this.state;
+    this.setState({ randomRestaurantLoading: true });
 
-    if (location === undefined 
-      || location?.longitude === undefined 
-      || location?.latitude === undefined 
-      || distance === undefined
-    ) {
-      this.setState({ randomRestaurantOverlayError: true, randomRestaurantOverlayChoiceLoading: false });
-    }
+    this.getUserLocation()
+      .then(({ location, distance, error }) => {
+        if (error) {
+          this.setState({
+            randomRestaurantError: true,
+            randomRestaurantErrorDetails: error
+          });
+          return;
+        }
+        
+        const latitude = location.latitude;
+        const longitude = location.longitude;
+        const radius = Math.round(distance * 1609.344);
+        const types = 'restaurant';
+        let url = 'https://maps.googleapis.com/maps/api/place/nearbysearch/json?'
+          + 'location=' + latitude + ',' + longitude
+          + '&radius=' + radius
+          + '&type=' + types
+          + '&opennow=true'
+          + '&key=' + GOOGLE_MAPS_API_KEY;
     
-    const latitude = location.latitude;
-    const longitude = location.longitude;
-    const radius = Math.round(distance * 1609.344);
-    const types = 'restaurant';
-    let url = 'https://maps.googleapis.com/maps/api/place/nearbysearch/json?'
-      + 'location=' + latitude + ',' + longitude
-      + '&radius=' + radius
-      + '&type=' + types
-      + '&opennow=true'
-      + '&key=' + GOOGLE_MAPS_API_KEY;
+        const places = [];
+    
+        fetch(url)
+          .then(res => {
+            return res.json();
+          })
+          .then(async (res) => {
+            if (res.status !== "OK") {
+              throw new Error(res.status);
+            }
+    
+            this.addPlaceDetails(res.results, places);
+            if (res.next_page_token !== undefined) {
+              const secondUrl = url + '&pagetoken=' + res.next_page_token;
 
-    this.setState({ randomRestaurantOverlayChoiceLoading: true });
-
-    const places = [];
-
-    fetch(url)
-      .then(res => {
-        return res.json();
-      })
-      .then(async (res) => {
-        if (res.status !== "OK") {
-          throw new Error(res.status);
-        }
-
-        this.addPlaceDetails(res.results, places);
-        if (res.next_page_token !== undefined) {
-          const secondUrl = 'https://maps.googleapis.com/maps/api/place/nearbysearch/json?'
-            + '&pagetoken=' + res.next_page_token
-            + '&key=' + GOOGLE_MAPS_API_KEY;
-          
-          await fetch(secondUrl)
-            .then(res2 => {
-              return res2.json();
-            })
-            .then(async (res2) => {
-              if (res2.status !== "OK") {
-                throw new Error(res.status);
-              }
-
-              this.addPlaceDetails(res2.results, places);
-              if (res2.next_page_token !== undefined) {
-                const secondUrl = 'https://maps.googleapis.com/maps/api/place/nearbysearch/json?'
-                  + '&pagetoken=' + res2.next_page_token
-                  + '&key=' + GOOGLE_MAPS_API_KEY;
-                
-                await fetch(secondUrl)
-                  .then(res3 => {
-                    return res3.json();
-                  })
-                  .then(res3 => {
-                    if (res3.status !== "OK") {
-                      throw new Error(res.status);
-                    }
-      
-                    this.addPlaceDetails(res3.results, places);
-                  })
-                  .catch(error => {
-                    console.error("Account::getRandomRestaurant::thirdUrl", error);
-                    this.setState({ randomRestaurantOverlayError: true });
-                  })
-                  .finally(() => {
-                    this.setState({ randomRestaurantOverlayChoiceLoading: false });
+              // Sleep for 2 seconds
+              // Must happen to get the second page of results as per: https://developers.google.com/maps/documentation/javascript/places#place_search_responses
+              await new Promise(r => setTimeout(r, 2000));
+              
+              await fetch(secondUrl)
+                .then(res2 => {
+                  return res2.json();
+                })
+                .then(async (res2) => {
+                  if (res2.status !== "OK") {
+                    throw new Error(res2.status);
+                  }
+    
+                  this.addPlaceDetails(res2.results, places);
+                })
+                .catch(err => {
+                  console.error("Account::getRandomRestaurant::secondUrl", err);
+                  this.setState({
+                    randomRestaurantError: true,
+                    randomRestaurantErrorDetails: err.message,
+                    randomRestaurantLoading: false,
                   });
-              }
-            })
-            .catch(error => {
-              console.error("Account::getRandomRestaurant::secondUrl", error);
-              this.setState({ randomRestaurantOverlayError: true });
-            })
-            .finally(() => {
-              this.setState({ randomRestaurantOverlayChoiceLoading: false });
+                });
+            }
+    
+            const randomRestaurantIndex = Math.round((Math.random() * 100)) % places.length;
+            const randomFoodChoice = places[randomRestaurantIndex];
+            this.props.navigation.navigate('PlaceDetails', { foodChoice: randomFoodChoice });
+            this.setState({
+              randomRestaurantError: false,
+              randomRestaurantErrorDetails: '',
+              randomRestaurantLoading: false,
             });
-        }
-
-        const randomRestaurantIndex = Math.round((Math.random() * 100)) % places.length;
-        const randomFoodChoice = places[randomRestaurantIndex];
-        this.props.navigation.navigate('PlaceDetails', { foodChoice: randomFoodChoice });
+          })
+          .catch(err => {
+            console.error("Account::getRandomRestaurant::firstUrl", err);
+            console.log(err.message);
+            this.setState({
+              randomRestaurantError: true,
+              randomRestaurantErrorDetails: err.message,
+              randomRestaurantLoading: false,
+            });
+          });
+      })
+      .catch(err => {
         this.setState({
-          randomRestaurantOverlayChoiceLoading: false,
-          randomRestaurantOverlayLoading: false,
-          randomRestaurantOverlayError: false,
-          randomRestaurantOverlayOpen: false,
+          randomRestaurantError: true,
+          randomRestaurantErrorDetails: err.message,
+          randomRestaurantLoading: false,
         });
       })
-      .catch(error => {
-        console.error("Account::getRandomRestaurant::firstUrl", error);
-        this.setState({ randomRestaurantOverlayError: true });
-      });
   }
 
   addPlaceDetails(results, places) {
@@ -222,68 +208,70 @@ class Account extends Component {
     }
   }
 
-  randomRestaurantOverlay() {
+  randomRestaurantErrorOverlay() {
     const {
-      randomRestaurantOverlayOpen,
-      randomRestaurantOverlayLoading,
-      randomRestaurantOverlayChoiceLoading,
-      randomRestaurantOverlayError,
-      distance,
-      locationGeocodeAddress,
-      location,
+      randomRestaurantError,
+      randomRestaurantErrorDetails,
+      randomRestaurantErrorDetailsOpen,
     } = this.state;
     return (
       <Overlay
-        isVisible={randomRestaurantOverlayOpen}
+        isVisible={randomRestaurantError}
         overlayStyle={{ width: ScreenWidth - 20, borderRadius: 10 }}
         onBackdropPress={() => {
           this.setState({
-            randomRestaurantOverlayOpen: false,
+            randomRestaurantError: false,
+            randomRestaurantErrorDetails: '',
+            randomRestaurantLoading: false,
           });
         }}
       >
-        <Text
-          style={{ fontSize: 24, textAlign: 'center', marginVertical: 10 }}
+        <View
+          style={{ flexDirection: 'row', justifyContent: 'center', marginBottom: 10 }}
         >
-          Random Restaurant
-        </Text>
+          <Icon
+            name="warning"
+            type="font-awesome"
+            size={30}
+            color={ThemeColors.text}
+            style={{ flex: 1, justifyContent: 'center' }}
+          />
+          <Text
+            style={{ fontSize: 24, color: ThemeColors.text, marginLeft: 10 }}
+          >
+            Error Choosing a Random Restaurant
+          </Text>
+        </View>
+        <Button
+          type="clear"
+          title={<Text style={{ color: 'black' }}>Details: {!randomRestaurantErrorDetailsOpen && '...'}</Text>}
+          titleStyle={{ color: ThemeColors.button }}
+          iconRight
+          icon={
+            <Icon
+              name={randomRestaurantErrorDetailsOpen ? "caret-up" : "caret-down"}
+              type="font-awesome"
+              size={16}
+              style={{ marginLeft: 5 }}
+            />
+          }
+          onPress={() => this.setState({ randomRestaurantErrorDetailsOpen: !randomRestaurantErrorDetailsOpen })}
+        />
         {
-          randomRestaurantOverlayError && (
-            <Text style={{ textAlign: 'center' }}>Error choosing a random restaurant. Please try again or contact support.</Text>
+          randomRestaurantErrorDetailsOpen && (
+            <Text style={{ textAlign: 'center' }}>{randomRestaurantErrorDetails}</Text>
           )
         }
-        <LocationView
-          setLocationData={this.setLocationData}
-          isHost={true}
-          loading={randomRestaurantOverlayLoading}
-          distance={distance}
-          location={location}
-          locationGeocodeAddress={locationGeocodeAddress}
-        />
         <Button
-          title="Random Restaurant"
-          loading={randomRestaurantOverlayChoiceLoading}
-          loadingStyle={{ marginVertical: 7 }}
-          disabled={
-            randomRestaurantOverlayLoading
-            || !location || !distance
-          }
-          titleStyle={{ fontSize: 24 }}
-          buttonStyle={{ backgroundColor: ThemeColors.button }}
-          containerStyle={{ marginTop: 20 }}
-          onPress={() => {
-            this.props.setLobbyData({ location });
-            this.getRandomRestaurant();
-          }}
-        />
-        <Button
-          title="Cancel"
+          title="Close"
           type="clear"
-          disabled={randomRestaurantOverlayLoading}
           titleStyle={{ color: ThemeColors.text, fontSize: 24 }}
+          containerStyle={{ marginTop: 10 }}
           onPress={() => {
             this.setState({
-              randomRestaurantOverlayOpen: false,
+              randomRestaurantError: false,
+              randomRestaurantErrorDetails: '',
+              randomRestaurantLoading: false,
             });
           }}
         />
@@ -292,49 +280,37 @@ class Account extends Component {
   }
 
   getUserLocation() {
-    this.setState({ randomRestaurantOverlayLoading: true });
-    Location.requestForegroundPermissionsAsync()
-      .then(({ status }) => {
+    return Location.requestForegroundPermissionsAsync()
+      .then(async ({ status }) => {
         if (status !== 'granted') {
           console.log(`User ${this.props.user.uid} did not grant access to their location.`);
-          return;
+          return { error: 'This feature requires access to your location.' };
         }
         Location.setGoogleApiKey(GOOGLE_MAPS_API_KEY);
-        Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High })
-          .then(location => {
-            Location.reverseGeocodeAsync({ latitude: location.coords.latitude, longitude: location.coords.longitude })
-              .then(locationGeocodeAddress => {
-                const distance = this.state.distance || this.distances[2];
-                const coords = { longitude: location.coords.longitude, latitude: location.coords.latitude };
-                this.setState({ location: coords, locationGeocodeAddress, distance });
-              })
-              .catch(err => {
-                console.error("Account::getUsersLocation::reverseGeocodeAsync", err);
-              })
-              .finally(() => {
-                this.setState({ randomRestaurantOverlayLoading: false });
-              });
+        const loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High })
+          .then(loc => {
+            const distance = this.state.distance || this.distances[2];
+            const location = { longitude: loc.coords.longitude, latitude: loc.coords.latitude };
+            this.props.setLobbyData({ location });
+            return { distance, location };
           })
           .catch(err => {
             console.error("Account::getUsersLocation::getCurrentPositionAsync", err);
-            this.setState({ randomRestaurantOverlayLoading: false });
+            return { error: 'There was an issue retrieving your location.' };
           });
+        return loc;
       })
       .catch(err => {
         console.error("Account::getUsersLocation::requestForegroundPermissionsAsync", err);
-        this.setState({ randomRestaurantOverlayLoading: false });
+        return { error: 'There was an issue retrieving your location permissions.' };
       });
   }
 
-  clickRandomRestaurantButton() {
-    this.setState({ randomRestaurantOverlayOpen: true });
-    this.getUserLocation();
-  }
-
   userLoggedIn(headerHeight) {
+    const { randomRestaurantLoading } = this.state;
     return (
       <View style={{ ...styles.container, height: screenHeight - headerHeight }}>
-        {this.randomRestaurantOverlay()}
+        {this.randomRestaurantErrorOverlay()}
         <View style={{ paddingHorizontal: 10, justifyContent: 'center' }}>
           <Icon name="user-circle" type="font-awesome" iconStyle={{ fontSize: 180 }} />
           <Text
@@ -349,37 +325,43 @@ class Account extends Component {
           <Button
             title="Join or Create a Lobby"
             raised
+            disabled={randomRestaurantLoading}
             titleStyle={{ color: 'white', fontSize: 26, paddingLeft: 3 }}
             buttonStyle={{ justifyContent: 'space-between', backgroundColor: ThemeColors.button }}
-            icon={<Icon name="angle-right" type="font-awesome" iconStyle={{ fontSize: 30, color: 'white', paddingRight: 3 }} />}
+            icon={<Icon name="angle-right" type="font-awesome" color={randomRestaurantLoading ? 'black' : 'white'} iconStyle={{ fontSize: 30, paddingRight: 3 }} />}
             iconRight
             onPress={() => this.props.navigation.navigate('LobbyPicker')}
-            containerStyle={{ marginBottom: 20 }}
+            containerStyle={{ marginVertical: 5 }}
           />
           <Button
             title="Random Restaurant"
-            raised
             titleStyle={{ color: ThemeColors.text, fontSize: 26, paddingLeft: 3 }}
+            raised
+            loading={randomRestaurantLoading}
+            loadingStyle={{ marginVertical: 7, flex: 1, justifyContent: 'center' }}
+            loadingProps={{ color: ThemeColors.text }}
             buttonStyle={{ justifyContent: 'space-between', backgroundColor: 'white' }}
             icon={<Icon name="angle-right" type="font-awesome" iconStyle={{ fontSize: 30, color: ThemeColors.text, paddingRight: 3 }} />}
             iconRight
-            onPress={() => this.clickRandomRestaurantButton()}
-            containerStyle={{ marginBottom: 20 }}
+            onPress={() => this.getRandomRestaurant()}
+            containerStyle={{ marginVertical: 5 }}
           />
           <Button
             title="Edit Account"
             raised
+            disabled={randomRestaurantLoading}
             titleStyle={{ color: 'black', fontSize: 26, paddingLeft: 3 }}
             buttonStyle={{ justifyContent: 'space-between', backgroundColor: 'lightgray' }}
             icon={<Icon name="angle-right" type="font-awesome" iconStyle={{ fontSize: 30, paddingRight: 3 }} />}
             iconRight
             onPress={() => this.props.navigation.navigate('AccountEdit')}
+            containerStyle={{ marginVertical: 5 }}
           />
         </View>
         <Button
-          buttonStyle={{ backgroundColor: 'transparent' }}
           title="Sign Out"
-          titleStyle={{ color: '#E54040', fontSize: 30, textAlign: 'center', fontWeight: 'normal' }}
+          type="clear"
+          titleStyle={{ color: ThemeColors.text, fontSize: 30, textAlign: 'center', fontWeight: 'normal' }}
           onPress={() => { signOut(this.props.auth) }}
           containerStyle={{ marginBottom: 10 }}
         />
@@ -416,6 +398,7 @@ class Account extends Component {
             }
           </Text>
           <Input
+            testID="accountLoginEmailAddress"
             placeholder="Email Address"
             textContentType="emailAddress"
             autoCapitalize='none'
@@ -434,6 +417,7 @@ class Account extends Component {
             onChangeText={(text) => this.setState({ emailAddressText: text, emailAddressError: false, })}
           />
           <Input
+            testID="accountLoginPassword"
             placeholder="Password"
             textContentType="password"
             secureTextEntry={!passwordShowing}

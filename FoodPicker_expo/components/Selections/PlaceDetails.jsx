@@ -173,7 +173,7 @@ class PlaceDetails extends Component {
     if (dayOfWeek < 0) dayOfWeek = 6;
 
     const DetailsTab = () => (
-      <View style={{
+      <ScrollView contentContainerStyle={{
         width: ScreenWidth,
         height: (screenHeight / 3) * 2 - 100,
         justifyContent: 'space-between',
@@ -313,7 +313,7 @@ class PlaceDetails extends Component {
             onPress={() => this.clickPlaceLink(place?.website)}
           />
         </View>
-      </View>
+      </ScrollView>
     );
     
     const ReviewsTab = () => (
