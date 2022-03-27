@@ -54,7 +54,8 @@
     "react-native-vector-icons": "^9.1.0",
     "react-native-web": "0.17.1",
     "styled-components": "^5.3.3",
-    "validator": "^13.7.0"
+    "validator": "^13.7.0",
+    "expo-ads-facebook": "~11.1.0"
   },
   "devDependencies": {
     "@babel/core": "^7.12.9"

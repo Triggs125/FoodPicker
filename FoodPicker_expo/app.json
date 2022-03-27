@@ -20,10 +20,7 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.driggs.foodpicker",
       "googleServicesFile": "./GoogleService-Info.plist",
-      "buildNumber": "1.1.0",
-      "config": {
-        "googleMobileAdsAppId": "ca-app-pub-1885494348989912~6684907829"
-      }
+      "buildNumber": "1.1.0"
     },
     "android": {
       "package": "com.driggs.foodpicker",
@@ -32,14 +29,24 @@
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#FFFFFF"
-      },
-      "config": {
-        "googleMobileAdsAppId": "ca-app-pub-1885494348989912~7746708057"
       }
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
+    "facebookScheme": "fb1234567891234567",
+    "facebookAppId": "1300932740403155",
+    "facebookDisplayName": "FoodPicker",
+    "facebookAutoLogAppEventsEnabled": true,
+    "facebookAdvertiserIDCollectionEnabled": true,
+    "plugins": [
+      [
+        "expo-ads-facebook",
+        {
+          "userTrackingPermission": "This identifier will be used to deliver personalized ads to you."
+        }
+      ]
+    ],
     "description": "Join your friends in picking a restaurant together!",
     "githubUrl": "https://github.com/Triggs125/FoodPicker"
   }

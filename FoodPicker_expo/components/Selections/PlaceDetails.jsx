@@ -1,5 +1,5 @@
 import { Component } from "react";
-import { Dimensions, Linking, View } from "react-native";
+import { Dimensions, Linking, StatusBar, View } from "react-native";
 import Constants from 'expo-constants';
 import { HeaderHeightContext } from '@react-navigation/elements';
 import { Text, Icon, ListItem, Avatar } from "react-native-elements";
@@ -18,8 +18,8 @@ class PlaceDetails extends Component {
     super(props);
 
     const offset = Constants.platform.android ? 35 : 0;
-    const adBannerHeight = 60;
-    const screenHeight = Dimensions.get('screen').height - offset;
+    const adBannerHeight = StatusBar.currentHeight + 60;
+    const screenHeight = Dimensions.get('screen').height - offset - adBannerHeight;
 
     const tabRoutes = [
       { key: 'details', title: 'Details' },

@@ -1,5 +1,5 @@
 import { Component } from 'react';
-import { View, Dimensions, KeyboardAvoidingView } from 'react-native';
+import { View, Dimensions, KeyboardAvoidingView, StatusBar } from 'react-native';
 import { Input, Text, Icon, Button, Switch } from 'react-native-elements';
 import PasswordValidator from 'password-validator';
 import isAlpha from 'validator/lib/isAlpha';
@@ -27,8 +27,8 @@ class CreateAccount extends Component {
       .has().not().spaces(0, " no spaces");
 
     const offset = Constants.platform.android ? 48 : 10;
-    const adBannerHeight = 60;
-    const screenHeight = Dimensions.get('screen').height - offset;
+    const adBannerHeight = StatusBar.currentHeight + 60;
+    const screenHeight = Dimensions.get('screen').height - offset - adBannerHeight;
 
     this.state = {
       screenHeight,

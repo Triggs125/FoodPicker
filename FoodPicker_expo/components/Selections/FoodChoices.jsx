@@ -1,6 +1,6 @@
 import { Component } from "react";
 import PropType from 'prop-types';
-import { View, Dimensions } from "react-native";
+import { View, Dimensions, StatusBar } from "react-native";
 import { Tile, Text, Icon } from 'react-native-elements';
 import Constants from 'expo-constants';
 import { getDistance } from 'geolib';
@@ -21,8 +21,8 @@ class FoodChoices extends Component {
     super(props);
 
     const offset = Constants.platform.android ? 35 : 20;
-    const adBannerHeight = 60;
-    const screenHeight = Dimensions.get('screen').height - offset;
+    const adBannerHeight = StatusBar.currentHeight + 60;
+    const screenHeight = Dimensions.get('screen').height - offset - adBannerHeight;
 
     this.state = {
       screenHeight: screenHeight

@@ -1,5 +1,5 @@
 import { Component } from "react";
-import { Dimensions, StyleSheet, View } from "react-native";
+import { Dimensions, StatusBar, StyleSheet, View } from "react-native";
 import { Card, Icon, Input, Text, Button, Switch, Overlay } from 'react-native-elements';
 import Constants from 'expo-constants';
 import { HeaderHeightContext } from '@react-navigation/elements';
@@ -16,8 +16,8 @@ class LobbyCreator extends Component {
     super(props);
 
     const offset = Constants.platform.android ? 48 : 0;
-    const adBannerHeight = 60;
-    const screenHeight = Dimensions.get('screen').height - offset;
+    const adBannerHeight = StatusBar.currentHeight + 60;
+    const screenHeight = Dimensions.get('screen').height - offset - adBannerHeight;
 
     var passwordSchema = new PasswordValidator();
     passwordSchema

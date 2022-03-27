@@ -1,7 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { collection, doc, getDocs, onSnapshot, query, setDoc, where } from "firebase/firestore";
 import { Component } from "react";
-import { Dimensions, SafeAreaView, Share, StyleSheet, View } from "react-native";
+import { Dimensions, SafeAreaView, Share, StatusBar, StyleSheet, View } from "react-native";
 import { Card, Icon, Input, Text, Button, Overlay, Switch } from 'react-native-elements';
 import Constants from 'expo-constants';
 import { HeaderHeightContext } from '@react-navigation/elements';
@@ -17,8 +17,8 @@ class LobbyView extends Component {
     super(props);
 
     const offset = Constants.platform.android ? 48 : 20;
-    const adBannerHeight = 60;
-    const screenHeight = Dimensions.get('screen').height - offset;
+    const adBannerHeight = StatusBar.currentHeight + 60;
+    const screenHeight = Dimensions.get('screen').height - offset - adBannerHeight;
 
     this.state = {
       screenHeight: screenHeight,

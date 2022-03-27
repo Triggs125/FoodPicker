@@ -1,7 +1,7 @@
-import { collection, getDocs, query, setDoc, where } from "firebase/firestore";
+import { collection, deleteDoc, doc, getDocs, query, setDoc, where } from "firebase/firestore";
 import { deleteUser } from "firebase/auth";
 import { Component } from "react";
-import { View, Dimensions } from "react-native";
+import { View, Dimensions, StatusBar } from "react-native";
 import { Input, Icon, Button, Text, Overlay } from 'react-native-elements';
 import ThemeColors from "../../assets/ThemeColors";
 import Constants from 'expo-constants';
@@ -15,8 +15,8 @@ class AccountEdit extends Component {
     super(props);
 
     const offset = Constants.platform.android ? 50 : 20;
-    const adBannerHeight = 60;
-    const screenHeight = Dimensions.get('screen').height - offset;
+    const adBannerHeight = StatusBar.currentHeight + 60;
+    const screenHeight = Dimensions.get('screen').height - offset - adBannerHeight;
 
     this.state = {
       loadingData: true,
@@ -108,21 +108,32 @@ class AccountEdit extends Component {
   }
 
   removeAccount() {
-    return deleteUser(this.props.user)
-    .then(() => {
-      this.setState({
-        removeAccountOverlayShowing: false,
-        removeAccountOverlayLoading: false,
+    deleteDoc(this.state.userRef)
+      .then(() => {
+        deleteUser(this.props.user)
+          .then(() => {
+            this.setState({
+              removeAccountOverlayShowing: false,
+              removeAccountOverlayLoading: false,
+              removeAccountOverlayError: false,
+            });
+            this.props.navigation.navigate("Account");
+          })
+          .catch(err => {
+            console.error("LobbyCreator::removeAccount::deleteUser", err);
+            this.setState({
+              removeAccountOverlayLoading: false,
+              removeAccountOverlayError: true,
+            });
+          });
+      })
+      .catch(err => {
+        console.error("LobbyCreator::removeAccount::deleteDoc", err);
+        this.setState({
+          removeAccountOverlayError: true,
+          removeAccountOverlayLoading: false,
+        });
       });
-      this.props.navigation.navigate("Account");
-    })
-    .catch(err => {
-      console.error("LobbyCreator::RemoveLobbyOverlay", err);
-      this.setState({
-        removeAccountOverlayLoading: false,
-        removeAccountOverlayError: true,
-      });
-    });;
   }
 
   removeAccountOverlay() {

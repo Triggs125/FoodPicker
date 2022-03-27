@@ -1,5 +1,5 @@
 import { Component } from "react";
-import { Dimensions, View } from "react-native";
+import { Dimensions, StatusBar, View } from "react-native";
 import { Button, Icon, Switch, Text } from 'react-native-elements';
 import { HeaderHeightContext } from '@react-navigation/elements';
 // import FoodProfile from "../FoodProfile/FoodProfile";
@@ -17,8 +17,8 @@ class MakeSelections extends Component {
   constructor(props) {
     super(props);
     const offset = Constants.platform.android ? 35 : 0;
-    const adBannerHeight = 60;
-    const screenHeight = Dimensions.get('screen').height - offset;
+    const adBannerHeight = StatusBar.currentHeight + 60;
+    const screenHeight = Dimensions.get('screen').height - offset - adBannerHeight;
     const maxNumberOfSelections = 5;
 
     this.openNowFilter = true;

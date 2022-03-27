@@ -1,19 +1,16 @@
 import { Component } from "react";
-import { Dimensions, KeyboardAvoidingViewBase, Keyboard, SafeAreaView, StyleSheet, View } from 'react-native';
+import { Dimensions, SafeAreaView, StyleSheet, View } from 'react-native';
 import Constants from 'expo-constants';
 import { Input, Button, Text, Icon, Overlay } from 'react-native-elements';
-import { GetUserFromDB } from '../Utils/firebase';
 import { signInWithEmailAndPassword, signOut } from 'firebase/auth';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { ScrollView, TouchableOpacity, TouchableWithoutFeedback } from 'react-native-gesture-handler';
+import { TouchableOpacity } from 'react-native-gesture-handler';
 import isEmail from 'validator/lib/isEmail';
 import { HeaderHeightContext } from '@react-navigation/elements';
 import ThemeColors from "../../assets/ThemeColors";
 import { ScreenWidth } from "react-native-elements/dist/helpers";
-import LocationView from "../Lobby/LocationView";
 import * as Location from 'expo-location';
 import { GOOGLE_MAPS_API_KEY, PLACE_DETAILS_API_KEY } from "../../config";
-import { random } from "isaac";
+import { StatusBar } from "react-native";
 
 class Account extends Component {
   constructor(props) {
@@ -37,6 +34,13 @@ class Account extends Component {
   }
 
   componentDidMount() {
+    this.props.navigation.addListener('focus', () => {
+      this.setState({
+        generalError: false,
+        loginError: false,
+        emailAddressError: false,
+      });
+    });
     this.props.navigation.addListener('blur', () => {
       this.setState({
         randomRestaurantError: false,
@@ -538,8 +542,8 @@ class Account extends Component {
 }
 
 const offset = Constants.platform.android ? 35 : 0;
-const adBannerHeight = 60;
-const screenHeight = Dimensions.get('screen').height - offset;
+const adBannerHeight = StatusBar.currentHeight + 60;
+const screenHeight = Dimensions.get('screen').height - offset - adBannerHeight;
 
 const styles = StyleSheet.create({
   container: {

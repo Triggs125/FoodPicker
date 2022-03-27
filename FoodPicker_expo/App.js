@@ -1,6 +1,6 @@
 import 'react-native-gesture-handler';
 import React, { useState } from 'react';
-import { View, LogBox } from 'react-native';
+import { View, LogBox, SafeAreaView, StatusBar } from 'react-native';
 import { Button, Image } from 'react-native-elements';
 import { NavigationContainer, ThemeProvider } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
@@ -13,8 +13,8 @@ import ThemeColors from './assets/ThemeColors';
 import { UserColors } from './ColorContext';
 import { onAuthStateChanged } from "firebase/auth";
 import Constants from 'expo-constants';
+import * as FacebookAds from 'expo-ads-facebook';
 
-import Settings from './components/Settings';
 import Account from './components/Account/Account';
 import CreateAccount from './components/Account/CreateAccount';
 import LobbyPicker from './components/Lobby/LobbyPicker';
@@ -36,11 +36,50 @@ const db = getFirestore(app);
 
 export default function App() {
   const [userColors, setUserColors] = useState({});
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [user, setUser] = useState();
   const [lobbyData, setLobbyData] = useState();
   const [userLobbies, setUserLobbies] = useState();
   const [kickedFromLobby, setKickedFromLobby] = useState(false);
+
+  const bannerId = getPlacementId(true);
+  const interstitialId = getPlacementId(false);
+
+  FacebookAds.AdSettings.requestPermissionsAsync()
+    .then(persmissionResponse => {
+      const canTrack = persmissionResponse.granted;
+      FacebookAds.AdSettings.setAdvertiserTrackingEnabled(canTrack);
+      setLoading(false);
+    });
+
+  function getPlacementId(isBanner) {
+    let placementId;
+    if (isBanner) {
+      // Banner ad
+      placementId = Constants.platform.android ? "1300932740403155_1308576742972088" : "1300932740403155_1308575796305516";
+    } else {
+      // Interstitial ad
+      placementId = Constants.platform.android ? "1300932740403155_1308576809638748" : "1300932740403155_1308576426305453";
+    }
+
+    if (__DEV__) {
+      return `IMG_16_9_APP_INSTALL#${placementId}`;
+    }
+    return placementId;
+  }
+
+  function getBannerAd() {
+    if (!loading) {
+      return (
+        <FacebookAds.BannerAd
+          placementId={bannerId}
+          type='standard'
+          onPress={() => console.log('Banner Ad Clicked')}
+          onError={err => console.error('App::getBannerAd', err.nativeEvent)}
+        />
+      )
+    }
+  }
 
   const navColors = {
     colors: {
@@ -134,131 +173,120 @@ export default function App() {
   ) : (
     <ThemeProvider theme={themeProviderColors}>
       <UserColors.Provider value={{ userColors, setUserColors }}>
-        <NavigationContainer
-          ref={navigationRef}
-          theme={navColors}
+        <SafeAreaView
+          style={{
+            flex: 1,
+            paddingTop: StatusBar.currentHeight,
+          }}
         >
-          <Stack.Navigator
-            initialRouteName="Account"
-            screenOptions={(props) => {
-              return {
-                headerRight: () => (
-                  <Button
-                    icon={{
-                      name: 'user-circle',
-                      type: 'font-awesome',
-                      color: 'black',
-                      marginRight: 8
-                    }}
-                    style={{ fontSize: 24 }}
-                    buttonStyle={{ backgroundColor: 'transparent' }}
-                    onPress={() => props.navigation.navigate('Account')}
-                  />
-                ),
-                headerTitleAlign: 'center',
-              }
-            }}
+          {getBannerAd()}
+          <NavigationContainer
+            ref={navigationRef}
+            theme={navColors}
           >
-            <Stack.Screen
-              name="Account"
-              options={{ headerTitle: 'Account', headerRight: () => {<></>} }}
+            <Stack.Navigator
+              initialRouteName="Account"
+              screenOptions={(props) => {
+                return {
+                  headerRight: () => (
+                    <Button
+                      icon={{
+                        name: 'user-circle',
+                        type: 'font-awesome',
+                        color: 'black',
+                        marginRight: 8
+                      }}
+                      style={{ fontSize: 24 }}
+                      buttonStyle={{ backgroundColor: 'transparent' }}
+                      onPress={() => props.navigation.navigate('Account')}
+                    />
+                  ),
+                  headerTitleAlign: 'center',
+                }
+              }}
             >
-              {props => <Account {...props} user={user} auth={auth} db={db} setLobbyData={setLobbyData} />}
-            </Stack.Screen>
-            <Stack.Screen
-              name="CreateAccount"
-              options={{ headerTitle: 'Create an Account', headerRight: () => {<></>} }}
-            > 
-              {props => <CreateAccount {...props} user={user} auth={auth} db={db} />}
-            </Stack.Screen>
-            <Stack.Screen
-              name="ForgotPassword"
-              options={{ headerTitle: 'Reset Password', headerRight: () => {<></>} }}
-            >
-              {props => <ForgotPassword {...props} user={user} auth={auth} db={db} />}
-            </Stack.Screen>
-            {
-              // Cannot see these screens until the user is logged in
-              user && (
-                <>
-                  <Stack.Screen
-                    name="AccountEdit"
-                    options={{ headerTitle: 'Edit Account' }}
-                  > 
-                    {props => <AccountEdit {...props} setUser={setUser} user={user} auth={auth} db={db} />}
-                  </Stack.Screen>
-                  <Stack.Screen
-                    name="Settings"
-                    options={{ headerTitle: "Settings" }}
-                  >
-                    {props => <Settings {...props} user={user} auth={auth} db={db} />}
-                  </Stack.Screen>
-                  <Stack.Screen
-                    name="LobbyPicker"
-                    options={{ headerTitle: "Join or Create a Lobby" }}
-                  >
-                    {props => <LobbyPicker {...props} userLobbies={userLobbies} user={user} auth={auth} db={db} kickedFromLobby={kickedFromLobby} setKickedFromLobby={setKickedFromLobby} />}
-                  </Stack.Screen>
-                  <Stack.Screen
-                    name="LobbyCreator"
-                    options={{ headerTitle: "Create a Lobby" }}
-                  >
-                    {props => <LobbyCreator {...props} user={user} auth={auth} db={db} />}
-                  </Stack.Screen>
-                  <Stack.Screen
-                    name="LobbyView"
-                    options={{ headerTitle: "Lobby" }}
-                  >
-                    {props => <LobbyView {...props} user={user} auth={auth} db={db} setLobbyData={setLobbyData} setKickedFromLobby={setKickedFromLobby} />}
-                  </Stack.Screen>
-                  <Stack.Screen
-                    name="MakeSelections"
-                    options={{
-                      headerTitle: "Make Selections",
-                      headerTitleAlign: 'center'
-                    }}
-                  >
-                    {props => <MakeSelections {...props} user={user} auth={auth} db={db} lobbyData={lobbyData} />}
-                  </Stack.Screen>
-                  <Stack.Screen
-                    name="UserSelections"
-                    options={{
-                      headerTitle: "Selections",
-                      headerTitleAlign: 'center'
-                    }}
-                  >
-                    {props => <UserSelections {...props} user={user} auth={auth} db={db} lobbyData={lobbyData} />}
-                  </Stack.Screen>
-                  <Stack.Screen
-                    name="EditFoodProfile"
-                    options={{ headerTitle: "Edit Food Profile" }}
-                  >
-                    {props => <EditFoodProfile {...props} user={user} auth={auth} db={db} />}
-                  </Stack.Screen>
-                  <Stack.Screen
-                    name="PlaceDetails"
-                    options={{ headerTitle: "Place Details", cardStyle: { backgroundColor: 'white' } }}
-                  >
-                    {props => <PlaceDetails {...props} user={user} auth={auth} db={db} lobbyData={lobbyData} />}
-                  </Stack.Screen>
-                </>
-              )
-            }
-          </Stack.Navigator>
-        </NavigationContainer>
-        {/* <View>
-          <AdMobBanner
-            adUnitId={adUnitId}
-            bannerSize={'fullBanner'}
-            servePersonalizedAds={false}
-            onAdViewDidReceiveAd={() => {
-              console.log('Advert loaded');
-            }}
-            onDidFailToReceiveAdWithError={(error) => {
-              console.error('Advert failed to load: ', error);
-            }}
-          />
-        </View> */}
+              <Stack.Screen
+                name="Account"
+                options={{ headerTitle: 'Account', headerRight: () => {<></>} }}
+              >
+                {props => <Account {...props} user={user} auth={auth} db={db} setLobbyData={setLobbyData} />}
+              </Stack.Screen>
+              <Stack.Screen
+                name="CreateAccount"
+                options={{ headerTitle: 'Create an Account', headerRight: () => {<></>} }}
+              > 
+                {props => <CreateAccount {...props} user={user} auth={auth} db={db} />}
+              </Stack.Screen>
+              <Stack.Screen
+                name="ForgotPassword"
+                options={{ headerTitle: 'Reset Password', headerRight: () => {<></>} }}
+              >
+                {props => <ForgotPassword {...props} user={user} auth={auth} db={db} />}
+              </Stack.Screen>
+              {
+                // Cannot see these screens until the user is logged in
+                user && (
+                  <>
+                    <Stack.Screen
+                      name="AccountEdit"
+                      options={{ headerTitle: 'Edit Account' }}
+                    > 
+                      {props => <AccountEdit {...props} setUser={setUser} user={user} auth={auth} db={db} />}
+                    </Stack.Screen>
+                    <Stack.Screen
+                      name="LobbyPicker"
+                      options={{ headerTitle: "Join or Create a Lobby" }}
+                    >
+                      {props => <LobbyPicker {...props} userLobbies={userLobbies} user={user} auth={auth} db={db} kickedFromLobby={kickedFromLobby} setKickedFromLobby={setKickedFromLobby} />}
+                    </Stack.Screen>
+                    <Stack.Screen
+                      name="LobbyCreator"
+                      options={{ headerTitle: "Create a Lobby" }}
+                    >
+                      {props => <LobbyCreator {...props} user={user} auth={auth} db={db} />}
+                    </Stack.Screen>
+                    <Stack.Screen
+                      name="LobbyView"
+                      options={{ headerTitle: "Lobby" }}
+                    >
+                      {props => <LobbyView {...props} user={user} auth={auth} db={db} setLobbyData={setLobbyData} setKickedFromLobby={setKickedFromLobby} />}
+                    </Stack.Screen>
+                    <Stack.Screen
+                      name="MakeSelections"
+                      options={{
+                        headerTitle: "Make Selections",
+                        headerTitleAlign: 'center'
+                      }}
+                    >
+                      {props => <MakeSelections {...props} user={user} auth={auth} db={db} lobbyData={lobbyData} />}
+                    </Stack.Screen>
+                    <Stack.Screen
+                      name="UserSelections"
+                      options={{
+                        headerTitle: "Selections",
+                        headerTitleAlign: 'center'
+                      }}
+                    >
+                      {props => <UserSelections {...props} user={user} auth={auth} db={db} lobbyData={lobbyData} />}
+                    </Stack.Screen>
+                    <Stack.Screen
+                      name="EditFoodProfile"
+                      options={{ headerTitle: "Edit Food Profile" }}
+                    >
+                      {props => <EditFoodProfile {...props} user={user} auth={auth} db={db} />}
+                    </Stack.Screen>
+                    <Stack.Screen
+                      name="PlaceDetails"
+                      options={{ headerTitle: "Place Details", cardStyle: { backgroundColor: 'white' } }}
+                    >
+                      {props => <PlaceDetails {...props} user={user} auth={auth} db={db} lobbyData={lobbyData} />}
+                    </Stack.Screen>
+                  </>
+                )
+              }
+            </Stack.Navigator>
+          </NavigationContainer>
+        </SafeAreaView>
       </UserColors.Provider>
     </ThemeProvider>
   )
