@@ -297,7 +297,7 @@ class CreateAccount extends Component {
                   marginBottom: 10,
                   color: ThemeColors.text,
                 }}
-                onPress={() => this.props.navigation.navigate('Account')}
+                onPress={() => this.props.navigation.navigate('Home')}
               />
             </View>
             {/* <Text

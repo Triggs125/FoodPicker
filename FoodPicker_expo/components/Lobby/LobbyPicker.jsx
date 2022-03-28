@@ -4,7 +4,7 @@ import { Button, Card, Icon, Overlay, Text, Input } from 'react-native-elements'
 import LoadingSpinner from '../LoadingSpinner';
 import { ScrollView } from "react-native-gesture-handler";
 import SearchAlgolia from "../Algolia/SearchAlgolia";
-import { collection, doc, getDocs, onSnapshot, query, setDoc, where, arrayUnion, updateDoc } from 'firebase/firestore';
+import { collection, doc, getDocs, onSnapshot, query, setDoc, where, arrayUnion, updateDoc, deleteDoc } from 'firebase/firestore';
 import { onAuthStateChanged } from 'firebase/auth';
 import ThemeColors from "../../assets/ThemeColors";
 import { ScreenWidth } from "react-native-elements/dist/helpers";
@@ -147,7 +147,6 @@ class LobbyPicker extends Component {
                 )
               )).docs[0]?.data().passwordHash;
               if (passwordHash && passwordHash.length > 0) {
-                this.addUserToLobby(lobby);
                 this.setState({ openOverlay: true, overlayLobby: lobby, overlayPasswordHash: passwordHash });
               }
             } catch(err) {
@@ -163,10 +162,37 @@ class LobbyPicker extends Component {
           let isUserLobby = lobby.host === this.props.user.uid
           if (isUserLobby) {
             this.setState({ removeLobbyOverlay: true, removeLobbyOverlayLobby: lobby });
+          } else if (lobby.users?.includes(this.props.user.uid)) {
+            this.removeUserFromLobby(lobby);
           }
         }}
       />
     );
+  }
+
+  removeUserFromLobby(lobby) {
+    const users = lobby.users;
+    const usersReady = lobby.usersReady;
+    const index = users.indexOf(this.props.user.uid);
+    const indexUR = usersReady.indexOf(this.props.user.uid);
+    if (index > -1) {
+      users.splice(index, 1);
+      if (indexUR > -1) {
+        usersReady.splice(indexUR, 1);
+      }
+      updateDoc(doc(this.props.db, lobby.path), { users, usersReady })
+        .then(() => {
+          deleteDoc(doc(this.props.db, `food_selections/${lobby.id}_${this.props.user.uid}`))
+          .catch(err => {
+            console.error("LobbyPicker::removeUserFromLobby::deleteDoc", err);
+          });
+        })
+        .catch(err => {
+          console.error("LobbyPicker::removeUserFromLobby::updateDoc", err);
+        });
+    } else {
+      console.error("LobbyPicker::removeUserFromLobby", "User not found inside lobby users list.");
+    }
   }
 
   refreshLobbySearch() {
@@ -228,7 +254,7 @@ class LobbyPicker extends Component {
                 });
               })
               .catch(err => {
-                console.log("LobbyView::RemoveLobbyOverlay", err);
+                console.error("LobbyView::RemoveLobbyOverlay", err);
                 this.setState({
                   removeLobbyOverlayLoading: false,
                   removeLobbyOverlayError: true,
@@ -331,6 +357,7 @@ class LobbyPicker extends Component {
               }
               if (passwordCorrect && openOverlay) {
                 const lobbyRef = this.getLobbyRef(overlayLobby);
+                this.addUserToLobby(overlayLobby);
                 this.props.navigation.navigate('LobbyView', { lobbyRef });
                 this.setState({
                   openOverlay: false,
@@ -384,10 +411,10 @@ class LobbyPicker extends Component {
             disabled={loading}
             raised
             icon={{
-              name: 'home',
-              type: 'font-awesome',
+              name: 'add-circle',
+              type: 'material-icons',
               color: 'white',
-              marginRight: 8
+              marginRight: 5
             }}
             titleStyle={{ fontWeight: '500', fontSize: 22 }}
             buttonStyle={{

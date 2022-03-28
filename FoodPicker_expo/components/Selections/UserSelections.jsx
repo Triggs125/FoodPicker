@@ -158,9 +158,9 @@ class UserSelections extends Component {
     const { user } = this.props.route.params;
     const { lobbyData } = this.props;
 
-    const addressName = lobbyData.locationGeocodeAddress &&
-      lobbyData.locationGeocodeAddress[0]?.city + ", " +
-      lobbyData.locationGeocodeAddress[0]?.region;
+    // const addressName = lobbyData.locationGeocodeAddress &&
+    //   lobbyData.locationGeocodeAddress[0]?.city + ", " +
+    //   lobbyData.locationGeocodeAddress[0]?.region;
 
     const userDisplayName = user.displayName ? user.displayName : user.firstName + " " + user.lastName
 
@@ -184,7 +184,7 @@ class UserSelections extends Component {
                   <LoadingSpinner />
                 </>
               ) : (
-                <View>
+                <ScrollView>
                   <Text
                     style={{
                       textAlign: 'center',
@@ -207,91 +207,110 @@ class UserSelections extends Component {
                     isUserChoices &&
                     <Text style={{ fontSize: 10, paddingLeft: 12, paddingBottom: 3 }}>**Hold down to delete</Text>
                   }
-                  <ScrollView>
-                    {
-                      selectedFoodChoices?.data?.selections?.map((foodChoice, i) => {
-                        return (
-                          <TouchableOpacity
-                            onLongPress={() => isUserChoices && this.removeFoodChoice(foodChoice)}
-                            onPress={() => this.props.navigation.navigate("PlaceDetails", { foodChoice })}
-                            key={'food-choice-' + i}
-                            containerStyle={{ marginHorizontal: -5 }}
+                  {
+                    selectedFoodChoices?.data?.selections?.map((foodChoice, i) => {
+                      return (
+                        <TouchableOpacity
+                          onLongPress={() => isUserChoices && this.removeFoodChoice(foodChoice)}
+                          onPress={() => this.props.navigation.navigate("PlaceDetails", { foodChoice })}
+                          key={'food-choice-' + i}
+                          containerStyle={{ marginHorizontal: -5 }}
+                        >
+                          <Card
+                            containerStyle={{
+                              elevation: 6,
+                              height: 80,
+                              marginBottom: 10,
+                              marginTop: 0,
+                              marginHorizontal: 10,
+                              paddingTop: 10,
+                              justifyContent: 'center'
+                            }}
                           >
-                            <Card
-                              containerStyle={{
-                                elevation: 6,
-                                height: 90,
-                                marginBottom: 10,
-                                marginTop: 0,
-                                marginHorizontal: 10,
-                                paddingTop: 10,
-                                justifyContent: 'center'
-                              }}
+                            <Card.Title
+                              style={{ fontSize: 18, textAlign: 'left', marginBottom: 0 }}
+                              ellipsizeMode='tail'
+                              numberOfLines={1}
                             >
-                              <Card.Title
-                                style={{ fontSize: 18, textAlign: 'left', marginBottom: 0 }}
-                                ellipsizeMode='tail'
-                                numberOfLines={1}
-                              >
-                                {foodChoice.name}
-                              </Card.Title>
-                              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                                <Text style={{ marginRight: 5, alignSelf: 'center' }}>{foodChoice.rating}</Text>
-                                <View style={{ flexDirection: 'row', marginRight: 5, alignSelf: 'center' }}>
-                                  {
-                                    this.stars(foodChoice?.rating)
-                                  }
-                                </View>
-                                <Text style={{ alignSelf: 'center', marginRight: 5 }}>{this.totalRatings(foodChoice.userRatingsTotal)}</Text>
-                                <Icon
-                                  name="circle"
-                                  type="font-awesome"
-                                  size={5}
-                                  color='#333'
-                                  style={{ alignSelf: 'center', marginRight: 5 }}
-                                />
-                                <Text style={{ flexDirection: 'row', marginRight: 5, alignSelf: 'center' }}>
-                                  {
-                                    this.priceLevel(foodChoice.priceLevel)
-                                  }
-                                </Text>
-                                <Icon
-                                  name="circle"
-                                  type="font-awesome"
-                                  size={5}
-                                  color='#333'
-                                  style={{ alignSelf: 'center', marginRight: 5 }}
-                                />
-                                <Text style={{ flexDirection: 'row', marginRight: 5, alignSelf: 'center' }}>
-                                  {
-                                    `${this.distanceAway(foodChoice.coordinate)} mi`
-                                  }
-                                </Text>
+                              {foodChoice.name}
+                            </Card.Title>
+                            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                              <Text style={{ marginRight: 5, alignSelf: 'center' }}>{foodChoice.rating}</Text>
+                              <View style={{ flexDirection: 'row', marginRight: 5, alignSelf: 'center' }}>
+                                {
+                                  this.stars(foodChoice?.rating)
+                                }
                               </View>
-                              <Text
-                                style={{ textTransform: 'capitalize', marginRight: 5 }}
-                                ellipsizeMode='tail'
-                                numberOfLines={1}
-                              >
-                                {this.placeTypes(foodChoice.types)}
+                              <Text style={{ alignSelf: 'center', marginRight: 5 }}>{this.totalRatings(foodChoice.userRatingsTotal)}</Text>
+                              <Icon
+                                name="circle"
+                                type="font-awesome"
+                                size={5}
+                                color='#333'
+                                style={{ alignSelf: 'center', marginRight: 5 }}
+                              />
+                              <Text style={{ flexDirection: 'row', marginRight: 5, alignSelf: 'center' }}>
+                                {
+                                  this.priceLevel(foodChoice.priceLevel)
+                                }
                               </Text>
-                            </Card>
-                          </TouchableOpacity>
-                        );
-                      })
-                    }
-                  </ScrollView>
-                </View>
+                              <Icon
+                                name="circle"
+                                type="font-awesome"
+                                size={5}
+                                color='#333'
+                                style={{ alignSelf: 'center', marginRight: 5 }}
+                              />
+                              <Text style={{ flexDirection: 'row', marginRight: 5, alignSelf: 'center' }}>
+                                {
+                                  `${this.distanceAway(foodChoice.coordinate)} mi`
+                                }
+                              </Text>
+                            </View>
+                            <Text
+                              style={{ textTransform: 'capitalize', marginRight: 5 }}
+                              ellipsizeMode='tail'
+                              numberOfLines={1}
+                            >
+                              {this.placeTypes(foodChoice.types)}
+                            </Text>
+                          </Card>
+                        </TouchableOpacity>
+                      );
+                    })
+                  }
+                </ScrollView>
               )
             }
-            <Button
-              title="Back to Lobby"
-              raised
-              titleStyle={{ color: 'white', fontWeight: 'bold', fontSize: 26 }}
-              buttonStyle={{ backgroundColor: ThemeColors.text }}
-              containerStyle={{ marginBottom: 10 }}
-              onPress={() => this.props.navigation.navigate('LobbyView', { lobbyRef: lobbyData.ref })}
-            />
+            <View
+              style={{ paddingTop: 5 }}
+            >
+              {
+                isUserChoices && (
+                  <Button
+                    title="Clear Selections"
+                    raised
+                    titleStyle={{ color: ThemeColors.text, fontWeight: 'bold', fontSize: 26 }}
+                    buttonStyle={{ backgroundColor: 'white' }}
+                    containerStyle={{ marginBottom: 10 }}
+                    icon={{
+                      name: 'remove-circle',
+                      type: 'material-icons',
+                      color: ThemeColors.text
+                    }}
+                    onPress={this.clearSelections}
+                  />
+                )
+              }
+              <Button
+                title="Back to Lobby"
+                raised
+                titleStyle={{ color: 'white', fontWeight: 'bold', fontSize: 26 }}
+                buttonStyle={{ backgroundColor: ThemeColors.text }}
+                containerStyle={{ marginBottom: 10 }}
+                onPress={() => this.props.navigation.navigate('LobbyView', { lobbyRef: lobbyData.ref })}
+              />
+            </View>
           </View>
         )}
       </HeaderHeightContext.Consumer>

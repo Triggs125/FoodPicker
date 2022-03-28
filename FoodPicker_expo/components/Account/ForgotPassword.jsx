@@ -74,7 +74,7 @@ class ForgotPassword extends Component {
     confirmPasswordReset(this.props.auth, emailCode, passwordText)
     .then(() => {
       this.setState({ emailCode: "", passwordText: "", updatePasswordLoading: false, updatePasswordError: false });
-      this.props.navigation.navigate("Account");
+      this.props.navigation.navigate("Home");
     })
     .catch(err => {
       this.setState({ updatePasswordLoading: false, updatePasswordError: true });

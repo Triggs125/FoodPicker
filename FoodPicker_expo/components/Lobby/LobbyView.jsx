@@ -1,8 +1,7 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { collection, doc, getDocs, onSnapshot, query, setDoc, where } from "firebase/firestore";
+import { collection, deleteDoc, doc, getDocs, onSnapshot, query, setDoc, where } from "firebase/firestore";
 import { Component } from "react";
-import { Dimensions, SafeAreaView, Share, StatusBar, StyleSheet, View } from "react-native";
-import { Card, Icon, Input, Text, Button, Overlay, Switch } from 'react-native-elements';
+import { Dimensions, Share, StatusBar, View } from "react-native";
+import { Card, Icon, Text, Button, Overlay } from 'react-native-elements';
 import Constants from 'expo-constants';
 import { HeaderHeightContext } from '@react-navigation/elements';
 import { ScrollView } from "react-native-gesture-handler";
@@ -170,9 +169,20 @@ class LobbyView extends Component {
       return;
     }
     const { lobbyData } = this.state;
-    let newUsers = lobbyData.users;
-    newUsers = newUsers.filter(uid => uid !== user.uid);
-    return setDoc(lobbyData.ref, { users: newUsers }, { merge: true });
+    let users = lobbyData.users;
+    users = users.filter(uid => uid !== user.uid);
+    const usersReady = lobbyData.usersReady;
+    const indexUR = usersReady.indexOf(this.props.user.uid);
+    if (indexUR > -1) {
+      usersReady.splice(indexUR, 1);
+    }
+    return setDoc(lobbyData.ref, { users, usersReady }, { merge: true })
+      .then(() => {
+        deleteDoc(doc(this.props.db, `food_selections/${lobbyData.ref.id}_${this.props.user.uid}`))
+          .catch(err => {
+            console.error("LobbyView::removeUser::deleteDoc", err);
+          });
+      });
   }
 
   setLocationData(location, locationGeocodeAddress, distance) {

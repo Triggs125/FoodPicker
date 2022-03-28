@@ -1,18 +1,18 @@
 import { Component } from "react";
 import { Dimensions, SafeAreaView, StyleSheet, View } from 'react-native';
 import Constants from 'expo-constants';
-import { Input, Button, Text, Icon, Overlay } from 'react-native-elements';
+import { Input, Button, Text, Icon, Overlay, Image } from 'react-native-elements';
 import { signInWithEmailAndPassword, signOut } from 'firebase/auth';
 import { TouchableOpacity } from 'react-native-gesture-handler';
 import isEmail from 'validator/lib/isEmail';
 import { HeaderHeightContext } from '@react-navigation/elements';
-import ThemeColors from "../../assets/ThemeColors";
+import ThemeColors from "../assets/ThemeColors";
 import { ScreenWidth } from "react-native-elements/dist/helpers";
 import * as Location from 'expo-location';
-import { GOOGLE_MAPS_API_KEY, PLACE_DETAILS_API_KEY } from "../../config";
+import { GOOGLE_MAPS_API_KEY, PLACE_DETAILS_API_KEY } from "../config";
 import { StatusBar } from "react-native";
 
-class Account extends Component {
+class Home extends Component {
   constructor(props) {
     super(props);
 
@@ -46,7 +46,7 @@ class Account extends Component {
         randomRestaurantError: false,
         randomRestaurantErrorDetails: '',
         randomRestaurantLoading: false,
-      })
+      });
     });
   }
 
@@ -143,7 +143,7 @@ class Account extends Component {
                   this.addPlaceDetails(res2.results, places);
                 })
                 .catch(err => {
-                  console.error("Account::getRandomRestaurant::secondUrl", err);
+                  console.error("Home::getRandomRestaurant::secondUrl", err);
                   this.setState({
                     randomRestaurantError: true,
                     randomRestaurantErrorDetails: err.message,
@@ -162,7 +162,7 @@ class Account extends Component {
             });
           })
           .catch(err => {
-            console.error("Account::getRandomRestaurant::firstUrl", err);
+            console.error("Home::getRandomRestaurant::firstUrl", err);
             console.log(err.message);
             this.setState({
               randomRestaurantError: true,
@@ -299,13 +299,13 @@ class Account extends Component {
             return { distance, location };
           })
           .catch(err => {
-            console.error("Account::getUsersLocation::getCurrentPositionAsync", err);
+            console.error("Home::getUsersLocation::getCurrentPositionAsync", err);
             return { error: 'There was an issue retrieving your location.' };
           });
         return loc;
       })
       .catch(err => {
-        console.error("Account::getUsersLocation::requestForegroundPermissionsAsync", err);
+        console.error("Home::getUsersLocation::requestForegroundPermissionsAsync", err);
         return { error: 'There was an issue retrieving your location permissions.' };
       });
   }
@@ -316,9 +316,9 @@ class Account extends Component {
       <View style={{ ...styles.container, height: screenHeight - headerHeight }}>
         {this.randomRestaurantErrorOverlay()}
         <View style={{ paddingHorizontal: 10, justifyContent: 'center' }}>
-          <Icon name="user-circle" type="font-awesome" iconStyle={{ fontSize: 180 }} />
+          <Icon name="user-circle" type="font-awesome" iconStyle={{ fontSize: 130 }} />
           <Text
-            style={{ textAlign: 'center', fontSize: 30, marginTop: 15, width: ScreenWidth - 50, alignSelf: 'center' }}
+            style={{ textAlign: 'center', fontSize: 30, marginTop: 10, width: ScreenWidth - 50, alignSelf: 'center' }}
             ellipsizeMode='tail'
             numberOfLines={1}
           >
@@ -563,4 +563,4 @@ const styles = StyleSheet.create({
   }
 });
 
-export default Account;
+export default Home;

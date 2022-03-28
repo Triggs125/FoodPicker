@@ -15,7 +15,7 @@ import { onAuthStateChanged } from "firebase/auth";
 import Constants from 'expo-constants';
 import * as FacebookAds from 'expo-ads-facebook';
 
-import Account from './components/Account/Account';
+import Home from './components/Home';
 import CreateAccount from './components/Account/CreateAccount';
 import LobbyPicker from './components/Lobby/LobbyPicker';
 import LobbyView from './components/Lobby/LobbyView';
@@ -190,15 +190,22 @@ export default function App() {
                 return {
                   headerRight: () => (
                     <Button
+                      raised
                       icon={{
-                        name: 'user-circle',
-                        type: 'font-awesome',
-                        color: 'black',
-                        marginRight: 8
+                        name: 'home',
+                        type: 'material-community-icons',
+                        color: 'white'
                       }}
                       style={{ fontSize: 24 }}
-                      buttonStyle={{ backgroundColor: 'transparent' }}
-                      onPress={() => props.navigation.navigate('Account')}
+                      buttonStyle={{
+                        backgroundColor: ThemeColors.button,
+                        borderRadius: 25,
+                        paddingHorizontal: 4,
+                        borderWidth: 1,
+                        borderColor: 'lightgray'
+                      }}
+                      containerStyle={{ marginRight: 8, borderRadius: 25 }}
+                      onPress={() => props.navigation.navigate('Home')}
                     />
                   ),
                   headerTitleAlign: 'center',
@@ -206,10 +213,10 @@ export default function App() {
               }}
             >
               <Stack.Screen
-                name="Account"
-                options={{ headerTitle: 'Account', headerRight: () => {<></>} }}
+                name="Home"
+                options={{ headerTitle: 'Home', headerRight: () => {<></>} }}
               >
-                {props => <Account {...props} user={user} auth={auth} db={db} setLobbyData={setLobbyData} />}
+                {props => <Home {...props} user={user} auth={auth} db={db} setLobbyData={setLobbyData} />}
               </Stack.Screen>
               <Stack.Screen
                 name="CreateAccount"

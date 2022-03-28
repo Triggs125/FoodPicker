@@ -78,7 +78,7 @@ class AccountEdit extends Component {
           const updatedUser = { ...this.props.user, firstName: firstNameText, lastName: lastNameText };
           console.log("Setting user", updatedUser)
           this.props.setUser(updatedUser);
-          this.props.navigation.navigate("Account");
+          this.props.navigation.navigate("Home");
         });
       })
       .catch(err => {
@@ -117,7 +117,7 @@ class AccountEdit extends Component {
               removeAccountOverlayLoading: false,
               removeAccountOverlayError: false,
             });
-            this.props.navigation.navigate("Account");
+            this.props.navigation.navigate("Home");
           })
           .catch(err => {
             console.error("LobbyCreator::removeAccount::deleteUser", err);

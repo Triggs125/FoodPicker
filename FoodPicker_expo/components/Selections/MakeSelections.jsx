@@ -227,30 +227,44 @@ class MakeSelections extends Component {
       merge: false,
     })
     .then(async () => {
-      // Add user to lobby usersReady list
+      // Add user to lobby's usersReady list
       const usersReady = lobbyData.usersReady || [];
-      if (!usersReady?.includes(user.uid)) {
-        setDoc(lobbyData.ref, { usersReady: [...usersReady, user.uid] }, { merge: true })
-        .then(async () => {
-          this.clearSelections();
-
-          if (selectedFoodChoices.length === 0) {
-            // Remove user from lobby usersReady list
-            usersReady = usersReady.filter(uid => uid !== user.uid);
-            await setDoc(lobbyData.ref, { usersReady: usersReady }, { merge: true });
-            this.props.navigation.navigate('LobbyView', { lobbyRef: lobbyData.ref });
-          } else {
-            this.props.navigation.navigate('UserSelections', { lobbyData: lobbyData, user: user });
-          }
-          this.setState({ loading: false });
-        });
-      } else {
-        if (selectedFoodChoices.length === 0) {
-          this.props.navigation.navigate('LobbyView', { lobbyRef: lobbyData.ref });
+      if (selectedFoodChoices.length === 0) {
+        const index = usersReady.indexOf(user.uid);
+        if (index > -1) {
+          usersReady.splice(index, 1);
+          setDoc(lobbyData.ref, { usersReady }, { merge: true })
+            .then(() => {
+              this.clearSelections();
+              this.setState({ loading: false });
+              this.props.navigation.navigate('LobbyView', { lobbyRef: lobbyData.ref });
+            })
+            .catch(err => {
+              console.error("MakeSelections::userSelectionPage::NoSelections", err);
+              this.setState({ loading: false });
+            });
         } else {
+          this.props.navigation.navigate('LobbyView', { lobbyRef: lobbyData.ref });
+          this.setState({ loading: false });
+        }
+      } else {
+        const index = usersReady.indexOf(user.uid);
+        if (index === -1) {
+          usersReady.push(user.uid);
+          setDoc(lobbyData.ref, { usersReady }, { merge: true })
+            .then(() => {
+              this.clearSelections();
+              this.setState({ loading: false });
+              this.props.navigation.navigate('UserSelections', { lobbyData: lobbyData, user: user });
+            })
+            .catch(err => {
+              console.error("MakeSelections::userSelectionPage::SelectionsPresent", err);
+              this.setState({ loading: false });
+            });
+        } else {
+          this.setState({ loading: false });
           this.props.navigation.navigate('UserSelections', { lobbyData: lobbyData, user: user });
         }
-        this.setState({ loading: false });
       }
     })
     .catch((err) => {
