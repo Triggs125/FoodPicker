@@ -12,6 +12,7 @@ import { getDoc, doc, setDoc } from "firebase/firestore";
 import { PLACE_DETAILS_API_KEY, GOOGLE_MAPS_API_KEY } from "../../config";
 import ThemeColors from "../../assets/ThemeColors";
 import { TouchableOpacity } from "react-native-gesture-handler";
+import * as Analytics from 'expo-firebase-analytics';
 
 class MakeSelections extends Component {
   constructor(props) {
@@ -194,10 +195,16 @@ class MakeSelections extends Component {
         this.setState({ nextPageToken: res.next_page_token });
       })
       .catch(error => {
-        console.error("FoodChoices::fetchNearestPlacesFromGoogle", error);
+        Analytics.logEvent("exception", {
+          description: "MakeSelections::fetchNearestPlacesFromGoogle"
+        });
+        console.error("MakeSelections::fetchNearestPlacesFromGoogle", error);
       })
       .finally(() => {
         this.setState({ loading: false });
+        Analytics.logEvent("event", {
+          description: "MakeSelections::fetchNearestPlacesFromGoogle"
+        });
       });
   }
 
@@ -209,6 +216,9 @@ class MakeSelections extends Component {
       const selectedFoodChoices = selectedFoodChoicesDoc.data()?.selections;
       this.setState({ selectedFoodChoices: selectedFoodChoices ?? [] });
     } catch (err) {
+      Analytics.logEvent("exception", {
+        description: "MakeSelections::getUserFoodSelections"
+      });
       console.error("MakeSelections::getUserFoodSelections", err);
     }
   }
@@ -240,6 +250,9 @@ class MakeSelections extends Component {
               this.props.navigation.navigate('LobbyView', { lobbyRef: lobbyData.ref });
             })
             .catch(err => {
+              Analytics.logEvent("exception", {
+                description: "MakeSelections::userSelectionPage::NoSelections"
+              });
               console.error("MakeSelections::userSelectionPage::NoSelections", err);
               this.setState({ loading: false });
             });
@@ -258,6 +271,9 @@ class MakeSelections extends Component {
               this.props.navigation.navigate('UserSelections', { lobbyData: lobbyData, user: user });
             })
             .catch(err => {
+              Analytics.logEvent("exception", {
+                description: "MakeSelections::userSelectionPage::SelectionsPresent"
+              });
               console.error("MakeSelections::userSelectionPage::SelectionsPresent", err);
               this.setState({ loading: false });
             });
@@ -268,6 +284,9 @@ class MakeSelections extends Component {
       }
     })
     .catch((err) => {
+      Analytics.logEvent("exception", {
+        description: "MakeSelections::userSelectionPage"
+      });
       console.error("MakeSelections::userSelectionPage", err);
       this.setState({ loading: false });
     });

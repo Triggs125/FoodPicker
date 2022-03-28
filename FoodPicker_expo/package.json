@@ -23,6 +23,8 @@
     "@react-navigation/stack": "^6.0.11",
     "algoliasearch": "^4.12.1",
     "expo": "~44.0.0",
+    "expo-ads-facebook": "~11.1.0",
+    "expo-firebase-analytics": "^6.0.1",
     "expo-location": "~14.0.1",
     "expo-splash-screen": "~0.14.1",
     "expo-status-bar": "~1.2.0",
@@ -54,8 +56,7 @@
     "react-native-vector-icons": "^9.1.0",
     "react-native-web": "0.17.1",
     "styled-components": "^5.3.3",
-    "validator": "^13.7.0",
-    "expo-ads-facebook": "~11.1.0"
+    "validator": "^13.7.0"
   },
   "devDependencies": {
     "@babel/core": "^7.12.9"

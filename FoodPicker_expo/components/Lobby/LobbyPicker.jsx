@@ -9,6 +9,7 @@ import { onAuthStateChanged } from 'firebase/auth';
 import ThemeColors from "../../assets/ThemeColors";
 import { ScreenWidth } from "react-native-elements/dist/helpers";
 import Password from "../Utils/Password";
+import * as Analytics from 'expo-firebase-analytics';
 
 class LobbyPicker extends Component {
   constructor(props) {
@@ -90,7 +91,7 @@ class LobbyPicker extends Component {
         this.setState({ userLobbies });
       },
       (error) => {
-        console.error("App::onAuthStateChanged", error)
+        console.error("LobbyPicker::userLobbiesUnsubscribe::onSnapshot", error)
       },
       () => { // Auth Complete (ie. user logged out)
         this.setState({ userLobbiesUnsubscribe: userLobbiesUnsubscribe });
@@ -156,6 +157,9 @@ class LobbyPicker extends Component {
             this.addUserToLobby(lobby);
             const lobbyRef = this.getLobbyRef(lobby);
             this.props.navigation.navigate('LobbyView', { lobbyRef });
+            Analytics.logEvent("event", {
+              description: "LobbyPicker::lobbyComponent::addUserToLobby::OpenLobby"
+            });
           }
         }}
         onLongPress={() => {
@@ -183,11 +187,19 @@ class LobbyPicker extends Component {
       updateDoc(doc(this.props.db, lobby.path), { users, usersReady })
         .then(() => {
           deleteDoc(doc(this.props.db, `food_selections/${lobby.id}_${this.props.user.uid}`))
-          .catch(err => {
-            console.error("LobbyPicker::removeUserFromLobby::deleteDoc", err);
-          });
+            .then(() => {
+              Analytics.logEvent("event", {
+                description: "LobbyPicker::removeUserFromLobby::deleteDoc"
+              });
+            })
+            .catch(err => {
+              console.error("LobbyPicker::removeUserFromLobby::deleteDoc", err);
+            });
         })
         .catch(err => {
+          Analytics.logEvent("exception", {
+            description: "LobbyPicker::removeUserFromLobby::updateDoc"
+          });
           console.error("LobbyPicker::removeUserFromLobby::updateDoc", err);
         });
     } else {
@@ -209,6 +221,9 @@ class LobbyPicker extends Component {
     return setDoc(doc(this.props.db, lobby.path), { active: false }, { merge: true })
       .then(() => {
         this.refreshLobbySearch();
+        Analytics.logEvent("event", {
+          description: "LobbyPicker::RemoveLobby"
+        });
       });
   }
 
@@ -254,6 +269,9 @@ class LobbyPicker extends Component {
                 });
               })
               .catch(err => {
+                Analytics.logEvent("exception", {
+                  description: "LobbyView::RemoveLobbyOverlay"
+                });
                 console.error("LobbyView::RemoveLobbyOverlay", err);
                 this.setState({
                   removeLobbyOverlayLoading: false,
@@ -366,6 +384,9 @@ class LobbyPicker extends Component {
                   overlayPasswordShowing: false,
                   overlayPasswordHash: "",
                   overlayPasswordError: false,
+                });
+                Analytics.logEvent("event", {
+                  description: "LobbyPicker::Overlay::PasswordCompare::OpeningLobby"
                 });
               } else {
                 this.setState({ overlayPasswordError: true });

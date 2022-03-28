@@ -9,6 +9,7 @@ import { HeaderHeightContext } from '@react-navigation/elements';
 import isAlpha from 'validator/lib/isAlpha';
 import { updateProfile } from 'firebase/auth';
 import { ScreenWidth } from "react-native-elements/dist/helpers";
+import * as Analytics from 'expo-firebase-analytics';
 
 class AccountEdit extends Component {
   constructor(props) {
@@ -47,44 +48,53 @@ class AccountEdit extends Component {
 
   componentDidAppear() {
     getDocs(query(collection(this.props.db, 'users'), where('uid', '==', this.props.user.uid)))
-    .then(docs => {
-      const user = docs.docs[0];
-      this.setState({
-        firstNameText: user.data().firstName,
-        lastNameText: user.data().lastName,
-        emailAddressText: user.data().email,
-        loadingData: false,
-        error: false,
-        userRef: user.ref,
+      .then(docs => {
+        const user = docs.docs[0];
+        this.setState({
+          firstNameText: user.data().firstName,
+          lastNameText: user.data().lastName,
+          emailAddressText: user.data().email,
+          loadingData: false,
+          error: false,
+          userRef: user.ref,
+        });
+      })
+      .catch(err => {
+        Analytics.logEvent("exception", {
+          description: "AccountEdit::componentDidAppear"
+        });
+        console.error("AccountEdit::componentDidAppear", err);
+        this.setState({ loadingData: false, error: true });
       });
-    })
-    .catch(err => {
-      console.error("AccountEdit::componentDidAppear", err);
-      this.setState({ loadingData: false, error: true });
-    });
   }
 
   updateAccount() {
     const { firstNameText, lastNameText, userRef } = this.state;
     if (this.validForm()) {
-      console.log("Updating data")
+      console.log("Updating data");
       this.setState({ updatingData: true });
       const displayName = `${this.state.firstNameText}${this.state.lastNameText !== "" ? " " + this.state.lastNameText : ""}`;
       setDoc(userRef, { firstName: firstNameText, lastName: lastNameText }, { merge: true })
-      .then(() => {
-        updateProfile(this.props.user, { displayName: displayName })
         .then(() => {
-          this.setState({ updatingData: false, loading: false, error: false });
-          const updatedUser = { ...this.props.user, firstName: firstNameText, lastName: lastNameText };
-          console.log("Setting user", updatedUser)
-          this.props.setUser(updatedUser);
-          this.props.navigation.navigate("Home");
+          updateProfile(this.props.user, { displayName: displayName })
+            .then(() => {
+              this.setState({ updatingData: false, loading: false, error: false });
+              const updatedUser = { ...this.props.user, firstName: firstNameText, lastName: lastNameText };
+              console.log("Setting user", updatedUser);
+              this.props.setUser(updatedUser);
+              this.props.navigation.navigate("Home");
+              Analytics.logEvent("event", {
+                description: "AccountEdit::updateAccount::updateProfile"
+              });
+            });
+        })
+        .catch(err => {
+          Analytics.logEvent("exception", {
+            description: "AccountEdit::updateAccount"
+          });
+          this.setState({ error: true, loading: false });
+          console.error("AccountEdit::updateAccount", err);
         });
-      })
-      .catch(err => {
-        this.setState({ error: true, loading: false });
-        console.error("AccountEdit::updateAccount", err);
-      })
     }
   }
 
@@ -118,9 +128,15 @@ class AccountEdit extends Component {
               removeAccountOverlayError: false,
             });
             this.props.navigation.navigate("Home");
+            Analytics.logEvent("event", {
+              description: "AccountEdit::removeAccount::deleteUser"
+            });
           })
           .catch(err => {
-            console.error("LobbyCreator::removeAccount::deleteUser", err);
+            Analytics.logEvent("exception", {
+              description: "AccountEdit::removeAccount::deleteUser"
+            });
+            console.error("AccountEdit::removeAccount::deleteUser", err);
             this.setState({
               removeAccountOverlayLoading: false,
               removeAccountOverlayError: true,
@@ -128,7 +144,10 @@ class AccountEdit extends Component {
           });
       })
       .catch(err => {
-        console.error("LobbyCreator::removeAccount::deleteDoc", err);
+        Analytics.logEvent("exception", {
+          description: "AccountEdit::removeAccount::deleteDoc"
+        });
+        console.error("AccountEdit::removeAccount::deleteDoc", err);
         this.setState({
           removeAccountOverlayError: true,
           removeAccountOverlayLoading: false,

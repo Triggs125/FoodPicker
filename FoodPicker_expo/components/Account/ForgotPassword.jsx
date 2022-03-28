@@ -4,6 +4,8 @@ import { View } from "react-native";
 import { Button, Input, Text, Icon } from "react-native-elements";
 import PasswordValidator from 'password-validator';
 import isEmail from "validator/lib/isEmail";
+import * as Analytics from 'expo-firebase-analytics';
+
 import ThemeColors from "../../assets/ThemeColors";
 
 class ForgotPassword extends Component {
@@ -43,13 +45,19 @@ class ForgotPassword extends Component {
 
     this.setState({ resetPasswordLoading: true });
     sendPasswordResetEmail(this.props.auth, emailAddressText)
-    .then(() => {
-      this.setState({ resetPasswordLoading: false, inputNewPassword: true });
-    })
-    .catch(err => {
-      this.setState({ resetPasswordLoading: false, emailAddressError: true });
-      console.error("ForgotPassword::sendResetPasswordEmail", err);
-    })
+      .then(() => {
+        this.setState({ resetPasswordLoading: false, inputNewPassword: true });
+        Analytics.logEvent("event", {
+          description: "ForgotPassword::sendResetPasswordEmail"
+        });
+      })
+      .catch(err => {
+        Analytics.logEvent("exception", {
+          description: "ForgotPassword::sendResetPasswordEmail"
+        });
+        this.setState({ resetPasswordLoading: false, emailAddressError: true });
+        console.error("ForgotPassword::sendResetPasswordEmail", err);
+      });
   }
 
   updatePassword() {
@@ -72,22 +80,25 @@ class ForgotPassword extends Component {
     }
 
     confirmPasswordReset(this.props.auth, emailCode, passwordText)
-    .then(() => {
-      this.setState({ emailCode: "", passwordText: "", updatePasswordLoading: false, updatePasswordError: false });
-      this.props.navigation.navigate("Home");
-    })
-    .catch(err => {
-      this.setState({ updatePasswordLoading: false, updatePasswordError: true });
-      console.error("ForgotPassword::updatePassword", err);
-    });
+      .then(() => {
+        this.setState({ emailCode: "", passwordText: "", updatePasswordLoading: false, updatePasswordError: false });
+        this.props.navigation.navigate("Home");
+        Analytics.logEvent("event", {
+          description: "ForgotPassword::updatePassword::confirmPasswordReset::passwordReset"
+        });
+      })
+      .catch(err => {
+        Analytics.logEvent("exception", {
+          description: "ForgotPassword::updatePassword::confirmPasswordReset"
+        });
+        this.setState({ updatePasswordLoading: false, updatePasswordError: true });
+        console.error("ForgotPassword::updatePassword::confirmPasswordReset", err);
+      });
   }
 
   render() {
     const {
-      emailAddressText, emailAddressError, resetPasswordLoading,
-      passwordText, passwordShowing, passwordFailures,
-      updatePasswordLoading, updatePasswordError,
-      emailCode, emailCodeError,
+      emailAddressText, emailAddressError, resetPasswordLoading
     } = this.state;
     return (
       <View

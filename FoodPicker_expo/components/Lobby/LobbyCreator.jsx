@@ -10,6 +10,7 @@ import PasswordValidator from 'password-validator';
 import Password from '../Utils/Password';
 import { addDoc, collection, doc, getDocs, query, setDoc, where } from "firebase/firestore";
 import { ScreenWidth } from "react-native-elements/dist/helpers";
+import * as Analytics from 'expo-firebase-analytics';
 
 class LobbyCreator extends Component {
   constructor(props) {
@@ -80,31 +81,43 @@ class LobbyCreator extends Component {
       if (passwordProtected) {
         const hashedPassword = this.props.hashPassword(passwordText);
         addDoc(collection(this.props.db, 'lobbies'), data) // create lobbies doc
-        .then((docRef) => {
-          addDoc(collection(this.props.db, 'lobby_passwords'), { // create passwords doc
-            passwordHash: hashedPassword,
-            lobbyId: docRef.id,
-            lobbyPath: docRef.path,
+          .then((docRef) => {
+            addDoc(collection(this.props.db, 'lobby_passwords'), { // create passwords doc
+              passwordHash: hashedPassword,
+              lobbyId: docRef.id,
+              lobbyPath: docRef.path,
+            })
+              .then(() => {
+                this.setState({ loading: false });
+                this.props.navigation.goBack();
+                this.props.navigation.navigate('LobbyView', { lobbyRef: docRef });
+                Analytics.logEvent("event", {
+                  description: "LobbyCreator::createLobby::LobbyCreated::PasswordProtected"
+                });
+              });
           })
-          .then(() => {
+          .catch(err => {
+            Analytics.logEvent("exception", {
+              description: "LobbyCreator::createLobby::passwordHash"
+            });
             this.setState({ loading: false });
-            this.props.navigation.goBack();
-            this.props.navigation.navigate('LobbyView', { lobbyRef: docRef });
+            console.error("LobbyCreator::createLobby::passwordHash", err);
           });
-        })
-        .catch(err => {
-          this.setState({ loading: false });
-          console.error("LobbyCreator::createLobby::passwordHash", err);
-        });
       } else {
         addDoc(collection(this.props.db, 'lobbies'), data)
           .then((docRef) => {
             this.setState({ loading: false })
             this.props.navigation.goBack();
             this.props.navigation.navigate('LobbyView', { lobbyRef: docRef });
+            Analytics.logEvent("event", {
+              description: "LobbyCreator::createLobby::LobbyCreated::NoPassword"
+            });
           });
       }
     } catch(err) {
+      Analytics.logEvent("exception", {
+        description: "LobbyCreator::createLobby"
+      });
       console.error("LobbyCreator::createLobby", err);
     }
   }
@@ -149,8 +162,14 @@ class LobbyCreator extends Component {
         }
         this.setState({ loading: false });
         this.props.navigation.goBack();
+        Analytics.logEvent("event", {
+          description: `LobbyCreator::updateLobby::${passwordProtected ? 'PasswordProtected' : 'NoPassword'}`
+        });
       })
       .catch(err => {
+        Analytics.logEvent("exception", {
+          description: "LobbyCreator::updateLobby"
+        });
         console.error("LobbyCreator::updateLobby", err);
         this.setState({ loading: false });
       })
@@ -237,8 +256,14 @@ class LobbyCreator extends Component {
                   removeLobbyOverlayLoading: false,
                 });
                 this.props.navigation.navigate("LobbyPicker");
+                Analytics.logEvent("event", {
+                  description: "LobbyCreator::removeLobbyOverlay::LobbyRemoved"
+                });
               })
               .catch(err => {
+                Analytics.logEvent("exception", {
+                  description: "LobbyCreator::RemoveLobbyOverlay"
+                });
                 console.error("LobbyCreator::RemoveLobbyOverlay", err);
                 this.setState({
                   removeLobbyOverlayLoading: false,

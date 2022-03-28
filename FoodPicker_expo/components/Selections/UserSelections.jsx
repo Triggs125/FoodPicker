@@ -28,6 +28,7 @@ class UserSelections extends Component {
 
     this.componentAppeared = this.componentAppeared.bind(this);
     this.removeFoodChoice = this.removeFoodChoice.bind(this);
+    this.clearSelections = this.clearSelections.bind(this);
   }
 
   componentDidMount() {
@@ -79,7 +80,7 @@ class UserSelections extends Component {
     newFoodChoices = newFoodChoices.filter(choice => choice.id !== foodChoice.id);
     await setDoc(selectedFoodChoices.ref, { selections: newFoodChoices }, { merge: true });
 
-    if (newFoodChoices.length <= 0) {
+    if (newFoodChoices.length === 0) {
       // Remove user from lobby usersReady list
       let usersReady = lobbyData.usersReady;
       if (usersReady.includes(user.uid)) {
@@ -88,6 +89,35 @@ class UserSelections extends Component {
         this.props.navigation.navigate('LobbyView', { lobbyRef: lobbyData.ref });
       }
     }
+    Analytics.logEvent("event", {
+      description: "UserSelections::removeFoodChoice"
+    });
+  }
+
+  clearSelections() {
+    const { selectedFoodChoices } = this.state;
+    const { lobbyData, user } = this.props;
+    setDoc(selectedFoodChoices.ref, { selections: [] }, { merge: true })
+      .then(() => {
+        const usersReady = lobbyData.usersReady || [];
+        const index = usersReady.indexOf(user.uid);
+        if (index > -1) {
+          usersReady.splice(index, 1);
+          setDoc(lobbyData.ref, { usersReady }, { merge: true })
+            .then(() => {
+              this.props.navigation.navigate("LobbyView", { lobbyRef: lobbyData.ref });
+              Analytics.logEvent("event", {
+                description: "UserSelections::clearSelections"
+              });
+            })
+            .catch(err => {
+              console.error("UserSelections::clearSelections::usersReadyRemoval", err);
+            })
+        }
+      })
+      .catch(err => {
+        console.error("UserSelection::clearSelections:setDoc", err);
+      });
   }
 
   stars(rating) {

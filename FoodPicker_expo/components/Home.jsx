@@ -11,6 +11,7 @@ import { ScreenWidth } from "react-native-elements/dist/helpers";
 import * as Location from 'expo-location';
 import { GOOGLE_MAPS_API_KEY, PLACE_DETAILS_API_KEY } from "../config";
 import { StatusBar } from "react-native";
+import * as Analytics from 'expo-firebase-analytics';
 
 class Home extends Component {
   constructor(props) {
@@ -89,6 +90,10 @@ class Home extends Component {
   }
 
   getRandomRestaurant() {
+    Analytics.logEvent("button_click", {
+      name: "Get Random Restaurant"
+    });
+
     this.setState({ randomRestaurantLoading: true });
 
     this.getUserLocation()
@@ -144,6 +149,9 @@ class Home extends Component {
                 })
                 .catch(err => {
                   console.error("Home::getRandomRestaurant::secondUrl", err);
+                  Analytics.logEvent("exception", {
+                    description: "Home::getRandomRestaurant::secondUrl"
+                  });
                   this.setState({
                     randomRestaurantError: true,
                     randomRestaurantErrorDetails: err.message,
@@ -162,6 +170,9 @@ class Home extends Component {
             });
           })
           .catch(err => {
+            Analytics.logEvent("exception", {
+              description: "Home::getRandomRestaurant::firstUrl"
+            });
             console.error("Home::getRandomRestaurant::firstUrl", err);
             console.log(err.message);
             this.setState({
@@ -172,6 +183,10 @@ class Home extends Component {
           });
       })
       .catch(err => {
+        Analytics.logEvent("exception", {
+          description: "Home::getRandomRestaurant::getUserLocation"
+        });
+        console.error("Home::getRandomRestaurant::getUserLocation", err);
         this.setState({
           randomRestaurantError: true,
           randomRestaurantErrorDetails: err.message,
@@ -299,12 +314,18 @@ class Home extends Component {
             return { distance, location };
           })
           .catch(err => {
+            Analytics.logEvent("exception", {
+              description: "Home::getUsersLocation::getCurrentPositionAsync"
+            });
             console.error("Home::getUsersLocation::getCurrentPositionAsync", err);
             return { error: 'There was an issue retrieving your location.' };
           });
         return loc;
       })
       .catch(err => {
+        Analytics.logEvent("exception", {
+          description: "Home::getUsersLocation::requestForegroundPermissionsAsync"
+        });
         console.error("Home::getUsersLocation::requestForegroundPermissionsAsync", err);
         return { error: 'There was an issue retrieving your location permissions.' };
       });
@@ -351,7 +372,7 @@ class Home extends Component {
             containerStyle={{ marginVertical: 5 }}
           />
           <Button
-            title="Edit Account"
+            title="Account"
             raised
             disabled={randomRestaurantLoading}
             titleStyle={{ color: 'black', fontSize: 26, paddingLeft: 3 }}

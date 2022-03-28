@@ -36,9 +36,6 @@ class PlaceDetails extends Component {
   }
 
   componentDidMount() {
-    this.componentFocusUnsub = this.props.navigation.addListener('focus', () => {
-      this.componentDidAppear();
-    });
     if (this.props.route?.params?.foodChoice) {
       this.componentDidAppear();
     }
@@ -48,7 +45,10 @@ class PlaceDetails extends Component {
     this.componentFocusUnsub && this.componentFocusUnsub();
   }
 
-  componentDidAppear() {
+  async componentDidAppear() {
+    console.log("Place details appeared...");
+    await this.props.showInterstitial();
+
     const foodChoice = this.props.route?.params?.foodChoice;
     const url = "https://maps.googleapis.com/maps/api/place/details/json?place_id=" + foodChoice.id 
     + '&key=' + PLACE_DETAILS_API_KEY;
@@ -59,7 +59,6 @@ class PlaceDetails extends Component {
         return res.json();
       })
       .then(res => {
-        
         this.setState({ place: res.result });
       })
       .catch(error => {
@@ -127,27 +126,17 @@ class PlaceDetails extends Component {
     return typeNames.substring(1, typeNames.length - 1);
   }
 
-  hexToRgbA(hex, opacity = 1) {
-    var c;
-    if(/^#([A-Fa-f0-9]{3}){1,2}$/.test(hex)) {
-        c = hex.substring(1).split('');
-        if(c.length == 3){
-            c = [c[0], c[0], c[1], c[1], c[2], c[2]];
-        }
-        c = '0x' + c.join('');
-        return 'rgba(' + [(c>>16)&255, (c>>8)&255, c&255].join(',') + ',' + opacity + ')';
-    }
-    return hex;
-  }
-
   clickPlaceLink(url) {
     Linking.canOpenURL(url)
-    .then(supported => {
-      if (supported) {
-        Linking.openURL(url);
-      } else {
-        console.error("Don't know how to open URL:" + url);
-      }
+      .then(supported => {
+        if (supported) {
+          Linking.openURL(url);
+        } else {
+          console.error("Don't know how to open URL:" + url);
+        }
+      });
+    Analytics.logEvent("event", {
+      description: "PlaceDetails::clickPlaceLink"
     });
   }
 
@@ -157,6 +146,9 @@ class PlaceDetails extends Component {
     } else {
       Linking.openURL(`telprompt:${formatted_phone_number}`);
     }
+    Analytics.logEvent("event", {
+      description: "PlaceDetails::callNumber"
+    });
   }
 
   render() {
@@ -173,13 +165,23 @@ class PlaceDetails extends Component {
     if (dayOfWeek < 0) dayOfWeek = 6;
 
     const DetailsTab = () => (
-      <ScrollView contentContainerStyle={{
+      <View style={{
         width: ScreenWidth,
         height: (screenHeight / 3) * 2 - 100,
         justifyContent: 'space-between',
       }}>
-        <View>
+        <ScrollView>
           <Text h3 h3Style={{ textAlign: 'center', paddingBottom: 5, paddingTop: 10 }}>{place?.name}</Text>
+          <Text
+            style={{
+              textAlign: 'center',
+              fontSize: 20,
+              textTransform: 'capitalize',
+              paddingVertical: 5,
+            }}
+          >
+            {this.placeTypes(place?.types)}
+          </Text>
           <View style={{ flexDirection: 'row', justifyContent: 'center', paddingVertical: 5 }}>
             <Text
               style={{
@@ -255,18 +257,8 @@ class PlaceDetails extends Component {
           }}>
             {place?.opening_hours?.weekday_text[dayOfWeek]}
           </Text>
-          <Text
-            style={{
-              textAlign: 'center',
-              fontSize: 20,
-              textTransform: 'capitalize',
-              paddingVertical: 5,
-            }}
-          >
-            {this.placeTypes(place?.types)}
-          </Text>
-        </View>
-        <View style={{ flexDirection: 'row', justifyContent: 'space-evenly', marginTop: 30 }}>
+        </ScrollView>
+        <View style={{ flexDirection: 'row', justifyContent: 'space-evenly', marginTop: 5, marginBottom: 10 }}>
           <Button
             title={'Call'}
             type='solid'
@@ -313,7 +305,7 @@ class PlaceDetails extends Component {
             onPress={() => this.clickPlaceLink(place?.website)}
           />
         </View>
-      </ScrollView>
+      </View>
     );
     
     const ReviewsTab = () => (
@@ -419,7 +411,12 @@ class PlaceDetails extends Component {
                   <TabView
                     navigationState={{ index: tabIndex, routes: tabRoutes }}
                     renderScene={renderScene}
-                    onIndexChange={(index) => this.setState({ tabIndex: index })}
+                    onIndexChange={(index) => {
+                      this.setState({ tabIndex: index });
+                      Analytics.logEvent("event", {
+                        description: "PlaceDetails::TabView::Clicked::" + index
+                      });
+                    }}
                     renderTabBar={props => (
                       <TabBar
                         {...props}

@@ -14,6 +14,7 @@ import { UserColors } from './ColorContext';
 import { onAuthStateChanged } from "firebase/auth";
 import Constants from 'expo-constants';
 import * as FacebookAds from 'expo-ads-facebook';
+import * as Analytics from 'expo-firebase-analytics';
 
 import Home from './components/Home';
 import CreateAccount from './components/Account/CreateAccount';
@@ -41,6 +42,7 @@ export default function App() {
   const [lobbyData, setLobbyData] = useState();
   const [userLobbies, setUserLobbies] = useState();
   const [kickedFromLobby, setKickedFromLobby] = useState(false);
+  const [interstitialAdShowing, setInterstitialAdShowing] = useState(false);
 
   const bannerId = getPlacementId(true);
   const interstitialId = getPlacementId(false);
@@ -74,10 +76,42 @@ export default function App() {
         <FacebookAds.BannerAd
           placementId={bannerId}
           type='standard'
-          onPress={() => console.log('Banner Ad Clicked')}
-          onError={err => console.error('App::getBannerAd', err.nativeEvent)}
+          onPress={() => {
+            Analytics.logEvent("ad", {
+              type: "banner",
+              description: "clicked"
+            });
+            console.log('Banner Ad Clicked');
+          }}
+          onError={err => {
+            Analytics.logEvent("exception", {
+              description: "App:getBannerAd"
+            });
+            console.error('App::getBannerAd', err.nativeEvent);
+          }}
         />
-      )
+      );
+    }
+  }
+
+  function showInterstitial() {
+    if (!interstitialAdShowing) {
+      setInterstitialAdShowing(true);
+      return FacebookAds.InterstitialAdManager.showAd(interstitialId)
+        .then(didClick => {
+          Analytics.logEvent("ad", {
+            type: "interstitial",
+            description: `shown - ${didClick ? 'clicked on' : 'not clicked on'}`
+          });
+          console.log("Interstitial Ad Clicked?", didClick);
+        })
+        .catch(err => {
+          Analytics.logEvent("exception", {
+            description: "App:showInterstitial"
+          });
+          console.error("App::showInterstitial", err);
+        })
+        .finally(() => setInterstitialAdShowing(false));
     }
   }
 
@@ -132,6 +166,7 @@ export default function App() {
   SplashScreen.preventAutoHideAsync();
   setTimeout(SplashScreen.hideAsync, 2000);
   const navigationRef = React.useRef();
+  const routeNameRef = React.useRef();
   
   // Ignore log notification by message
   LogBox.ignoreLogs([
@@ -146,20 +181,23 @@ export default function App() {
       return;
     }
     getDocs(query(collection(db, 'users'), where('uid', '==', authUser.uid)))
-    .then(docs => {
-      const user = docs?.docs[0]?.data();
-      if (!user) {
+      .then(docs => {
+        const user = docs?.docs[0]?.data();
+        if (!user) {
+          setUser(authUser);
+          return;
+        }
+        authUser.firstName = user?.firstName;
+        authUser.lastName = user?.lastName;
         setUser(authUser);
-        return;
-      }
-      authUser.firstName = user?.firstName;
-      authUser.lastName = user?.lastName;
-      setUser(authUser);
-    })
-    .catch(err => {
-      console.error("App:onAuthStateChanged", err);
-      setUser(authUser)
-    })
+      })
+      .catch(err => {
+        Analytics.logEvent("exception", {
+          description: "App:onAuthStateChanged"
+        });
+        console.error("App:onAuthStateChanged", err);
+        setUser(authUser)
+      });
   });
 
   if (Constants.platform.web) {
@@ -183,11 +221,27 @@ export default function App() {
           <NavigationContainer
             ref={navigationRef}
             theme={navColors}
+            onReady={() => {
+              routeNameRef.current = navigationRef.current.getCurrentRoute().name;
+            }}
+            onStateChange={async () => {
+              const previousRouteName = routeNameRef.current;
+              const currentRouteName = navigationRef.current.getCurrentRoute().name;
+
+              if (previousRouteName !== currentRouteName) {
+                await Analytics.logEvent("screen_view", {
+                  screen_name: currentRouteName
+                });
+              }
+              routeNameRef.current = currentRouteName;
+            }}
           >
             <Stack.Navigator
-              initialRouteName="Account"
+              initialRouteName="Home"
               screenOptions={(props) => {
                 return {
+                  headerStyle: { height: 50 },
+                  headerTitleStyle: { fontSize: 20 },
                   headerRight: () => (
                     <Button
                       raised
@@ -216,7 +270,16 @@ export default function App() {
                 name="Home"
                 options={{ headerTitle: 'Home', headerRight: () => {<></>} }}
               >
-                {props => <Home {...props} user={user} auth={auth} db={db} setLobbyData={setLobbyData} />}
+                {props => (
+                  <Home
+                    {...props}
+                    user={user}
+                    auth={auth}
+                    db={db}
+                    setLobbyData={setLobbyData}
+                    showInterstitial={showInterstitial}
+                  />
+                )}
               </Stack.Screen>
               <Stack.Screen
                 name="CreateAccount"
@@ -256,7 +319,16 @@ export default function App() {
                       name="LobbyView"
                       options={{ headerTitle: "Lobby" }}
                     >
-                      {props => <LobbyView {...props} user={user} auth={auth} db={db} setLobbyData={setLobbyData} setKickedFromLobby={setKickedFromLobby} />}
+                      {props => (
+                        <LobbyView
+                          {...props}
+                          user={user}
+                          auth={auth}
+                          db={db}
+                          setLobbyData={setLobbyData}
+                          setKickedFromLobby={setKickedFromLobby}
+                        />
+                      )}
                     </Stack.Screen>
                     <Stack.Screen
                       name="MakeSelections"
@@ -265,7 +337,16 @@ export default function App() {
                         headerTitleAlign: 'center'
                       }}
                     >
-                      {props => <MakeSelections {...props} user={user} auth={auth} db={db} lobbyData={lobbyData} />}
+                      {props => (
+                        <MakeSelections
+                          {...props}
+                          user={user}
+                          auth={auth}
+                          db={db}
+                          lobbyData={lobbyData}
+                          showInterstitial={showInterstitial}
+                        />
+                      )}
                     </Stack.Screen>
                     <Stack.Screen
                       name="UserSelections"
@@ -286,7 +367,16 @@ export default function App() {
                       name="PlaceDetails"
                       options={{ headerTitle: "Place Details", cardStyle: { backgroundColor: 'white' } }}
                     >
-                      {props => <PlaceDetails {...props} user={user} auth={auth} db={db} lobbyData={lobbyData} />}
+                      {props => (
+                        <PlaceDetails
+                          {...props}
+                          user={user}
+                          auth={auth}
+                          db={db}
+                          lobbyData={lobbyData}
+                          showInterstitial={showInterstitial}
+                        />
+                      )}
                     </Stack.Screen>
                   </>
                 )

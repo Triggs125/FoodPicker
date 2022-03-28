@@ -12,6 +12,7 @@ import { ScrollView } from 'react-native-gesture-handler';
 import Constants from 'expo-constants';
 import { HeaderHeightContext } from '@react-navigation/elements';
 import ThemeColors from '../../assets/ThemeColors';
+import * as Analytics from 'expo-firebase-analytics';
 
 class CreateAccount extends Component {
   constructor(props) {
@@ -52,28 +53,34 @@ class CreateAccount extends Component {
     if (this.formValidation()) {
       this.setState({ loading: true });
       createUserWithEmailAndPassword(this.props.auth, this.state.emailAddressText, this.state.passwordText)
-      .then(async (res) => {
-        const displayName = `${this.state.firstNameText}${this.state.lastNameText !== "" ? " " + this.state.lastNameText : ""}`;
-        await updateProfile(this.props.auth.currentUser, {
-          displayName: displayName
+        .then(async (res) => {
+          const displayName = `${this.state.firstNameText}${this.state.lastNameText !== "" ? " " + this.state.lastNameText : ""}`;
+          await updateProfile(this.props.auth.currentUser, {
+            displayName: displayName
+          });
+          await AddUserToDB(this.props.db, res.user, this.state.firstNameText, this.state.lastNameText, displayName);
+          this.setState({
+            firstNameText: "",
+            lastNameText: "",
+            emailAddressText: "",
+            passwordText: "",
+            passwordShowing: false,
+            loading: false,
+          });
+          this.props.navigation.navigate('LobbyPicker');
+          Analytics.logEvent("event", {
+            description: "CreateAccount::createUserWithEmailAndPassword::UserCreated"
+          });
+        }).catch(err => {
+          Analytics.logEvent("exception", {
+            description: "CreateAccount::createUserWithEmailAndPassword"
+          });
+          console.error("CreateAccount::createUserWithEmailAndPassword", err);
+          if (err.code === "auth/email-already-in-use") {
+            this.setState({ emailExistsError: true });
+          }
+          this.setState({ loading: false });
         });
-        await AddUserToDB(this.props.db, res.user, this.state.firstNameText, this.state.lastNameText, displayName);
-        this.setState({
-          firstNameText: "",
-          lastNameText: "",
-          emailAddressText: "",
-          passwordText: "",
-          passwordShowing: false,
-          loading: false,
-        });
-        this.props.navigation.navigate('LobbyPicker');
-      }).catch(err => {
-        console.error("Account Creation Error:", err);
-        if (err.code === "auth/email-already-in-use") {
-          this.setState({ emailExistsError: true });
-        }
-        this.setState({ loading: false });
-      });
     } else {
       console.log("Invalid Form");
     }

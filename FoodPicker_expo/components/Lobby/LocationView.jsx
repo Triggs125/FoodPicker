@@ -10,6 +10,7 @@ import { GooglePlacesAutocomplete } from "react-native-google-places-autocomplet
 import { ScrollView } from "react-native-gesture-handler";
 import LoadingSpinner from "../LoadingSpinner";
 import { ScreenWidth } from "react-native-elements/dist/helpers";
+import * as Analytics from 'expo-firebase-analytics';
 
 class LocationView extends Component {
   constructor(props) {
@@ -85,8 +86,14 @@ class LocationView extends Component {
                 const coords = { longitude: location.coords.longitude, latitude: location.coords.latitude };
                 this.props.setLocationData(coords, locationGeocodeAddress, distance);
                 this.setState({ location: coords, locationGeocodeAddress, distance });
+                Analytics.logEvent("event", {
+                  description: "LocationView::getUsersLocation::locationGeocodeAddress::UserLocationRetrieved"
+                });
               })
               .catch(err => {
+                Analytics.logEvent("exception", {
+                  description: "LocationView::getUsersLocation::reverseGeocodeAsync"
+                });
                 console.error("LocationView::getUsersLocation::reverseGeocodeAsync", err);
               })
               .finally(() => {
@@ -94,11 +101,17 @@ class LocationView extends Component {
               });
           })
           .catch(err => {
+            Analytics.logEvent("exception", {
+              description: "LocationView::getUsersLocation::getCurrentPositionAsync"
+            });
             console.error("LocationView::getUsersLocation::getCurrentPositionAsync", err);
             this.setState({ loading: false });
           });
       })
       .catch(err => {
+        Analytics.logEvent("exception", {
+          description: "LocationView::getUsersLocation::requestForegroundPermissionsAsync"
+        });
         console.error("LocationView::getUsersLocation::requestForegroundPermissionsAsync", err);
         this.setState({ loading: false });
       });
@@ -117,6 +130,9 @@ class LocationView extends Component {
         this.setState({ locationGeocodeAddress });
       })
       .catch(err => {
+        Analytics.logEvent("exception", {
+          description: "LocationView::setPlaceData::reverseGeocodeAsync"
+        });
         console.error("LocationView::setPlaceData::reverseGeocodeAsync", err);
       });
   }

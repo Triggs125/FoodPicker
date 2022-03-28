@@ -10,6 +10,7 @@ import LocationView from "./LocationView";
 import { ScreenWidth } from "react-native-elements/dist/helpers";
 import { getDistance } from 'geolib';
 import LoadingSpinner from "../LoadingSpinner";
+import * as Analytics from 'expo-firebase-analytics';
 
 class LobbyView extends Component {
   constructor(props) {
@@ -73,7 +74,10 @@ class LobbyView extends Component {
           this.setState({ lobbyData: {...lobbyData, ref: lobby.ref}, lobbyName: lobbyData.name, lobbyUsers, isHost });
           this.props.setLobbyData({...lobbyData, ref: lobby.ref});
         } catch(err) {
-          console.error(err);
+          Analytics.logEvent("exception", {
+            description: "LobbyView::componentDidAppear::unsubscribeLobby"
+          });
+          console.error("LobbyView::componentDidAppear::unsubscribeLobby", err);
         }
         this.setState({ loading: false });
       }
@@ -105,7 +109,15 @@ class LobbyView extends Component {
       dialogTitle: "Food Picker Lobby",
       tintColor: ThemeColors.text,
     })
+    .then((action) => {
+      Analytics.logEvent("event", {
+        description: "LobbyView::share::" + action.activityType
+      });
+    })
     .catch(err => {
+      Analytics.logEvent("exception", {
+        description: "LobbyView::share"
+      });
       console.error("LobbyView:share", err);
     });
   }
@@ -179,7 +191,15 @@ class LobbyView extends Component {
     return setDoc(lobbyData.ref, { users, usersReady }, { merge: true })
       .then(() => {
         deleteDoc(doc(this.props.db, `food_selections/${lobbyData.ref.id}_${this.props.user.uid}`))
+          .then(() => {
+            Analytics.logEvent("event", {
+              description: "LobbyView::removeUser::deleteDoc"
+            });
+          })
           .catch(err => {
+            Analytics.logEvent("exception", {
+              description: "LobbyView::removeUser::deleteDoc"
+            });
             console.error("LobbyView::removeUser::deleteDoc", err);
           });
       });
@@ -239,13 +259,19 @@ class LobbyView extends Component {
       
       // Set final decision in database
       setDoc(lobbyData.ref, { finalDecision: finalSelection }, { merge: true })
-      .then(() => {
-        // Navigate to place details page
-        this.props.navigation.navigate("PlaceDetails", { foodChoice: finalSelection, finalSelection: true });
-        this.setState({ loading: false });
-      });
+        .then(() => {
+          // Navigate to place details page
+          this.props.navigation.navigate("PlaceDetails", { foodChoice: finalSelection, finalSelection: true });
+          this.setState({ loading: false });
+          Analytics.logEvent("event", {
+            description: "LobbyView::getFinalDecision::decisionMade"
+          });
+        });
     })
     .catch(err => {
+      Analytics.logEvent("exception", {
+        description: "LobbyView::getFinalDecision"
+      });
       console.error("LobbyView::getFinalDecision", err);
       this.setState({ loading: false });
     });
@@ -354,8 +380,19 @@ class LobbyView extends Component {
   resetFinalDecision() {
     this.setState({ loading: true });
     setDoc(this.state.lobbyData.ref, { finalDecision: null }, { merge: true })
-    .then(() => this.setState({ loading: false }))
-    .catch(err => { console.error("LobbyView::resetFinalDecision", err); this.setState({ loading: false }) });
+      .then(() => {
+        this.setState({ loading: false });
+        Analytics.logEvent("event", {
+          description: "LobbyView::resetFinalDecision"
+        });
+      })
+      .catch(err => {
+        Analytics.logEvent("exception", {
+          description: "LobbyView::resetFinalDecision"
+        });
+        console.error("LobbyView::resetFinalDecision", err);
+        this.setState({ loading: false });
+      });
   }
 
   goToFinalDecision() {
@@ -407,6 +444,9 @@ class LobbyView extends Component {
                 });
               })
               .catch(err => {
+                Analytics.logEvent("exception", {
+                  description: "LobbyView::RemoveUserOverlay"
+                });
                 console.log("LobbyView::RemoveUserOverlay", err);
                 this.setState({
                   removeUserOverlayLoading: false,
