@@ -192,8 +192,9 @@ export default function App() {
           setUser(authUser);
           return;
         }
-        authUser.firstName = user?.firstName;
-        authUser.lastName = user?.lastName;
+        authUser.firstName = user.firstName;
+        authUser.lastName = user.lastName;
+        authUser.noAds = user.noAds;
         setUser(authUser);
       })
       .catch(err => {

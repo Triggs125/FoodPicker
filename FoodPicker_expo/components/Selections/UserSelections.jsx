@@ -244,7 +244,7 @@ class UserSelections extends Component {
                       return (
                         <TouchableOpacity
                           onLongPress={() => isUserChoices && this.removeFoodChoice(foodChoice)}
-                          onPress={() => this.props.navigation.navigate("PlaceDetails", { foodChoice })}
+                          onPress={() => this.props.navigation.navigate("PlaceDetails", { foodChoice, finalDecision: false })}
                           key={'food-choice-' + i}
                           containerStyle={{ marginHorizontal: -5 }}
                         >

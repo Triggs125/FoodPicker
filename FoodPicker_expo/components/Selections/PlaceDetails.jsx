@@ -47,8 +47,9 @@ class PlaceDetails extends Component {
   }
 
   async componentDidAppear() {
-    console.log("Place details appeared...");
-    await this.props.showInterstitial();
+    if (!this.props.user.noAds && this.props.route?.params?.finalDecision) {
+      await this.props.showInterstitial();
+    }
 
     const foodChoice = this.props.route?.params?.foodChoice;
     const url = "https://maps.googleapis.com/maps/api/place/details/json?place_id=" + foodChoice.id 

@@ -264,7 +264,7 @@ class LobbyView extends Component {
       setDoc(lobbyData.ref, { finalDecision: finalSelection }, { merge: true })
         .then(() => {
           // Navigate to place details page
-          this.props.navigation.navigate("PlaceDetails", { foodChoice: finalSelection, finalSelection: true });
+          this.props.navigation.navigate("PlaceDetails", { foodChoice: finalSelection, finalDecision: true });
           this.setState({ loading: false });
           Analytics.logEvent("event", {
             description: "LobbyView::getFinalDecision::decisionMade"
@@ -399,7 +399,7 @@ class LobbyView extends Component {
   }
 
   goToFinalDecision() {
-    this.props.navigation.navigate("PlaceDetails", { foodChoice: this.state.lobbyData.finalDecision, finalSelection: true });
+    this.props.navigation.navigate("PlaceDetails", { foodChoice: this.state.lobbyData.finalDecision, finalDecision: true });
   }
 
   removeUserOverlay() {

@@ -162,7 +162,7 @@ class Home extends Component {
     
             const randomRestaurantIndex = Math.round((Math.random() * 100)) % places.length;
             const randomFoodChoice = places[randomRestaurantIndex];
-            this.props.navigation.navigate('PlaceDetails', { foodChoice: randomFoodChoice });
+            this.props.navigation.navigate('PlaceDetails', { foodChoice: randomFoodChoice, finalDecision: true });
             this.setState({
               randomRestaurantError: false,
               randomRestaurantErrorDetails: '',

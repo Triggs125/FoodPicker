@@ -136,7 +136,7 @@ class FoodChoices extends Component {
                     }}
                     contentContainerStyle={{ backgroundColor: isSelected ? ThemeColors.selection : 'white', paddingBottom: 10 }}
                     onPress={() => this.toggleSelection(place, isSelected)}
-                    onLongPress={() => this.props.navigation.navigate("PlaceDetails", { foodChoice: place })}
+                    onLongPress={() => this.props.navigation.navigate("PlaceDetails", { foodChoice: place, finalDecision: false })}
                   >
                     <View key={'food-choice-info'} style={{ flexDirection: 'row', alignItems: 'center' }}>
                       <Text style={{ marginRight: 5, alignSelf: 'center', color: isSelected ? 'white' : 'black' }}>{place.rating}</Text>
