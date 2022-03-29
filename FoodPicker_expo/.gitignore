@@ -14,3 +14,7 @@ my-food-picker-firebase-adminsdk-cozou-fccb1576b6.json
 
 # macOS
 .DS_Store
+
+# firebase
+.firebase
+.firebaserc

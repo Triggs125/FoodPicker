@@ -7,7 +7,9 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
-    "eject": "expo eject"
+    "eject": "expo eject",
+    "predeploy": "expo build:web",
+    "deploy-hosting": "npm run predeploy && firebase deploy --only hosting"
   },
   "dependencies": {
     "@emotion/react": "^11.7.1",
@@ -37,6 +39,7 @@
     "react-dom": "17.0.1",
     "react-instantsearch": "^6.21.1",
     "react-instantsearch-native": "^6.21.1",
+    "react-mobile-store-button": "0.0.6",
     "react-native": "0.64.3",
     "react-native-bcrypt": "^2.4.0",
     "react-native-dropdown-picker": "^5.3.0",
@@ -55,6 +58,7 @@
     "react-native-tab-view": "^3.1.1",
     "react-native-vector-icons": "^9.1.0",
     "react-native-web": "0.17.1",
+    "react-style-proptype": "^3.2.2",
     "styled-components": "^5.3.3",
     "validator": "^13.7.0"
   },

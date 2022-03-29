@@ -28,6 +28,7 @@ import LobbyCreator from './components/Lobby/LobbyCreator';
 import LoadingSpinner from './components/LoadingSpinner';
 import AccountEdit from './components/Account/AccountEdit';
 import ForgotPassword from './components/Account/ForgotPassword';
+import Website from './components/Website/Website';
 
 const Stack = createStackNavigator();
 
@@ -36,6 +37,10 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 
 export default function App() {
+  if (Constants.platform.web) {
+    return <Website />;
+  }
+
   const [userColors, setUserColors] = useState({});
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState();
@@ -200,6 +205,8 @@ export default function App() {
       });
   });
 
+  const setOpacity = (hex, alpha) => `${hex}${Math.floor(alpha * 255).toString(16).padStart(2, 0)}`;
+
   if (Constants.platform.web) {
     return (<Image source={'./assets/splash.png'} />)
   }
@@ -240,7 +247,11 @@ export default function App() {
               initialRouteName="Home"
               screenOptions={(props) => {
                 return {
-                  headerStyle: { height: 50 },
+                  headerStyle: {
+                    height: 50,
+                    borderTopWidth: 1,
+                    borderTopColor: setOpacity(ThemeColors.text, 0.3)
+                  },
                   headerTitleStyle: { fontSize: 20 },
                   headerRight: () => (
                     <Button
@@ -262,7 +273,7 @@ export default function App() {
                       onPress={() => props.navigation.navigate('Home')}
                     />
                   ),
-                  headerTitleAlign: 'center',
+                  headerTitleAlign: 'center'
                 }
               }}
             >

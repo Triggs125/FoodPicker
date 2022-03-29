@@ -61,6 +61,9 @@ class LobbyView extends Component {
     const { lobbyRef } = this.props.route?.params;
     if (!lobbyRef) {
       this.props.navigation.navigate('LobbyPicker');
+      Analytics.logEvent("exception", {
+        description: "LobbyView::componentDidAppear::lobbyRefNotPresent"
+      });
     }
     const unsubscribeLobby = onSnapshot(lobbyRef, async (lobby) => {
       const { user, db } = this.props;
@@ -482,6 +485,9 @@ class LobbyView extends Component {
     if (!loading && !lobbyData.users?.includes(user.uid)) {
       this.props.setKickedFromLobby(true);
       this.props.navigation.navigate("LobbyPicker");
+      Analytics.logEvent("event", {
+        description: "LobbyView::render::userKickedFromLobby"
+      });
     }
 
     return (

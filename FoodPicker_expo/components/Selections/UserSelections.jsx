@@ -232,11 +232,13 @@ class UserSelections extends Component {
                   >
                     {userDisplayName}
                   </Text>
-                  <Text style={{ fontSize: 10, paddingLeft: 12 }}>**Select Card to see the place details</Text>
-                  {
-                    isUserChoices &&
-                    <Text style={{ fontSize: 10, paddingLeft: 12, paddingBottom: 3 }}>**Hold down to delete</Text>
-                  }
+                  <View style={{ paddingBottom: 3, paddingLeft: 12 }}>
+                    <Text style={{ fontSize: 10 }}>**Select Card to see the place details</Text>
+                    {
+                      isUserChoices &&
+                      <Text style={{ fontSize: 10 }}>**Hold down to delete</Text>
+                    }
+                  </View>
                   {
                     selectedFoodChoices?.data?.selections?.map((foodChoice, i) => {
                       return (

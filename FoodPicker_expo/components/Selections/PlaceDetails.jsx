@@ -7,11 +7,12 @@ import { SliderBox } from 'react-native-image-slider-box';
 import { getDistance } from 'geolib';
 import LoadingSpinner from "../LoadingSpinner";
 import ThemeColors from "../../assets/ThemeColors";
-import { ScrollView, TouchableOpacity } from "react-native-gesture-handler";
+import { ScrollView } from "react-native-gesture-handler";
 import { Button } from "react-native-elements/dist/buttons/Button";
 import { PLACE_DETAILS_API_KEY } from "../../config";
-import { ScreenHeight, ScreenWidth } from "react-native-elements/dist/helpers";
-import { TabBar, TabView, SceneMap } from 'react-native-tab-view'
+import { ScreenWidth } from "react-native-elements/dist/helpers";
+import { TabBar, TabView, SceneMap } from 'react-native-tab-view';
+import * as Analytics from 'expo-firebase-analytics';
 
 class PlaceDetails extends Component {
   constructor(props) {
@@ -140,11 +141,12 @@ class PlaceDetails extends Component {
     });
   }
 
-  callNumber(formatted_phone_number) {
-    if (Platform.OS === 'android') {
-      Linking.openURL(`tel:${formatted_phone_number}`);
+  callNumber(phone_number) {
+    const number = phone_number.replace(/\D/g, '');
+    if (Constants.platform.android) {
+      Linking.openURL(`tel:+${number}`);
     } else {
-      Linking.openURL(`telprompt:${formatted_phone_number}`);
+      Linking.openURL(`telprompt:+${number}`);
     }
     Analytics.logEvent("event", {
       description: "PlaceDetails::callNumber"
@@ -270,9 +272,9 @@ class PlaceDetails extends Component {
             titleStyle={{ fontSize: 20, color: 'white'}}
             raised
             containerStyle={{ marginTop: 5, marginBottom: 10, width: 100, borderRadius: 10 }}
-            icon={<Icon onPress={() => this.callNumber(place.formatted_phone_number)} name="phone-alt" type="font-awesome-5" color='white' />}
+            icon={<Icon onPress={() => this.callNumber(place.international_phone_number)} name="phone-alt" type="font-awesome-5" color='white' />}
             iconPosition='top'
-            onPress={() => this.callNumber(place.formatted_phone_number)}
+            onPress={() => this.callNumber(place.international_phone_number)}
           />
           <Button
             title={'Directions'}
