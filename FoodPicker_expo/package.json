@@ -8,8 +8,7 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "eject": "expo eject",
-    "predeploy": "expo build:web",
-    "deploy-hosting": "npm run predeploy && firebase deploy --only hosting"
+    "deploy-hosting": "expo build:web && cp app-ads.txt web-build && firebase deploy --only hosting"
   },
   "dependencies": {
     "@emotion/react": "^11.7.1",

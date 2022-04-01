@@ -280,7 +280,7 @@ export default function App() {
             >
               <Stack.Screen
                 name="Home"
-                options={{ headerTitle: 'Home', headerRight: () => {<></>} }}
+                options={{ headerTitle: `${user ? 'Home' : 'Log In'}`, headerRight: () => {<></>} }}
               >
                 {props => (
                   <Home

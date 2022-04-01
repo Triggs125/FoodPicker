@@ -46,6 +46,13 @@ export default function Home() {
           </Text>
         </View>
       </Card>
+      <Card>
+        <Card.Title style={{ fontSize: 24, marginBottom: 8 }}>
+          <a href="https://www.freeprivacypolicy.com/live/3286ca90-3d6e-493d-ba42-456066b3d592" target="_blank">
+            Privacy Policy
+          </a>
+        </Card.Title>
+      </Card>
     </View>
   );
 }

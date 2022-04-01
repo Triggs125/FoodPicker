@@ -6,7 +6,6 @@ import ThemeColors from "../../assets/ThemeColors";
 import { UserColors } from '../../ColorContext';
 
 import Home from "./Home";
-import { Linking } from "react-native";
 
 const Stack = createStackNavigator();
 
@@ -62,21 +61,6 @@ export default function Website() {
         borderColor: ThemeColors.border,
       }
     }
-  }
-
-  const pathname = window?.location?.pathname;
-  if (pathname === "/app-ads.txt") {
-    // Auto download app-ads.txt file
-    const url = window.URL.createObjectURL(
-      new Blob(["facebook.com, 150568707412508, DIRECT, c3e20eee3f780d68"]),
-    );
-    console.log("Url", url)
-    const link = document.createElement('a');
-    link.href = url;
-    link.setAttribute('download', 'app-ads.txt');
-    document.body.appendChild(link);
-    link.click();
-    link.parentNode.removeChild(link);
   }
 
   return (

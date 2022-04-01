@@ -2,7 +2,7 @@
   "expo": {
     "name": "Food Picker",
     "slug": "FoodPicker",
-    "version": "1.2.0",
+    "version": "1.2.1",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "splash": {
@@ -20,7 +20,10 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.driggs.foodpicker",
       "googleServicesFile": "./GoogleService-Info.plist",
-      "buildNumber": "1.2.0"
+      "buildNumber": "1.2.1",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "This app uses your location to find restaurants around you and to set the location of your hosted lobby if you choose."
+      }
     },
     "android": {
       "package": "com.driggs.foodpicker",
