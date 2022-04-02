@@ -7,8 +7,6 @@ import isEmail from 'validator/lib/isEmail';
 // import SignInWithGoogle from '../Utils/SignInWithGoogle';
 import { AddUserToDB } from '../Utils/firebase';
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { ScrollView } from 'react-native-gesture-handler';
 import Constants from 'expo-constants';
 import { HeaderHeightContext } from '@react-navigation/elements';
 import ThemeColors from '../../assets/ThemeColors';

@@ -1,7 +1,4 @@
 import { Component } from "react";
-import { View } from "react-native";
-import { SearchBar } from 'react-native-elements';
-import Constants from 'expo-constants';
 import { GooglePlacesAutocomplete } from "react-native-google-places-autocomplete";
 
 class GoogleFoodSearch extends Component {

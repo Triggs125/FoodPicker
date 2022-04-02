@@ -1,6 +1,6 @@
 import { Component } from "react";
 import { Dimensions, StatusBar, View } from "react-native";
-import { Button, Icon, Switch, Text } from 'react-native-elements';
+import { Switch, Text } from 'react-native-elements';
 import { HeaderHeightContext } from '@react-navigation/elements';
 // import FoodProfile from "../FoodProfile/FoodProfile";
 // import GoogleFoodSearch from "./GoogleFoodSearch";

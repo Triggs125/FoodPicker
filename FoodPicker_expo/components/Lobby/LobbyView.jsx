@@ -162,7 +162,7 @@ class LobbyView extends Component {
           ellipsizeMode='tail'
           numberOfLines={1}
         >
-          {`${user.firstName}${user.lastName && " " + user.lastName}`}
+          {user.displayName && user.displayName !== "" ? user.displayName : `${user.firstName}${user.lastName && " " + user.lastName}`}
         </Text>
         <Icon
           name="angle-right"
@@ -186,8 +186,8 @@ class LobbyView extends Component {
     const { lobbyData } = this.state;
     let users = lobbyData.users;
     users = users.filter(uid => uid !== user.uid);
-    const usersReady = lobbyData.usersReady;
-    const indexUR = usersReady.indexOf(this.props.user.uid);
+    const usersReady = lobbyData.usersReady || [];
+    const indexUR = usersReady?.indexOf(this.props.user.uid);
     if (indexUR > -1) {
       usersReady.splice(indexUR, 1);
     }
@@ -423,7 +423,9 @@ class LobbyView extends Component {
           ellipsizeMode='tail'
           numberOfLines={1}
         >
-          {`${removeUserOverlayUser?.firstName}${removeUserOverlayUser?.lastName ?? " " + removeUserOverlayUser?.lastName}`}
+          {removeUserOverlayUser?.displayName && removeUserOverlayUser?.displayName !== ""
+            ? removeUserOverlayUser?.displayName
+            : `${removeUserOverlayUser?.firstName}${removeUserOverlayUser?.lastName ?? " " + removeUserOverlayUser?.lastName}`}
         </Text>
         {
           removeUserOverlayError && (

@@ -1,7 +1,6 @@
 import { Component } from "react";
 import { SafeAreaView, StyleSheet, View } from 'react-native';
 import { Button, Card, Icon, Overlay, Text, Input } from 'react-native-elements';
-import LoadingSpinner from '../LoadingSpinner';
 import { ScrollView } from "react-native-gesture-handler";
 import SearchAlgolia from "../Algolia/SearchAlgolia";
 import { collection, doc, getDocs, onSnapshot, query, setDoc, where, arrayUnion, updateDoc, deleteDoc } from 'firebase/firestore';

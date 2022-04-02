@@ -59,7 +59,8 @@
     "react-native-web": "0.17.1",
     "react-style-proptype": "^3.2.2",
     "styled-components": "^5.3.3",
-    "validator": "^13.7.0"
+    "validator": "^13.7.0",
+    "expo-facebook": "~12.1.0"
   },
   "devDependencies": {
     "@babel/core": "^7.12.9"

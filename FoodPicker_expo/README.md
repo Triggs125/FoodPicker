@@ -1,3 +1,15 @@
+# App Deployment
+
+## iOS
+
+1. Run the command: ```expo build:ios```
+2. Choose either archive or simulator
+3. Type in 'y' and follow the prompts to sign the app with your apple developer account
+
+## Android
+
+1. Run the command: ```expo build:android```
+
 # Website
 
 ## Local Build Fix

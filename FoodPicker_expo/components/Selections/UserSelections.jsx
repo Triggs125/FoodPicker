@@ -1,14 +1,15 @@
 import { Component } from "react";
 import Constants from 'expo-constants';
-import { collection, doc, getDocs, onSnapshot, query, setDoc, where } from "firebase/firestore";
+import { doc, onSnapshot, setDoc } from "firebase/firestore";
 import { View, Dimensions, StatusBar } from "react-native";
 import LoadingSpinner from '../LoadingSpinner';
 import { ScrollView, TouchableOpacity } from "react-native-gesture-handler";
 import { HeaderHeightContext } from '@react-navigation/elements';
-import { Tile, Text, Icon, Button, Card } from 'react-native-elements';
+import { Text, Icon, Button, Card } from 'react-native-elements';
 import { getDistance } from 'geolib';
 import ThemeColors from "../../assets/ThemeColors";
 import { ScreenWidth } from "react-native-elements/dist/helpers";
+import * as Analytics from 'expo-firebase-analytics';
 
 
 class UserSelections extends Component {
@@ -72,6 +73,10 @@ class UserSelections extends Component {
   }
 
   async removeFoodChoice(foodChoice) {
+    Analytics.logEvent("event", {
+      description: "UserSelections::removeFoodChoice"
+    });
+    
     const { selectedFoodChoices } = this.state;
     const { lobbyData } = this.props;
     const { user } = this.props.route?.params;
@@ -89,9 +94,6 @@ class UserSelections extends Component {
         this.props.navigation.navigate('LobbyView', { lobbyRef: lobbyData.ref });
       }
     }
-    Analytics.logEvent("event", {
-      description: "UserSelections::removeFoodChoice"
-    });
   }
 
   clearSelections() {
@@ -111,11 +113,17 @@ class UserSelections extends Component {
               });
             })
             .catch(err => {
+              Analytics.logEvent("exception", {
+                description: "UserSelections::clearSelections::usersReadyRemoval"
+              });
               console.error("UserSelections::clearSelections::usersReadyRemoval", err);
             })
         }
       })
       .catch(err => {
+        Analytics.logEvent("exception", {
+          description: "UserSelections::clearSelections"
+        });
         console.error("UserSelection::clearSelections:setDoc", err);
       });
   }

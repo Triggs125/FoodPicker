@@ -2,7 +2,7 @@
   "expo": {
     "name": "Food Picker",
     "slug": "FoodPicker",
-    "version": "1.2.1",
+    "version": "1.3.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "splash": {
@@ -20,7 +20,7 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.driggs.foodpicker",
       "googleServicesFile": "./GoogleService-Info.plist",
-      "buildNumber": "1.2.1",
+      "buildNumber": "1",
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "This app uses your location to find restaurants around you and to set the location of your hosted lobby if you choose."
       }
@@ -28,7 +28,7 @@
     "android": {
       "package": "com.driggs.foodpicker",
       "googleServicesFile": "./google-services.json",
-      "versionCode": 3,
+      "versionCode": 4,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#FFFFFF"
@@ -37,7 +37,7 @@
     "web": {
       "favicon": "./assets/favicon.png"
     },
-    "facebookScheme": "fb1234567891234567",
+    "facebookScheme": "fb1300932740403155",
     "facebookAppId": "1300932740403155",
     "facebookDisplayName": "FoodPicker",
     "facebookAutoLogAppEventsEnabled": true,
@@ -47,6 +47,12 @@
         "expo-ads-facebook",
         {
           "userTrackingPermission": "This identifier will be used to deliver personalized ads to you."
+        }
+      ],
+      [
+        "expo-facebook",
+        {
+          "userTrackingPermission": false
         }
       ]
     ],

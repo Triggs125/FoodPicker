@@ -6,8 +6,6 @@ import Constants from 'expo-constants';
 import { getDistance } from 'geolib';
 import ThemeColors from "../../assets/ThemeColors";
 import { HeaderHeightContext } from "@react-navigation/elements";
-import LoadingSpinner from "../LoadingSpinner";
-
 
 const propTypes = {
   googleSearchText: PropType.string,

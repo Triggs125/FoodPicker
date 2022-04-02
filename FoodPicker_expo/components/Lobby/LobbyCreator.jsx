@@ -1,6 +1,6 @@
 import { Component } from "react";
-import { Dimensions, StatusBar, StyleSheet, View } from "react-native";
-import { Card, Icon, Input, Text, Button, Switch, Overlay } from 'react-native-elements';
+import { Dimensions, StatusBar, View } from "react-native";
+import { Icon, Input, Text, Button, Switch, Overlay } from 'react-native-elements';
 import Constants from 'expo-constants';
 import { HeaderHeightContext } from '@react-navigation/elements';
 import LocationView from "./LocationView";

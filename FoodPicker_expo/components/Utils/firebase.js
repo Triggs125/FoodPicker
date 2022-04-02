@@ -8,14 +8,16 @@ import { collection, addDoc, query, where, getDocs } from 'firebase/firestore';
  * @param {*} lastName 
  * @return {Promise} user
  */
-export const AddUserToDB = (db, user, firstName, lastName="", displayName="") => {
+export const AddUserToDB = (
+  db, user, firstName, lastName="", displayName="", authProvider="local",
+) => {
   return addDoc(collection(db, 'users'), {
     uid: user.uid,
-    firstName: firstName,
-    lastName: lastName,
-    authProvider: 'local',
+    firstName,
+    lastName,
+    authProvider,
     email: user.email,
-    displayName: displayName,
+    displayName,
   });
 }
 
@@ -30,5 +32,5 @@ export const GetUserFromDB = async (db, uid) => {
   const matchingDocs = await getDocs(q);
   const docs = [];
   matchingDocs.forEach((doc) => docs.push(doc));
-  return docs[0].data();
+  return docs[0]?.data();
 }

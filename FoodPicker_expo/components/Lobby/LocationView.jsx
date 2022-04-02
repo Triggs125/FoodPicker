@@ -2,7 +2,7 @@ import { Component } from "react";
 import { Button, Icon, ListItem, Text, BottomSheet } from "react-native-elements";
 import * as Location from 'expo-location';
 import { KeyboardAvoidingView, View } from "react-native";
-import { GOOGLE_MAPS_API_KEY, PLACE_DETAILS_API_KEY } from "../../config";
+import { GOOGLE_MAPS_API_KEY } from "../../config";
 import MapView, { Circle } from 'react-native-maps';
 import ThemeColors from "../../assets/ThemeColors";
 import Constants from 'expo-constants';

@@ -1,7 +1,7 @@
 import { Component } from "react";
 import { Dimensions, SafeAreaView, StyleSheet, View } from 'react-native';
 import Constants from 'expo-constants';
-import { Input, Button, Text, Icon, Overlay, Image } from 'react-native-elements';
+import { Input, Button, Text, Icon, Overlay, Avatar } from 'react-native-elements';
 import { signInWithEmailAndPassword, signOut } from 'firebase/auth';
 import { TouchableOpacity } from 'react-native-gesture-handler';
 import isEmail from 'validator/lib/isEmail';
@@ -12,6 +12,7 @@ import * as Location from 'expo-location';
 import { GOOGLE_MAPS_API_KEY, PLACE_DETAILS_API_KEY } from "../config";
 import { StatusBar } from "react-native";
 import * as Analytics from 'expo-firebase-analytics';
+import FacebookLoginButton from "./Utils/FacebookLoginButton";
 
 class Home extends Component {
   constructor(props) {
@@ -337,7 +338,24 @@ class Home extends Component {
       <View style={{ ...styles.container, height: screenHeight - headerHeight }}>
         {this.randomRestaurantErrorOverlay()}
         <View style={{ paddingHorizontal: 10, justifyContent: 'center' }}>
-          <Icon name="user-circle" type="font-awesome" iconStyle={{ fontSize: 130 }} />
+          {
+            this.props.user.photoURL ? (
+              <Avatar
+                rounded
+                size="xlarge"
+                source={{
+                  uri: this.props.user.photoURL + "?type=large",
+                }}
+                containerStyle={{
+                  alignSelf: 'center',
+                  padding: 1,
+                  backgroundColor: 'gray'
+                }}
+              />
+            ) : (
+              <Icon name="user-circle" type="font-awesome" iconStyle={{ fontSize: 130 }} />
+            )
+          }
           <Text
             style={{ textAlign: 'center', fontSize: 30, marginTop: 10, width: ScreenWidth - 50, alignSelf: 'center' }}
             ellipsizeMode='tail'
@@ -402,26 +420,30 @@ class Home extends Component {
     return (
       <View style={{ ...styles.container, height: screenHeight - headerHeight }}>
         <View>
-          <Text style={{ textAlign: 'center', fontSize: 35 }}>Log In</Text>
-          <Text
-            style={{
-              textAlign: 'center',
-              fontSize: 16,
-              color: ThemeColors.text,
-              marginBottom: 10,
-              height: 20,
-              flexWrap: 'wrap'
-            }}
-          >
-            {
-              loginError &&
-              "Email or Password Incorrect."
-            }
-            {
-              generalError &&
-              "Error logging in. Please try again or contact support."
-            }
-          </Text>
+          {/* <Text style={{ textAlign: 'center', fontSize: 35 }}>Log In</Text> */}
+          {
+            (loginError || generalError) && (
+              <Text
+                style={{
+                  textAlign: 'center',
+                  fontSize: 16,
+                  color: ThemeColors.text,
+                  marginBottom: 10,
+                  height: 20,
+                  flexWrap: 'wrap'
+                }}
+              >
+                {
+                  loginError &&
+                  "Email or Password Incorrect."
+                }
+                {
+                  generalError &&
+                  "Error logging in. Please try again or contact support."
+                }
+              </Text>
+            )
+          }
           <Input
             testID="accountLoginEmailAddress"
             placeholder="Email Address"
@@ -467,8 +489,20 @@ class Home extends Component {
           />
           <View style={{ paddingHorizontal: 10 }}>
             <Button
+              title="Forgot Password"
+              type='clear'
+              titleStyle={{
+                textAlign: 'center',
+                fontSize: 20,
+                marginVertical: 0,
+                color: 'black',
+                fontWeight: 'normal'
+              }}
+              onPress={() => this.props.navigation.navigate('ForgotPassword')}
+            />
+            <Button
               title="Sign in with FoodPicker"
-              raised={{}}
+              raised
               icon={{
                 name: 'home',
                 type: 'font-awesome',
@@ -478,31 +512,14 @@ class Home extends Component {
               titleStyle={{ fontWeight: '500', fontSize: 22 }}
               buttonStyle={{
                 backgroundColor: '#E54040',
-                borderColor: 'transparent',
-                borderWidth: 0,
-                height: 60,
+                paddingVertical: 10
               }}
               containerStyle={{
-                width: '100%',
-                alignSelf: 'center',
-                marginTop: 10,
-                overflow: 'visible'
+                marginVertical: 5,
               }}
               onPress={() => { this.signIn(); }}
             />
-            <Button
-              title="Forgot Password"
-              type='clear'
-              titleStyle={{
-                textAlign: 'center',
-                fontSize: 20,
-                marginTop: 5,
-                marginBottom: 5,
-                color: ThemeColors.text,
-              }}
-              containerStyle={{ marginBottom: -10 }}
-              onPress={() => this.props.navigation.navigate('ForgotPassword')}
-            />
+            {/* {<SignInWithGoogle />} */}
           </View>
         </View>
         {/* <SignInWithGoogle /> */}
@@ -518,6 +535,7 @@ class Home extends Component {
           - OR -
         </Text>
         <View style={{ paddingHorizontal: 10 }}>
+          {<FacebookLoginButton db={this.props.db} auth={this.props.auth} />}
           <Button
             title="Create an Account"
             raised
@@ -530,13 +548,14 @@ class Home extends Component {
             titleStyle={{ fontWeight: '500', fontSize: 22, color: 'black' }}
             buttonStyle={{
               backgroundColor: '#fff',
-              height: 60,
+              paddingVertical: 10
             }}
             containerStyle={{
               width: '100%',
               alignSelf: 'center',
               overflow: 'visible',
               marginBottom: 20,
+              marginTop: 5,
             }}
             onPress={() => { this.props.navigation.navigate('CreateAccount') }}
           />
