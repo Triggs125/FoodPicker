@@ -13,6 +13,7 @@ import { GOOGLE_MAPS_API_KEY, PLACE_DETAILS_API_KEY } from "../config";
 import { StatusBar } from "react-native";
 import * as Analytics from 'expo-firebase-analytics';
 import FacebookLoginButton from "./Utils/FacebookLoginButton";
+import LocationView from "./Lobby/LocationView";
 
 class Home extends Component {
   constructor(props) {
@@ -32,7 +33,15 @@ class Home extends Component {
       randomRestaurantErrorDetails: '',
       randomRestaurantErrorDetailsOpen: false,
       randomRestaurantLoading: false,
+      randomRestaurantOverlayOpen: false,
+      randomRestaurantOverlayLoading: false,
+      randomRestaurantOverlayError: false,
+      distance: 3,
+      locationGeocodeAddress: undefined,
+      location: undefined,
     }
+
+    this.setLocationData = this.setLocationData.bind(this);
   }
 
   componentDidMount() {
@@ -48,6 +57,7 @@ class Home extends Component {
         randomRestaurantError: false,
         randomRestaurantErrorDetails: '',
         randomRestaurantLoading: false,
+        randomRestaurantOverlayOpen: false,
       });
     });
   }
@@ -228,6 +238,72 @@ class Home extends Component {
     }
   }
 
+  randomRestaurantOverlay() {
+    const {
+      randomRestaurantOverlayOpen,
+      randomRestaurantLoading,
+      randomRestaurantOverlayError,
+      distance,
+      locationGeocodeAddress,
+      location,
+    } = this.state;
+    return (
+      <Overlay
+        isVisible={randomRestaurantOverlayOpen}
+        overlayStyle={{ width: ScreenWidth - 20, borderRadius: 10 }}
+        onBackdropPress={() => {
+          this.setState({
+            randomRestaurantOverlayOpen: false,
+          });
+        }}
+      >
+        <Text
+          style={{ fontSize: 24, textAlign: 'center', marginVertical: 10 }}
+        >
+          Random Restaurant
+        </Text>
+        {
+          randomRestaurantOverlayError && (
+            <Text style={{ textAlign: 'center' }}>Error choosing a random restaurant. Please try again or contact support.</Text>
+          )
+        }
+        <LocationView
+          setLocationData={this.setLocationData}
+          isHost={true}
+          distance={distance}
+          location={location}
+          locationGeocodeAddress={locationGeocodeAddress}
+        />
+        <Button
+          title="Random Restaurant"
+          loading={randomRestaurantLoading}
+          loadingStyle={{ marginVertical: 7 }}
+          disabled={
+            randomRestaurantLoading
+            || !location || !distance
+          }
+          titleStyle={{ fontSize: 24 }}
+          buttonStyle={{ backgroundColor: ThemeColors.button }}
+          containerStyle={{ marginTop: 20 }}
+          onPress={() => {
+            this.props.setLobbyData({ location });
+            this.getRandomRestaurant();
+          }}
+        />
+        <Button
+          title="Cancel"
+          type="clear"
+          titleStyle={{ color: ThemeColors.text, fontSize: 24 }}
+          onPress={() => {
+            this.setState({
+              randomRestaurantOverlayOpen: false,
+            });
+          }}
+        />
+      </Overlay>
+    );
+  }
+
   randomRestaurantErrorOverlay() {
     const {
       randomRestaurantError,
@@ -336,6 +412,7 @@ class Home extends Component {
     const { randomRestaurantLoading } = this.state;
     return (
       <View style={{ ...styles.container, height: screenHeight - headerHeight }}>
+        {this.randomRestaurantOverlay()}
         {this.randomRestaurantErrorOverlay()}
         <View style={{ paddingHorizontal: 10, justifyContent: 'center' }}>
           {
@@ -386,7 +463,16 @@ class Home extends Component {
             buttonStyle={{ justifyContent: 'space-between', backgroundColor: 'white' }}
             icon={<Icon name="angle-right" type="font-awesome" iconStyle={{ fontSize: 30, color: ThemeColors.text, paddingRight: 3 }} />}
             iconRight
-            onPress={() => this.getRandomRestaurant()}
+            onPress={() => {
+              if (Constants.platform.android) {
+                console.log("Open Restaurant Overlay")
+                this.setState({
+                  randomRestaurantOverlayOpen: true,
+                });
+              } else {
+                this.getRandomRestaurant();
+              }
+            }}
             containerStyle={{ marginVertical: 5 }}
           />
           <Button

@@ -16,7 +16,7 @@ class LocationView extends Component {
   constructor(props) {
     super(props);
 
-    this.distances = [0.5, 1, 2, 5, 10, 20];
+    this.distances = [0.5, 1, 3, 5, 10, 20];
 
     this.state = {
       location: props.location,
@@ -287,64 +287,58 @@ class LocationView extends Component {
           </View>
           {
             (mapViewOpen && isHost) && // Location search for host only
-              (!Constants.platform.web ? // Mobile
-                (<KeyboardAvoidingView style={{ flexDirection: "row", alignSelf: 'stretch' }}>
-                  <Button
-                    icon={<Icon name="my-location" type="MaterialIcons" />}
-                    buttonStyle={{ backgroundColor: 'transparent' }}
-                    onPress={this.getUsersLocation}
-                  />
-                  <ScrollView
-                    keyboardShouldPersistTaps='always'
-                  >
-                    <GooglePlacesAutocomplete
-                      placeholder="Search Location"
-                      onPress={(data, details = null) => this.setPlaceData(data, details)}
-                      query={{ key: GOOGLE_MAPS_API_KEY, language: 'en' }}
-                      fetchDetails={true}
-                      listViewDisplayed={false}
-                      keepResultsAfterBlur={true}
-                      GooglePlacesSearchQuery={{
-                        rankby: 'distance',
-                      }}
-                      debounce={200}
-                      // requestUrl={{
-                      //   useOnPlatform: 'web',
-                      //   url: 'https://cors-anywhere.herokuapp.com/https://maps.googleapis.com/maps/api',
-                      // }}
+            (
+              <View style={{ flexDirection: "row", alignSelf: 'stretch' }}>
+                {
+                  !Constants.platform.android && (
+                    <Button
+                      icon={<Icon name="my-location" type="MaterialIcons" />}
+                      buttonStyle={{ backgroundColor: 'transparent' }}
+                      onPress={this.getUsersLocation}
                     />
-                  </ScrollView>
-                </KeyboardAvoidingView>
-              ) : ( // Web View
-                <View>
-                </View>
-              )
+                  )
+                }
+                <ScrollView
+                  keyboardShouldPersistTaps='always'
+                >
+                  <GooglePlacesAutocomplete
+                    placeholder="Search Location"
+                    onPress={(data, details = null) => this.setPlaceData(data, details)}
+                    query={{ key: GOOGLE_MAPS_API_KEY, language: 'en' }}
+                    fetchDetails={true}
+                    listViewDisplayed={false}
+                    keepResultsAfterBlur={true}
+                    GooglePlacesSearchQuery={{
+                      rankby: 'distance',
+                    }}
+                    debounce={200}
+                    // requestUrl={{
+                    //   useOnPlatform: 'web',
+                    //   url: 'https://cors-anywhere.herokuapp.com/https://maps.googleapis.com/maps/api',
+                    // }}
+                  />
+                </ScrollView>
+              </View>
             )
           }
         </View>
         {(mapViewOpen && location) && // Location Map for everyone
-          (!Constants.platform.web ? // Mobile
-            (
-              <View>
-                <MapView
-                  style={{ width: '100%', height: 200 }}
-                  initialRegion={{ latitude: location.latitude, longitude: location.longitude, latitudeDelta: 0.1, longitudeDelta: 0.1 }}
-                  region={{ latitude: location.latitude, longitude: location.longitude, latitudeDelta: distance ? distance * 0.04 : 0.1, longitudeDelta: distance ? distance * 0.04 : 0.1 }}
-                >
-                  <Circle
-                    center={{ latitude: location.latitude, longitude: location.longitude}}
-                    radius={distance ? Math.round(distance * 1609.344) : 5000}
-                    strokeWidth={2}
-                    strokeColor={'transparent'}
-                    fillColor={'rgba(229,64,64,0.25)'}
-                  />
-                </MapView>
-              </View>
-            ) : ( // Web View
-              <View>
-                
-              </View>
-            )
+          (
+            <View>
+              <MapView
+                style={{ width: '100%', height: 200 }}
+                initialRegion={{ latitude: location.latitude, longitude: location.longitude, latitudeDelta: 0.1, longitudeDelta: 0.1 }}
+                region={{ latitude: location.latitude, longitude: location.longitude, latitudeDelta: distance ? distance * 0.04 : 0.1, longitudeDelta: distance ? distance * 0.04 : 0.1 }}
+              >
+                <Circle
+                  center={{ latitude: location.latitude, longitude: location.longitude}}
+                  radius={distance ? Math.round(distance * 1609.344) : 5000}
+                  strokeWidth={2}
+                  strokeColor={'transparent'}
+                  fillColor={'rgba(229,64,64,0.25)'}
+                />
+              </MapView>
+            </View>
           )
         }
       </View>
