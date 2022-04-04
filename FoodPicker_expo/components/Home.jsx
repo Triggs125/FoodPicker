@@ -273,6 +273,8 @@ class Home extends Component {
           distance={distance}
           location={location}
           locationGeocodeAddress={locationGeocodeAddress}
+          locationError={!location}
+          distanceError={!distance}
         />
         <Button
           title="Random Restaurant"
@@ -376,6 +378,11 @@ class Home extends Component {
   }
 
   getUserLocation() {
+    if (Constants.platform.android) {
+      return new Promise((resolve) => {
+        resolve({ location: this.state.location, distance: this.state.distance });
+      });
+    }
     return Location.requestForegroundPermissionsAsync()
       .then(async ({ status }) => {
         if (status !== 'granted') {

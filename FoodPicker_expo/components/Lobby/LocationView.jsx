@@ -227,7 +227,7 @@ class LocationView extends Component {
                     fontWeight: '300'
                   }}
                 >
-                  Please select a valid distance
+                  *Please select a distance
                 </Text>
               )
             }
@@ -280,7 +280,7 @@ class LocationView extends Component {
                     fontWeight: '300'
                   }}
                 >
-                  Please select a valid location
+                  *Please select a location
                 </Text>
               )
             }
