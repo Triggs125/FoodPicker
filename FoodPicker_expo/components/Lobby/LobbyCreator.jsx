@@ -16,10 +16,6 @@ class LobbyCreator extends Component {
   constructor(props) {
     super(props);
 
-    const offset = Constants.platform.android ? 48 : 0;
-    const adBannerHeight = StatusBar.currentHeight + 60;
-    const screenHeight = Dimensions.get('screen').height - offset - adBannerHeight;
-
     var passwordSchema = new PasswordValidator();
     passwordSchema
       .is().min(4, " minimum of 4 characters")
@@ -29,7 +25,6 @@ class LobbyCreator extends Component {
     const lobby = props.route?.params?.lobbyData;
 
     this.state = {
-      screenHeight,
       lobbyPath: lobby?.path,
       lobbyName: lobby?.name || "",
       lobbyNameError: false,
@@ -114,7 +109,7 @@ class LobbyCreator extends Component {
             });
           });
       }
-    } catch(err) {
+    } catch (err) {
       Analytics.logEvent("exception", {
         description: "LobbyCreator::createLobby"
       });
@@ -127,7 +122,7 @@ class LobbyCreator extends Component {
       console.log("Form not valid")
       return;
     }
-    
+
     const { lobbyData } = this.props.route?.params;
     const { lobbyName, location, locationGeocodeAddress, distance, passwordProtected, passwordInLobby, passwordText } = this.state;
     this.setState({ loading: true })
@@ -139,7 +134,7 @@ class LobbyCreator extends Component {
       distance,
       passwordProtected,
     };
-    
+
     setDoc(lobbyData.ref, data, { merge: true })
       .then(async () => {
         if (passwordProtected && !passwordInLobby) {
@@ -177,9 +172,9 @@ class LobbyCreator extends Component {
 
   validateForm() {
     const {
-      lobbyName, 
-      passwordSchema, passwordProtected, passwordText, 
-      distance, 
+      lobbyName,
+      passwordSchema, passwordProtected, passwordText,
+      distance,
       location, locationGeocodeAddress
     } = this.state;
 
@@ -295,7 +290,6 @@ class LobbyCreator extends Component {
 
   render() {
     const {
-      screenHeight,
       lobbyName, lobbyNameError,
       passwordFailures, passwordProtected, passwordShowing, passwordText, passwordInLobby,
       distanceError,
@@ -306,177 +300,173 @@ class LobbyCreator extends Component {
     const lobbyData = this.props.route?.params?.lobbyData;
     const ownsLobby = lobbyData?.host === this.props.user.uid;
     return (
-      <HeaderHeightContext.Consumer>
-        {headerHeight => (
-          <View
-            key={'lobby-creator-view'}
-            style={{
-              height: screenHeight - headerHeight,
-              justifyContent: 'space-between',
-              paddingHorizontal: 10,
-            }}
-          >
-            {this.removeLobbyOverlay()}
-            <ScrollView>
-              <Input
-                placeholder="Lobby Name"
-                textContentType="name"
-                inputStyle={{ fontSize: 24, paddingLeft: 5 }}
-                disabled={loading}
-                leftIcon={
-                  <Icon
-                    name='solution1'
-                    type='ant-design'
-                    iconStyle={{
-                      marginLeft: 2,
-                      marginRight: 3,
-                      alignSelf: 'flex-start',
-                    }}
-                  />
-                }
-                value={lobbyName}
-                containerStyle={{
-                  marginTop: 15,
-                  backgroundColor: 'white',
-                  borderColor: 'lightgray',
-                  borderWidth: 1.5,
-                  borderRadius: 10,
-                  marginBottom: 10
+      <View
+        key={'lobby-creator-view'}
+        style={{
+          flex: 1,
+          justifyContent: 'space-between',
+          paddingHorizontal: 10,
+        }}
+      >
+        {this.removeLobbyOverlay()}
+        <ScrollView>
+          <Input
+            placeholder="Lobby Name"
+            textContentType="name"
+            inputStyle={{ fontSize: 24, paddingLeft: 5 }}
+            disabled={loading}
+            leftIcon={
+              <Icon
+                name='solution1'
+                type='ant-design'
+                iconStyle={{
+                  marginLeft: 2,
+                  marginRight: 3,
+                  alignSelf: 'flex-start',
                 }}
-                errorMessage={lobbyNameError ? "Please enter a valid lobby name" : ""}
-                onChangeText={(text) => this.setState({ lobbyName: text })}
               />
-              <View style={{
-                marginVertical: 10,
-                backgroundColor: 'white',
-                padding: 10,
-                borderWidth: 1.5,
-                borderColor: 'lightgray',
-                borderRadius: 10,
-              }}>
-                <View
-                  style={{
-                    flexDirection: 'row',
-                    marginHorizontal: 10,
-                  }}
-                >
-                  <Switch
-                    value={passwordProtected}
-                    color={ThemeColors.button}
-                    onValueChange={(value) => this.setState({ passwordProtected: value })}
-                  />
-                  <Text style={{ marginLeft: 10, alignSelf: 'center', fontSize: 24 }}>Password Protected?</Text>
-                </View>
-                {
-                  passwordProtected && (
-                    !passwordInLobby ? (
-                      <Input
-                        placeholder="Password"
-                        textContentType="password"
-                        secureTextEntry={!passwordShowing}
-                        autoCapitalize='none'
-                        value={passwordText}
-                        leftIcon={
-                          <Icon
-                            name='key'
-                            type='font-awesome-5'
-                            size={18}
-                          />
-                        }
-                        rightIcon={
-                          <TouchableOpacity onPress={() => this.setState({ passwordShowing: !passwordShowing })}>
-                            <Text style={{ color: 'gray' }}>{passwordShowing ? 'hide' : 'show'}</Text>
-                          </TouchableOpacity>
-                        }
-                        onChangeText={(text) => this.setState({ passwordText: text })}
-                        inputStyle={{ fontSize: 24, paddingLeft: 5 }}
-                        containerStyle={{ marginTop: 10 }}
-                        errorMessage={passwordFailures.length > 0 ?
-                          "Password requirements:" +
-                          passwordFailures.flatMap((failure) => {
-                            return failure.message;
-                          }) + "."
-                          : ""
-                        }
-                      />
-                    ) : (
-                      <Button
-                        title="Change Password"
-                        raised
-                        titleStyle={{ fontSize: 24, color: 'white' }}
-                        buttonStyle={{ backgroundColor: ThemeColors.button }}
-                        containerStyle={{ marginVertical: 10, marginHorizontal: 5 }}
-                        onPress={() => this.setState({ passwordInLobby: false })}
-                      />
-                    )
-                  )
-                }
-              </View>
-              <LocationView
-                {...this.props}
-                location={location}
-                locationGeocodeAddress={locationGeocodeAddress}
-                distance={distance}
-                setLocationData={this.setLocationData}
-                isHost={true}
-                loading={false}
-                locationError={locationError}
-                distanceError={distanceError}
+            }
+            value={lobbyName}
+            containerStyle={{
+              marginTop: 15,
+              backgroundColor: 'white',
+              borderColor: 'lightgray',
+              borderWidth: 1.5,
+              borderRadius: 10,
+              marginBottom: 10
+            }}
+            errorMessage={lobbyNameError ? "Please enter a valid lobby name" : ""}
+            onChangeText={(text) => this.setState({ lobbyName: text })}
+          />
+          <View style={{
+            marginVertical: 10,
+            backgroundColor: 'white',
+            padding: 10,
+            borderWidth: 1.5,
+            borderColor: 'lightgray',
+            borderRadius: 10,
+          }}>
+            <View
+              style={{
+                flexDirection: 'row',
+                marginHorizontal: 10,
+              }}
+            >
+              <Switch
+                value={passwordProtected}
+                color={ThemeColors.button}
+                onValueChange={(value) => this.setState({ passwordProtected: value })}
               />
-              {
-                !newLobby && ownsLobby && (
-                  <Button
-                    title="Delete Lobby"
-                    titleStyle={{
-                      color: ThemeColors.text,
-                      fontSize: 20,
-                    }}
-                    type="clear"
-                    icon={
+              <Text style={{ marginLeft: 10, alignSelf: 'center', fontSize: 24 }}>Password Protected?</Text>
+            </View>
+            {
+              passwordProtected && (
+                !passwordInLobby ? (
+                  <Input
+                    placeholder="Password"
+                    textContentType="password"
+                    secureTextEntry={!passwordShowing}
+                    autoCapitalize='none'
+                    value={passwordText}
+                    leftIcon={
                       <Icon
-                        name="warning"
-                        type="font-awesome"
-                        color={ThemeColors.text}
-                        style={{
-                          paddingRight: 10,
-                        }}
-                        size={20}
+                        name='key'
+                        type='font-awesome-5'
+                        size={18}
                       />
                     }
-                    containerStyle={{ marginTop: 20 }}
-                    onPress={() => {
-                      if (ownsLobby) {
-                        this.setState({ removeLobbyOverlay: true });
-                      }
-                    }}
+                    rightIcon={
+                      <TouchableOpacity onPress={() => this.setState({ passwordShowing: !passwordShowing })}>
+                        <Text style={{ color: 'gray' }}>{passwordShowing ? 'hide' : 'show'}</Text>
+                      </TouchableOpacity>
+                    }
+                    onChangeText={(text) => this.setState({ passwordText: text })}
+                    inputStyle={{ fontSize: 24, paddingLeft: 5 }}
+                    containerStyle={{ marginTop: 10 }}
+                    errorMessage={passwordFailures.length > 0 ?
+                      "Password requirements:" +
+                      passwordFailures.flatMap((failure) => {
+                        return failure.message;
+                      }) + "."
+                      : ""
+                    }
+                  />
+                ) : (
+                  <Button
+                    title="Change Password"
+                    raised
+                    titleStyle={{ fontSize: 24, color: 'white' }}
+                    buttonStyle={{ backgroundColor: ThemeColors.button }}
+                    containerStyle={{ marginVertical: 10, marginHorizontal: 5 }}
+                    onPress={() => this.setState({ passwordInLobby: false })}
                   />
                 )
-              }
-            </ScrollView>
-            <View style={{ marginTop: 5 }}>
-              <Button
-                title={lobbyData ? "Update Lobby" : "Create Lobby"}
-                titleStyle={{ fontSize: 24 }}
-                loading={loading}
-                loadingStyle={{ paddingVertical: 7 }}
-                containerStyle={{ marginBottom: 10 }}
-                buttonStyle={{ backgroundColor: ThemeColors.button }}
-                raised
-                onPress={() => lobbyData ? this.updateLobby() : this.createLobby()}
-              />
-              <Button
-                title="Cancel"
-                type="clear"
-                raised
-                disabled={loading}
-                titleStyle={{ color: ThemeColors.text, fontSize: 24 }}
-                containerStyle={{ marginBottom: 10 }}
-                onPress={() => this.props.navigation.goBack()}
-              />
-            </View>
+              )
+            }
           </View>
-        )}
-      </HeaderHeightContext.Consumer>
+          <LocationView
+            {...this.props}
+            location={location}
+            locationGeocodeAddress={locationGeocodeAddress}
+            distance={distance}
+            setLocationData={this.setLocationData}
+            isHost={true}
+            loading={false}
+            locationError={locationError}
+            distanceError={distanceError}
+          />
+          {
+            !newLobby && ownsLobby && (
+              <Button
+                title="Delete Lobby"
+                titleStyle={{
+                  color: ThemeColors.text,
+                  fontSize: 20,
+                }}
+                type="clear"
+                icon={
+                  <Icon
+                    name="warning"
+                    type="font-awesome"
+                    color={ThemeColors.text}
+                    style={{
+                      paddingRight: 10,
+                    }}
+                    size={20}
+                  />
+                }
+                containerStyle={{ marginTop: 20 }}
+                onPress={() => {
+                  if (ownsLobby) {
+                    this.setState({ removeLobbyOverlay: true });
+                  }
+                }}
+              />
+            )
+          }
+        </ScrollView>
+        <View style={{ marginTop: 5 }}>
+          <Button
+            title={lobbyData ? "Update Lobby" : "Create Lobby"}
+            titleStyle={{ fontSize: 24 }}
+            loading={loading}
+            loadingStyle={{ paddingVertical: 7 }}
+            containerStyle={{ marginBottom: 10 }}
+            buttonStyle={{ backgroundColor: ThemeColors.button }}
+            raised
+            onPress={() => lobbyData ? this.updateLobby() : this.createLobby()}
+          />
+          <Button
+            title="Cancel"
+            type="clear"
+            raised
+            disabled={loading}
+            titleStyle={{ color: ThemeColors.text, fontSize: 24 }}
+            containerStyle={{ marginBottom: 10 }}
+            onPress={() => this.props.navigation.goBack()}
+          />
+        </View>
+      </View>
     )
   }
 }

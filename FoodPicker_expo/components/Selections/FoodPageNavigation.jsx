@@ -15,11 +15,15 @@ class FoodPageNavigation extends Component {
 
     return (
       <View>
-        <View style={{ justifyContent: 'space-between', flexDirection: 'row', marginTop: -8, paddingHorizontal: 15 }}>
+        <View style={{
+          justifyContent: 'space-between',
+          flexDirection: 'row',
+          paddingHorizontal: 20
+        }}>
           <Text>{addressName}</Text>
           <Text>Page {choicesPageIndex + 1}</Text>
         </View>
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 10, paddingHorizontal: 5 }}>
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 5 }}>
           <Button
             title={"Last Page"}
             disabled={foodChoices.length < 60 && choicesPageIndex === 0}
@@ -38,7 +42,7 @@ class FoodPageNavigation extends Component {
               borderRadius: 10,
               borderTopLeftRadius: 25,
               borderBottomLeftRadius: 25,
-              marginVertical: 20,
+              marginVertical: 10,
               marginLeft: 5,
             }}
           />
@@ -54,7 +58,7 @@ class FoodPageNavigation extends Component {
             raised
             containerStyle={{
               borderRadius: 10,
-              marginVertical: 20,
+              marginVertical: 10,
             }}
           />
           <Button
@@ -75,7 +79,7 @@ class FoodPageNavigation extends Component {
               borderRadius: 10,
               borderTopRightRadius: 25,
               borderBottomRightRadius: 25,
-              marginVertical: 20,
+              marginVertical: 10,
               marginRight: 5,
             }}
           />

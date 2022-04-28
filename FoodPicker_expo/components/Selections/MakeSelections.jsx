@@ -17,15 +17,12 @@ import * as Analytics from 'expo-firebase-analytics';
 class MakeSelections extends Component {
   constructor(props) {
     super(props);
-    const offset = Constants.platform.android ? 35 : 0;
-    const adBannerHeight = StatusBar.currentHeight + 60;
-    const screenHeight = Dimensions.get('screen').height - offset - adBannerHeight;
-    const maxNumberOfSelections = 5;
 
     this.openNowFilter = true;
 
+    const maxNumberOfSelections = 5;
+
     this.state = {
-      screenHeight: screenHeight,
       selectedFoodProfile: undefined,
       googleSearchText: "",
       selectedFoodChoices: [],
@@ -129,7 +126,7 @@ class MakeSelections extends Component {
     nextPageToken = this.state.nextPageToken
   ) {
     const { lobbyData } = this.props;
-    
+
     const latitude = lobbyData.location.latitude;
     const longitude = lobbyData.location.longitude;
     const radius = Math.round(lobbyData.distance * 1609.344);
@@ -150,7 +147,7 @@ class MakeSelections extends Component {
     if (this.openNowFilter) {
       url = url + '&opennow=true';
     }
-    
+
     this.setState({ loading: true });
 
     await fetch(url)
@@ -163,7 +160,7 @@ class MakeSelections extends Component {
         }
 
         const GooglePicBaseUrl = `https://maps.googleapis.com/maps/api/place/photo?key=${PLACE_DETAILS_API_KEY}&maxwidth=400&photo_reference=`;
-        for(let googlePlace of res.results) {
+        for (let googlePlace of res.results) {
           var place = {};
           const coordinate = {
             latitude: googlePlace.geometry.location.lat,
@@ -172,7 +169,7 @@ class MakeSelections extends Component {
 
           var gallery = [];
           if (googlePlace.photos) {
-            for(let photo of googlePlace.photos) { 
+            for (let photo of googlePlace.photos) {
               var photoUrl = GooglePicBaseUrl + photo.photo_reference;
               gallery.push(photoUrl);
             }
@@ -226,7 +223,7 @@ class MakeSelections extends Component {
   userSelectionPage() {
     const { lobbyData, user, db } = this.props;
     const { selectedFoodChoices } = this.state;
-    
+
     this.setState({ loading: true });
     // Add food selections to firestore
     setDoc(doc(db, 'food_selections', `${lobbyData.ref.id}_${user.uid}`), {
@@ -236,65 +233,64 @@ class MakeSelections extends Component {
     }, {
       merge: false,
     })
-    .then(async () => {
-      // Add user to lobby's usersReady list
-      const usersReady = lobbyData.usersReady || [];
-      if (selectedFoodChoices.length === 0) {
-        const index = usersReady.indexOf(user.uid);
-        if (index > -1) {
-          usersReady.splice(index, 1);
-          setDoc(lobbyData.ref, { usersReady }, { merge: true })
-            .then(() => {
-              this.clearSelections();
-              this.setState({ loading: false });
-              this.props.navigation.navigate('LobbyView', { lobbyRef: lobbyData.ref });
-            })
-            .catch(err => {
-              Analytics.logEvent("exception", {
-                description: "MakeSelections::userSelectionPage::NoSelections"
+      .then(async () => {
+        // Add user to lobby's usersReady list
+        const usersReady = lobbyData.usersReady || [];
+        if (selectedFoodChoices.length === 0) {
+          const index = usersReady.indexOf(user.uid);
+          if (index > -1) {
+            usersReady.splice(index, 1);
+            setDoc(lobbyData.ref, { usersReady }, { merge: true })
+              .then(() => {
+                this.clearSelections();
+                this.setState({ loading: false });
+                this.props.navigation.navigate('LobbyView', { lobbyRef: lobbyData.ref });
+              })
+              .catch(err => {
+                Analytics.logEvent("exception", {
+                  description: "MakeSelections::userSelectionPage::NoSelections"
+                });
+                console.error("MakeSelections::userSelectionPage::NoSelections", err);
+                this.setState({ loading: false });
               });
-              console.error("MakeSelections::userSelectionPage::NoSelections", err);
-              this.setState({ loading: false });
-            });
+          } else {
+            this.props.navigation.navigate('LobbyView', { lobbyRef: lobbyData.ref });
+            this.setState({ loading: false });
+          }
         } else {
-          this.props.navigation.navigate('LobbyView', { lobbyRef: lobbyData.ref });
-          this.setState({ loading: false });
-        }
-      } else {
-        const index = usersReady.indexOf(user.uid);
-        if (index === -1) {
-          usersReady.push(user.uid);
-          setDoc(lobbyData.ref, { usersReady }, { merge: true })
-            .then(() => {
-              this.clearSelections();
-              this.setState({ loading: false });
-              this.props.navigation.navigate('UserSelections', { lobbyData: lobbyData, user: user });
-            })
-            .catch(err => {
-              Analytics.logEvent("exception", {
-                description: "MakeSelections::userSelectionPage::SelectionsPresent"
+          const index = usersReady.indexOf(user.uid);
+          if (index === -1) {
+            usersReady.push(user.uid);
+            setDoc(lobbyData.ref, { usersReady }, { merge: true })
+              .then(() => {
+                this.clearSelections();
+                this.setState({ loading: false });
+                this.props.navigation.navigate('UserSelections', { lobbyData: lobbyData, user: user });
+              })
+              .catch(err => {
+                Analytics.logEvent("exception", {
+                  description: "MakeSelections::userSelectionPage::SelectionsPresent"
+                });
+                console.error("MakeSelections::userSelectionPage::SelectionsPresent", err);
+                this.setState({ loading: false });
               });
-              console.error("MakeSelections::userSelectionPage::SelectionsPresent", err);
-              this.setState({ loading: false });
-            });
-        } else {
-          this.setState({ loading: false });
-          this.props.navigation.navigate('UserSelections', { lobbyData: lobbyData, user: user });
+          } else {
+            this.setState({ loading: false });
+            this.props.navigation.navigate('UserSelections', { lobbyData: lobbyData, user: user });
+          }
         }
-      }
-    })
-    .catch((err) => {
-      Analytics.logEvent("exception", {
-        description: "MakeSelections::userSelectionPage"
+      })
+      .catch((err) => {
+        Analytics.logEvent("exception", {
+          description: "MakeSelections::userSelectionPage"
+        });
+        console.error("MakeSelections::userSelectionPage", err);
+        this.setState({ loading: false });
       });
-      console.error("MakeSelections::userSelectionPage", err);
-      this.setState({ loading: false });
-    });
   }
 
   render() {
     const {
-      screenHeight,
       googleSearchText,
       choicesPageIndex,
       selectedFoodChoices,
@@ -307,137 +303,134 @@ class MakeSelections extends Component {
     const { user, lobbyData } = this.props;
 
     return (
-      <HeaderHeightContext.Consumer>
-        {headerHeight => (
-          <View
-            key={'make-selections-view'}
-            style={{
-              height: screenHeight - headerHeight,
-              justifyContent: 'space-between',
-            }}
-          >
-            {/* <FoodProfile
+      <View
+        key={'make-selections-view'}
+        style={{
+          justifyContent: 'space-between',
+          flex: 1
+        }}
+      >
+        {/* <FoodProfile
               {...this.props}
               selectedFoodProfile={this.setSelectedFoodProfile}
             /> */}
-            {/* <GoogleFoodSearch
+        {/* <GoogleFoodSearch
               {...this.props}
               googleSearchText={this.setGoogleSearchText}
             /> */}
-            <View
-              style={{
-                flexDirection: 'row',
-                justifyContent: 'space-between',
+        <View
+          style={{
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+          }}
+        >
+          <View
+            style={{
+              flexDirection: 'row',
+              borderRadius: 10,
+              paddingHorizontal: 10,
+              paddingTop: 5,
+              justifyContent: 'center'
+            }}
+          >
+            <Switch
+              value={this.openNowFilter}
+              color={ThemeColors.button}
+              style={{ alignSelf: 'center' }}
+              onValueChange={(value) => {
+                this.openNowFilter = value;
+                this.setState({ choicesPageIndex: 0 });
+                this.fetchNearestPlacesFromGoogle([], null);
               }}
+            />
+            <Text
+              style={{ marginLeft: 10, alignSelf: 'center', fontSize: 20 }}
+              ellipsizeMode='tail'
+              numberOfLines={1}
             >
-              <View
+              Only open now?
+            </Text>
+          </View>
+          <View style={{ paddingRight: 15, paddingTop: 5 }}>
+            <TouchableOpacity
+              onPress={this.userSelectionPage}
+            >
+              <Text style={{ textAlign: 'center', fontSize: 18 }}>Picks</Text>
+              <Text
                 style={{
-                  flexDirection: 'row',
-                  borderRadius: 10,
-                  paddingHorizontal: 10,
-                  paddingTop: 5,
-                  justifyContent: 'center'
+                  textAlign: 'center',
+                  fontSize: 20,
+                  fontWeight: 'bold'
                 }}
               >
-                <Switch
-                  value={this.openNowFilter}
-                  color={ThemeColors.button}
-                  style={{ alignSelf: 'center' }}
-                  onValueChange={(value) => {
-                    this.openNowFilter = value;
-                    this.setState({ choicesPageIndex: 0 });
-                    this.fetchNearestPlacesFromGoogle([], null);
-                  }}
-                />
-                <Text
-                  style={{ marginLeft: 10, alignSelf: 'center', fontSize: 20 }}
-                  ellipsizeMode='tail'
-                  numberOfLines={1}
-                >
-                  Only open now?
-                </Text>
-              </View>
-              <View style={{ paddingRight: 15, paddingTop: 5 }}>
-                <TouchableOpacity
-                  onPress={this.userSelectionPage}
-                >
-                  <Text style={{ textAlign: 'center', fontSize: 18 }}>Picks</Text>
-                  <Text
-                    style={{
-                      textAlign: 'center',
-                      fontSize: 20,
-                      fontWeight: 'bold'
-                    }}
-                  >
-                    {
-                      loading ? (
-                        <LoadingSpinner size="small" />
-                      ) : (
-                        <Text
-                          style={{ fontWeight: 'bold', color: ThemeColors.text }}
-                        >
-                          {selectedFoodChoices?.length || 0}
-                        </Text>
-                      )
-                    }
-                    {` / ${maxNumberOfSelections}`}
-                  </Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-            {
-              loading ? (
-                <>
-                  <Text>{''}</Text>
-                  <LoadingSpinner />
-                  <Text>{''}</Text>
-                </>
-              ) : (
-                <View
-                  style={{ justifyContent: 'center' }}
-                >
-                  <Text
-                    style={{
-                      fontSize: 12,
-                      marginLeft: 15,
-                      textAlign: 'center'
-                    }}
-                  >
-                    Choose 0 - 5 selections
-                  </Text>
-                  <FoodChoices
-                    {...this.props}
-                    googleSearchText={googleSearchText}
-                    removeFoodChoice={this.removeFoodChoice}
-                    addFoodChoice={this.addFoodChoice}
-                    choicesPageIndex={choicesPageIndex}
-                    setChoices={this.setChoices}
-                    nextPageToken={nextPageToken}
-                    foodChoices={foodChoices}
-                    lobbyData={lobbyData}
-                    selectedFoodChoices={selectedFoodChoices}
-                    maxNumberOfSelections={maxNumberOfSelections}
-                  />
-                </View>
-              )
-            }
-            <FoodPageNavigation
-              {...this.props}
-              nextChoicesPage={this.nextChoicesPage}
-              lastChoicesPage={this.lastChoicesPage}
-              userSelectionPage={this.userSelectionPage}
-              choicesPageIndex={choicesPageIndex}
-              clearSelections={this.clearSelections}
-              selectedFoodChoices={selectedFoodChoices}
-              foodChoices={foodChoices}
-              lobbyData={lobbyData}
-              user={user}
-              maxNumberOfSelections={maxNumberOfSelections}
-              loading={loading}
-            />
+                {
+                  loading ? (
+                    <LoadingSpinner size="small" />
+                  ) : (
+                    <Text
+                      style={{ fontWeight: 'bold', color: ThemeColors.text }}
+                    >
+                      {selectedFoodChoices?.length || 0}
+                    </Text>
+                  )
+                }
+                {` / ${maxNumberOfSelections}`}
+              </Text>
+            </TouchableOpacity>
           </View>
-        )}
-      </HeaderHeightContext.Consumer>
+        </View>
+        {
+          loading ? (
+            <>
+              <Text>{''}</Text>
+              <LoadingSpinner />
+              <Text>{''}</Text>
+            </>
+          ) : (
+            <View
+              style={{ justifyContent: 'center' }}
+            >
+              <Text
+                style={{
+                  fontSize: 12,
+                  marginLeft: 15,
+                  marginBottom: 5,
+                  textAlign: 'center'
+                }}
+              >
+                Choose up to 5 selections
+              </Text>
+              <FoodChoices
+                {...this.props}
+                googleSearchText={googleSearchText}
+                removeFoodChoice={this.removeFoodChoice}
+                addFoodChoice={this.addFoodChoice}
+                choicesPageIndex={choicesPageIndex}
+                setChoices={this.setChoices}
+                nextPageToken={nextPageToken}
+                foodChoices={foodChoices}
+                lobbyData={lobbyData}
+                selectedFoodChoices={selectedFoodChoices}
+                maxNumberOfSelections={maxNumberOfSelections}
+              />
+            </View>
+          )
+        }
+        <FoodPageNavigation
+          {...this.props}
+          nextChoicesPage={this.nextChoicesPage}
+          lastChoicesPage={this.lastChoicesPage}
+          userSelectionPage={this.userSelectionPage}
+          choicesPageIndex={choicesPageIndex}
+          clearSelections={this.clearSelections}
+          selectedFoodChoices={selectedFoodChoices}
+          foodChoices={foodChoices}
+          lobbyData={lobbyData}
+          user={user}
+          maxNumberOfSelections={maxNumberOfSelections}
+          loading={loading}
+        />
+      </View>
     )
   }
 }

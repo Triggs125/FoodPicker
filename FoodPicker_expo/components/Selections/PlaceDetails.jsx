@@ -18,10 +18,6 @@ class PlaceDetails extends Component {
   constructor(props) {
     super(props);
 
-    const offset = Constants.platform.android ? 35 : 0;
-    const adBannerHeight = StatusBar.currentHeight + 60;
-    const screenHeight = Dimensions.get('screen').height - offset - adBannerHeight;
-
     const tabRoutes = [
       { key: 'details', title: 'Details' },
       { key: 'reviews', title: 'Reviews' },
@@ -30,7 +26,6 @@ class PlaceDetails extends Component {
 
     this.state = {
       loading: true,
-      screenHeight: screenHeight,
       tabIndex: 0,
       tabRoutes,
     };
@@ -52,8 +47,8 @@ class PlaceDetails extends Component {
     }
 
     const foodChoice = this.props.route?.params?.foodChoice;
-    const url = "https://maps.googleapis.com/maps/api/place/details/json?place_id=" + foodChoice.id 
-    + '&key=' + PLACE_DETAILS_API_KEY;
+    const url = "https://maps.googleapis.com/maps/api/place/details/json?place_id=" + foodChoice.id
+      + '&key=' + PLACE_DETAILS_API_KEY;
 
     this.setState({ loading: true });
     fetch(url)
@@ -91,13 +86,13 @@ class PlaceDetails extends Component {
     for (let i = fullStars + halfStar; i < 5; i++) {
       stars.push(<Icon name="star-o" type="font-awesome" color='gold' size={20} />)
     }
-    
+
     return stars;
   }
 
   totalRatings(num) {
     if (!num || isNaN(num)) return;
-    return `(${Math.abs(num) > 999 ? Math.sign(num)*((Math.abs(num)/1000).toFixed(1)) + 'k' : Math.sign(num)*Math.abs(num)})`;
+    return `(${Math.abs(num) > 999 ? Math.sign(num) * ((Math.abs(num) / 1000).toFixed(1)) + 'k' : Math.sign(num) * Math.abs(num)})`;
   }
 
   priceLevel(priceLevel) {
@@ -155,8 +150,8 @@ class PlaceDetails extends Component {
   }
 
   render() {
-    const { screenHeight, place, tabIndex, tabRoutes } = this.state;
-    
+    const { place, tabIndex, tabRoutes } = this.state;
+
     const GooglePicBaseUrl = `https://maps.googleapis.com/maps/api/place/photo?key=${PLACE_DETAILS_API_KEY}&maxwidth=400&photo_reference=`;
     const images = place?.photos?.map(photo => GooglePicBaseUrl + photo.photo_reference);
     const coordinate = {
@@ -170,7 +165,7 @@ class PlaceDetails extends Component {
     const DetailsTab = () => (
       <View style={{
         width: ScreenWidth,
-        height: (screenHeight / 3) * 2 - 100,
+        flex: 1,
         justifyContent: 'space-between',
       }}>
         <ScrollView>
@@ -261,7 +256,7 @@ class PlaceDetails extends Component {
             {place?.opening_hours?.weekday_text[dayOfWeek]}
           </Text>
         </ScrollView>
-        <View style={{ flexDirection: 'row', justifyContent: 'space-evenly', marginTop: 5, marginBottom: 10 }}>
+        <View style={{ flexDirection: 'row', justifyContent: 'space-evenly', marginTop: 5, marginBottom: 5 }}>
           <Button
             title={'Call'}
             type='solid'
@@ -270,9 +265,9 @@ class PlaceDetails extends Component {
               borderRadius: 10,
               height: 70,
             }}
-            titleStyle={{ fontSize: 20, color: 'white'}}
+            titleStyle={{ fontSize: 20, color: 'white' }}
             raised
-            containerStyle={{ marginTop: 5, marginBottom: 10, width: 100, borderRadius: 10 }}
+            containerStyle={{ marginTop: 5, marginBottom: 5, width: 100, borderRadius: 10 }}
             icon={<Icon onPress={() => this.callNumber(place.international_phone_number)} name="phone-alt" type="font-awesome-5" color='white' />}
             iconPosition='top'
             onPress={() => this.callNumber(place.international_phone_number)}
@@ -287,7 +282,7 @@ class PlaceDetails extends Component {
             }}
             raised
             titleStyle={{ fontSize: 20, color: 'white' }}
-            containerStyle={{ marginTop: 5, marginBottom: 10, width: 130, borderRadius: 10 }}
+            containerStyle={{ marginTop: 5, marginBottom: 5, width: 130, borderRadius: 10 }}
             icon={<Icon name="map" type="font-awesome-5" color='white' />}
             iconPosition='top'
             onPress={() => this.clickPlaceLink(place?.url)}
@@ -302,7 +297,7 @@ class PlaceDetails extends Component {
             }}
             raised
             titleStyle={{ fontSize: 20, color: 'white' }}
-            containerStyle={{ marginTop: 5, marginBottom: 10, width: 100, borderRadius: 10 }}
+            containerStyle={{ marginTop: 5, marginBottom: 5, width: 100, borderRadius: 10 }}
             icon={<Icon name="globe-americas" type="font-awesome-5" color='white' />}
             iconPosition='top'
             onPress={() => this.clickPlaceLink(place?.website)}
@@ -310,7 +305,7 @@ class PlaceDetails extends Component {
         </View>
       </View>
     );
-    
+
     const ReviewsTab = () => (
       <ScrollView>
         <Text
@@ -357,7 +352,7 @@ class PlaceDetails extends Component {
         }
       </ScrollView>
     );
-    
+
     const HoursTab = () => (
       <View style={{ paddingHorizontal: 10, paddingTop: 10 }}>
         <Text
@@ -395,60 +390,56 @@ class PlaceDetails extends Component {
     });
 
     return (
-      <HeaderHeightContext.Consumer>
-        {headerHeight => (
-          <View
-            style={{
-              height: screenHeight - headerHeight,
-            }}
-          >
-            {
-              place ? (
-                <>
-                  <SliderBox
-                    images={images}
-                    dotColor={ThemeColors.text}
-                    imageLoadingColor={ThemeColors.text}
-                    circleLoop
-                  />
-                  <TabView
-                    navigationState={{ index: tabIndex, routes: tabRoutes }}
-                    renderScene={renderScene}
-                    onIndexChange={(index) => {
-                      this.setState({ tabIndex: index });
-                      Analytics.logEvent("event", {
-                        description: "PlaceDetails::TabView::Clicked::" + index
-                      });
+      <View
+        style={{
+          flex: 1
+        }}
+      >
+        {
+          place ? (
+            <>
+              <SliderBox
+                images={images}
+                dotColor={ThemeColors.text}
+                imageLoadingColor={ThemeColors.text}
+                circleLoop
+              />
+              <TabView
+                navigationState={{ index: tabIndex, routes: tabRoutes }}
+                renderScene={renderScene}
+                onIndexChange={(index) => {
+                  this.setState({ tabIndex: index });
+                  Analytics.logEvent("event", {
+                    description: "PlaceDetails::TabView::Clicked::" + index
+                  });
+                }}
+                renderTabBar={props => (
+                  <TabBar
+                    {...props}
+                    indicatorStyle={{
+                      backgroundColor: 'white',
+                      borderRadius: 2,
                     }}
-                    renderTabBar={props => (
-                      <TabBar
-                        {...props}
-                        indicatorStyle={{
-                          backgroundColor: 'white',
-                          borderRadius: 2,
-                        }}
-                        labelStyle={{ fontSize: 16, fontWeight: 'bold' }}
-                        style={{ backgroundColor: ThemeColors.button }}
-                      />
-                    )}
+                    labelStyle={{ fontSize: 16, fontWeight: 'bold' }}
+                    style={{ backgroundColor: ThemeColors.button }}
                   />
-                </>
-              ) : (
-                <View
-                  style={{
-                    height: screenHeight - headerHeight,
-                    justifyContent: 'space-between'
-                  }}
-                >
-                  <Text>{''}</Text>
-                  <LoadingSpinner />
-                  <Text>{''}</Text>
-                </View>
-              )
-            }
-          </View>
-        )}
-      </HeaderHeightContext.Consumer>
+                )}
+              />
+            </>
+          ) : (
+            <View
+              style={{
+                flex: 1,
+                justifyContent: 'space-between'
+              }}
+            >
+              <Text>{''}</Text>
+              <LoadingSpinner />
+              <Text>{''}</Text>
+            </View>
+          )
+        }
+      </View>
     );
   }
 }

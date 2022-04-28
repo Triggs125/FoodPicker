@@ -1,19 +1,18 @@
 import { Component } from "react";
-import { Dimensions, SafeAreaView, StyleSheet, View } from 'react-native';
+import { SafeAreaView, StyleSheet, View } from 'react-native';
 import Constants from 'expo-constants';
 import { Input, Button, Text, Icon, Overlay, Avatar } from 'react-native-elements';
 import { signInWithEmailAndPassword, signOut } from 'firebase/auth';
 import { TouchableOpacity } from 'react-native-gesture-handler';
 import isEmail from 'validator/lib/isEmail';
-import { HeaderHeightContext } from '@react-navigation/elements';
 import ThemeColors from "../assets/ThemeColors";
 import { ScreenWidth } from "react-native-elements/dist/helpers";
 import * as Location from 'expo-location';
 import { GOOGLE_MAPS_API_KEY, PLACE_DETAILS_API_KEY } from "../config";
-import { StatusBar } from "react-native";
 import * as Analytics from 'expo-firebase-analytics';
 import FacebookLoginButton from "./Utils/FacebookLoginButton";
 import LocationView from "./Lobby/LocationView";
+import AppleLoginButton from "./Utils/AppleLoginButton";
 
 class Home extends Component {
   constructor(props) {
@@ -378,11 +377,6 @@ class Home extends Component {
   }
 
   getUserLocation() {
-    if (Constants.platform.android) {
-      return new Promise((resolve) => {
-        resolve({ location: this.state.location, distance: this.state.distance });
-      });
-    }
     return Location.requestForegroundPermissionsAsync()
       .then(async ({ status }) => {
         if (status !== 'granted') {
@@ -415,10 +409,10 @@ class Home extends Component {
       });
   }
 
-  userLoggedIn(headerHeight) {
+  userLoggedIn() {
     const { randomRestaurantLoading } = this.state;
     return (
-      <View style={{ ...styles.container, height: screenHeight - headerHeight }}>
+      <View style={{ ...styles.container, flex: 1 }}>
         {this.randomRestaurantOverlay()}
         {this.randomRestaurantErrorOverlay()}
         <View style={{ paddingHorizontal: 10, justifyContent: 'center' }}>
@@ -471,14 +465,7 @@ class Home extends Component {
             icon={<Icon name="angle-right" type="font-awesome" iconStyle={{ fontSize: 30, color: ThemeColors.text, paddingRight: 3 }} />}
             iconRight
             onPress={() => {
-              if (Constants.platform.android) {
-                console.log("Open Restaurant Overlay")
-                this.setState({
-                  randomRestaurantOverlayOpen: true,
-                });
-              } else {
-                this.getRandomRestaurant();
-              }
+              this.getRandomRestaurant();
             }}
             containerStyle={{ marginVertical: 5 }}
           />
@@ -505,15 +492,14 @@ class Home extends Component {
     );
   }
 
-  userNotLoggedIn(headerHeight) {
+  userNotLoggedIn() {
     const {
       emailAddressText, passwordText, emailAddressError, passwordShowing, loginError, generalError
     } = this.state;
 
     return (
-      <View style={{ ...styles.container, height: screenHeight - headerHeight }}>
+      <View style={{ ...styles.container, flex: 1 }}>
         <View>
-          {/* <Text style={{ textAlign: 'center', fontSize: 35 }}>Log In</Text> */}
           {
             (loginError || generalError) && (
               <Text
@@ -554,7 +540,7 @@ class Home extends Component {
             }
             inputStyle={styles.inputStyle}
             errorMessage={emailAddressError ? "Please enter a valid email address" : ""}
-            onChangeText={(text) => this.setState({ emailAddressText: text, emailAddressError: false, })}
+            onChangeText={(text) => this.setState({ emailAddressText: text.replace(/\s/g, ''), emailAddressError: false, })}
           />
           <Input
             testID="accountLoginPassword"
@@ -578,7 +564,7 @@ class Home extends Component {
               </TouchableOpacity>
             }
             inputStyle={styles.inputStyle}
-            onChangeText={(text) => this.setState({ passwordText: text })}
+            onChangeText={(text) => this.setState({ passwordText: text.replace(/\s/g, '') })}
           />
           <View style={{ paddingHorizontal: 10 }}>
             <Button
@@ -629,6 +615,11 @@ class Home extends Component {
         </Text>
         <View style={{ paddingHorizontal: 10 }}>
           {<FacebookLoginButton db={this.props.db} auth={this.props.auth} />}
+          {
+            Constants.platform.ios && (
+              <AppleLoginButton db={this.props.db} auth={this.props.auth} />
+            )
+          }
           <Button
             title="Create an Account"
             raised
@@ -641,13 +632,12 @@ class Home extends Component {
             titleStyle={{ fontWeight: '500', fontSize: 22, color: 'black' }}
             buttonStyle={{
               backgroundColor: '#fff',
-              paddingVertical: 10
+              paddingVertical: 10,
+              borderWidth: 1,
+              borderColor: 'lightgray'
             }}
             containerStyle={{
-              width: '100%',
-              alignSelf: 'center',
-              overflow: 'visible',
-              marginBottom: 20,
+              marginBottom: 10,
               marginTop: 5,
             }}
             onPress={() => { this.props.navigation.navigate('CreateAccount') }}
@@ -659,31 +649,21 @@ class Home extends Component {
 
   render() {
     return (
-      <SafeAreaView>
-        <HeaderHeightContext.Consumer>
-          {headerHeight => (
-            this.props.user ? (
-              this.userLoggedIn(headerHeight)
-            ) : (
-              this.userNotLoggedIn(headerHeight)
-            )
-          )}
-        </HeaderHeightContext.Consumer>
-      </SafeAreaView>
-    );
+      this.props.user ? (
+        this.userLoggedIn()
+      ) : (
+        this.userNotLoggedIn()
+      )
+    )
   }
 }
-
-const offset = Constants.platform.android ? 35 : 0;
-const adBannerHeight = StatusBar.currentHeight + 60;
-const screenHeight = Dimensions.get('screen').height - offset - adBannerHeight;
 
 const styles = StyleSheet.create({
   container: {
     display: 'flex',
     justifyContent: 'space-between',
     paddingTop: 15,
-    paddingBottom: 15,
+    paddingBottom: 0,
   },
   inputIcon: {
     paddingLeft: 10,

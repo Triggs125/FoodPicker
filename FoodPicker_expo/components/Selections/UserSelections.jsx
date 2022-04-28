@@ -15,12 +15,8 @@ import * as Analytics from 'expo-firebase-analytics';
 class UserSelections extends Component {
   constructor(props) {
     super(props);
-    const offset = Constants.platform.android ? 48 : 20;
-    const adBannerHeight = StatusBar.currentHeight + 60;
-    const screenHeight = Dimensions.get('screen').height - offset - adBannerHeight;
 
     this.state = {
-      screenHeight: screenHeight,
       selectedFoodProfile: undefined,
       selectedFoodChoices: [],
       choicesPageIndex: 0,
@@ -63,9 +59,9 @@ class UserSelections extends Component {
         loading: false,
       });
     },
-    err => {
-      console.error("UserSelections::componentAppeared", err);
-    });
+      err => {
+        console.error("UserSelections::componentAppeared", err);
+      });
   }
 
   componentWillUnmount() {
@@ -76,7 +72,7 @@ class UserSelections extends Component {
     Analytics.logEvent("event", {
       description: "UserSelections::removeFoodChoice"
     });
-    
+
     const { selectedFoodChoices } = this.state;
     const { lobbyData } = this.props;
     const { user } = this.props.route?.params;
@@ -188,7 +184,6 @@ class UserSelections extends Component {
 
   render() {
     const {
-      screenHeight,
       selectedFoodChoices,
       loading,
     } = this.state;
@@ -205,155 +200,151 @@ class UserSelections extends Component {
     const isUserChoices = user.uid === this.props.user.uid;
 
     return (
-      <HeaderHeightContext.Consumer>
-        {headerHeight => (
-          <View
-            key={'user-selection-view'}
-            style={{
-              height: screenHeight - headerHeight,
-              paddingHorizontal: 10,
-              justifyContent: 'space-between',
-            }}
-          >
-            {
-              loading ? (
-                <>
-                  <Text></Text>
-                  <LoadingSpinner />
-                </>
-              ) : (
-                <ScrollView>
-                  <Text
-                    style={{
-                      textAlign: 'center',
-                      alignSelf: 'center',
-                      marginTop: 5,
-                      marginBottom: 10,
-                      fontWeight: '600',
-                      fontSize: 30,
-                      fontWeight: 'normal',
-                      width: ScreenWidth - 40,
-                      color: isUserChoices ? ThemeColors.text : 'black'
-                    }}
-                    ellipsizeMode='tail'
-                    numberOfLines={1}
-                  >
-                    {userDisplayName}
-                  </Text>
-                  <View style={{ paddingBottom: 3, paddingLeft: 12 }}>
-                    <Text style={{ fontSize: 10 }}>**Select Card to see the place details</Text>
-                    {
-                      isUserChoices &&
-                      <Text style={{ fontSize: 10 }}>**Hold down to delete</Text>
-                    }
-                  </View>
-                  {
-                    selectedFoodChoices?.data?.selections?.map((foodChoice, i) => {
-                      return (
-                        <TouchableOpacity
-                          onLongPress={() => isUserChoices && this.removeFoodChoice(foodChoice)}
-                          onPress={() => this.props.navigation.navigate("PlaceDetails", { foodChoice, finalDecision: false })}
-                          key={'food-choice-' + i}
-                          containerStyle={{ marginHorizontal: -5 }}
-                        >
-                          <Card
-                            containerStyle={{
-                              elevation: 6,
-                              height: 80,
-                              marginBottom: 10,
-                              marginTop: 0,
-                              marginHorizontal: 10,
-                              paddingTop: 10,
-                              justifyContent: 'center'
-                            }}
-                          >
-                            <Card.Title
-                              style={{ fontSize: 18, textAlign: 'left', marginBottom: 0 }}
-                              ellipsizeMode='tail'
-                              numberOfLines={1}
-                            >
-                              {foodChoice.name}
-                            </Card.Title>
-                            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                              <Text style={{ marginRight: 5, alignSelf: 'center' }}>{foodChoice.rating}</Text>
-                              <View style={{ flexDirection: 'row', marginRight: 5, alignSelf: 'center' }}>
-                                {
-                                  this.stars(foodChoice?.rating)
-                                }
-                              </View>
-                              <Text style={{ alignSelf: 'center', marginRight: 5 }}>{this.totalRatings(foodChoice.userRatingsTotal)}</Text>
-                              <Icon
-                                name="circle"
-                                type="font-awesome"
-                                size={5}
-                                color='#333'
-                                style={{ alignSelf: 'center', marginRight: 5 }}
-                              />
-                              <Text style={{ flexDirection: 'row', marginRight: 5, alignSelf: 'center' }}>
-                                {
-                                  this.priceLevel(foodChoice.priceLevel)
-                                }
-                              </Text>
-                              <Icon
-                                name="circle"
-                                type="font-awesome"
-                                size={5}
-                                color='#333'
-                                style={{ alignSelf: 'center', marginRight: 5 }}
-                              />
-                              <Text style={{ flexDirection: 'row', marginRight: 5, alignSelf: 'center' }}>
-                                {
-                                  `${this.distanceAway(foodChoice.coordinate)} mi`
-                                }
-                              </Text>
-                            </View>
-                            <Text
-                              style={{ textTransform: 'capitalize', marginRight: 5 }}
-                              ellipsizeMode='tail'
-                              numberOfLines={1}
-                            >
-                              {this.placeTypes(foodChoice.types)}
-                            </Text>
-                          </Card>
-                        </TouchableOpacity>
-                      );
-                    })
-                  }
-                </ScrollView>
-              )
-            }
-            <View
-              style={{ paddingTop: 5 }}
-            >
+      <View
+        key={'user-selection-view'}
+        style={{
+          flex: 1,
+          paddingHorizontal: 10,
+          justifyContent: 'space-between',
+        }}
+      >
+        {
+          loading ? (
+            <>
+              <Text></Text>
+              <LoadingSpinner />
+            </>
+          ) : (
+            <ScrollView>
+              <Text
+                style={{
+                  textAlign: 'center',
+                  alignSelf: 'center',
+                  marginTop: 5,
+                  marginBottom: 10,
+                  fontWeight: '600',
+                  fontSize: 30,
+                  fontWeight: 'normal',
+                  width: ScreenWidth - 40,
+                  color: isUserChoices ? ThemeColors.text : 'black'
+                }}
+                ellipsizeMode='tail'
+                numberOfLines={1}
+              >
+                {userDisplayName}
+              </Text>
+              <View style={{ paddingBottom: 3, paddingLeft: 12 }}>
+                <Text style={{ fontSize: 10 }}>**Select Card to see the place details</Text>
+                {
+                  isUserChoices &&
+                  <Text style={{ fontSize: 10 }}>**Hold down to delete</Text>
+                }
+              </View>
               {
-                isUserChoices && (
-                  <Button
-                    title="Clear Selections"
-                    raised
-                    titleStyle={{ color: ThemeColors.text, fontWeight: 'bold', fontSize: 26 }}
-                    buttonStyle={{ backgroundColor: 'white' }}
-                    containerStyle={{ marginBottom: 10 }}
-                    icon={{
-                      name: 'remove-circle',
-                      type: 'material-icons',
-                      color: ThemeColors.text
-                    }}
-                    onPress={this.clearSelections}
-                  />
-                )
+                selectedFoodChoices?.data?.selections?.map((foodChoice, i) => {
+                  return (
+                    <TouchableOpacity
+                      onLongPress={() => isUserChoices && this.removeFoodChoice(foodChoice)}
+                      onPress={() => this.props.navigation.navigate("PlaceDetails", { foodChoice, finalDecision: false })}
+                      key={'food-choice-' + i}
+                      containerStyle={{ marginHorizontal: -5 }}
+                    >
+                      <Card
+                        containerStyle={{
+                          elevation: 6,
+                          height: 80,
+                          marginBottom: 10,
+                          marginTop: 0,
+                          marginHorizontal: 10,
+                          paddingTop: 10,
+                          justifyContent: 'center'
+                        }}
+                      >
+                        <Card.Title
+                          style={{ fontSize: 18, textAlign: 'left', marginBottom: 0 }}
+                          ellipsizeMode='tail'
+                          numberOfLines={1}
+                        >
+                          {foodChoice.name}
+                        </Card.Title>
+                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                          <Text style={{ marginRight: 5, alignSelf: 'center' }}>{foodChoice.rating}</Text>
+                          <View style={{ flexDirection: 'row', marginRight: 5, alignSelf: 'center' }}>
+                            {
+                              this.stars(foodChoice?.rating)
+                            }
+                          </View>
+                          <Text style={{ alignSelf: 'center', marginRight: 5 }}>{this.totalRatings(foodChoice.userRatingsTotal)}</Text>
+                          <Icon
+                            name="circle"
+                            type="font-awesome"
+                            size={5}
+                            color='#333'
+                            style={{ alignSelf: 'center', marginRight: 5 }}
+                          />
+                          <Text style={{ flexDirection: 'row', marginRight: 5, alignSelf: 'center' }}>
+                            {
+                              this.priceLevel(foodChoice.priceLevel)
+                            }
+                          </Text>
+                          <Icon
+                            name="circle"
+                            type="font-awesome"
+                            size={5}
+                            color='#333'
+                            style={{ alignSelf: 'center', marginRight: 5 }}
+                          />
+                          <Text style={{ flexDirection: 'row', marginRight: 5, alignSelf: 'center' }}>
+                            {
+                              `${this.distanceAway(foodChoice.coordinate)} mi`
+                            }
+                          </Text>
+                        </View>
+                        <Text
+                          style={{ textTransform: 'capitalize', marginRight: 5 }}
+                          ellipsizeMode='tail'
+                          numberOfLines={1}
+                        >
+                          {this.placeTypes(foodChoice.types)}
+                        </Text>
+                      </Card>
+                    </TouchableOpacity>
+                  );
+                })
               }
+            </ScrollView>
+          )
+        }
+        <View
+          style={{ paddingTop: 5 }}
+        >
+          {
+            isUserChoices && (
               <Button
-                title="Back to Lobby"
+                title="Clear Selections"
                 raised
-                titleStyle={{ color: 'white', fontWeight: 'bold', fontSize: 26 }}
-                buttonStyle={{ backgroundColor: ThemeColors.text }}
+                titleStyle={{ color: ThemeColors.text, fontWeight: 'bold', fontSize: 26 }}
+                buttonStyle={{ backgroundColor: 'white' }}
                 containerStyle={{ marginBottom: 10 }}
-                onPress={() => this.props.navigation.navigate('LobbyView', { lobbyRef: lobbyData.ref })}
+                icon={{
+                  name: 'remove-circle',
+                  type: 'material-icons',
+                  color: ThemeColors.text
+                }}
+                onPress={this.clearSelections}
               />
-            </View>
-          </View>
-        )}
-      </HeaderHeightContext.Consumer>
+            )
+          }
+          <Button
+            title="Back to Lobby"
+            raised
+            titleStyle={{ color: 'white', fontWeight: 'bold', fontSize: 26 }}
+            buttonStyle={{ backgroundColor: ThemeColors.text }}
+            containerStyle={{ marginBottom: 10 }}
+            onPress={() => this.props.navigation.navigate('LobbyView', { lobbyRef: lobbyData.ref })}
+          />
+        </View>
+      </View>
     )
   }
 }

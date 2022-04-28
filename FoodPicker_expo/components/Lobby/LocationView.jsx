@@ -290,13 +290,11 @@ class LocationView extends Component {
             (
               <View style={{ flexDirection: "row", alignSelf: 'stretch' }}>
                 {
-                  !Constants.platform.android && (
-                    <Button
-                      icon={<Icon name="my-location" type="MaterialIcons" />}
-                      buttonStyle={{ backgroundColor: 'transparent' }}
-                      onPress={this.getUsersLocation}
-                    />
-                  )
+                  <Button
+                    icon={<Icon name="my-location" type="MaterialIcons" />}
+                    buttonStyle={{ backgroundColor: 'transparent' }}
+                    onPress={this.getUsersLocation}
+                  />
                 }
                 <ScrollView
                   keyboardShouldPersistTaps='always'

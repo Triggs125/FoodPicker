@@ -15,14 +15,9 @@ class AccountEdit extends Component {
   constructor(props) {
     super(props);
 
-    const offset = Constants.platform.android ? 50 : 20;
-    const adBannerHeight = StatusBar.currentHeight + 60;
-    const screenHeight = Dimensions.get('screen').height - offset - adBannerHeight;
-
     this.state = {
       loadingData: true,
       updatingData: false,
-      screenHeight: screenHeight,
       firstNameText: "",
       lastNameText: "",
       firstNameError: false,
@@ -211,141 +206,138 @@ class AccountEdit extends Component {
       firstNameText, lastNameText,
       firstNameError, lastNameError,
       emailAddressText,
-      screenHeight,
       loadingData,
       updatingData,
       error,
     } = this.state;
 
     return (
-      <HeaderHeightContext.Consumer>
-        {headerHeight => (
-          <View style={{ height: screenHeight - headerHeight, justifyContent: 'space-between' }}>
-            {this.removeAccountOverlay()}
-            <View>
-              <Text style={{ textAlign: 'center', color: ThemeColors.text }}>
-                { error && "Error loading or updating data. Please try again or contact support." }
-              </Text>
-              <Input
-                placeholder="First Name"
-                textContentType="name"
-                label="First Name *"
-                labelStyle={{ color: ThemeColors.text }}
-                leftIcon={
-                  <Icon
-                    name='user'
-                    type='font-awesome'
-                    iconStyle={{
-                      fontSize: 18,
-                      marginLeft: 2,
-                      marginRight: 3,
-                    }}
-                  />
-                }
-                value={firstNameText}
-                inputStyle={{ fontSize: 20 }}
-                containerStyle={{
-                  marginTop: 15
-                }}
-                errorMessage={firstNameError ? "Please enter a valid first name" : ""}
-                onChangeText={(text) => this.setState({ firstNameText: text })}
-              />
-              <Input
-                placeholder="Last Name"
-                textContentType="name"
-                label="Last Name"
-                labelStyle={{ color: ThemeColors.text }}
-                value={lastNameText}
-                leftIcon={
-                  <Icon
-                    name='user'
-                    type='font-awesome'
-                    iconStyle={{
-                      fontSize: 18,
-                      marginLeft: 2,
-                      marginRight: 3,
-                    }}
-                  />
-                }
-                inputStyle={{ fontSize: 20 }}
-                errorMessage={lastNameError ? "Please enter a valid last name" : ""}
-                onChangeText={(text) => this.setState({ lastNameText: text })}
-              />
-              <Input
-                placeholder="Email Address"
-                disabled
-                textContentType="name"
-                label="Email Address"
-                labelStyle={{ color: ThemeColors.text }}
-                value={emailAddressText}
-                leftIcon={
-                  <Icon
-                    name='envelope'
-                    type='font-awesome'
-                    iconStyle={{
-                      fontSize: 18,
-                      marginLeft: 2,
-                      marginRight: 3,
-                    }}
-                  />
-                }
-                inputStyle={{ fontSize: 20 }}
-              />
-              <Button
-                title="Delete Account"
-                titleStyle={{
-                  color: ThemeColors.text,
-                  fontSize: 16,
-                }}
-                type="clear"
-                icon={
-                  <Icon
-                    name="warning"
-                    type="font-awesome"
-                    color={ThemeColors.text}
-                    style={{
-                      paddingRight: 10,
-                    }}
-                    size={20}
-                  />
-                }
-                containerStyle={{ marginTop: 20 }}
-                onPress={() => {
-                  this.setState({ removeAccountOverlayShowing: true });
+      <View style={{ flex: 1, justifyContent: 'space-between' }}>
+        {this.removeAccountOverlay()}
+        <View>
+          <Text style={{ textAlign: 'center', color: ThemeColors.text }}>
+            {error && "Error loading or updating data. Please try again or contact support."}
+          </Text>
+          <Input
+            placeholder="First Name"
+            textContentType="name"
+            label="First Name *"
+            labelStyle={{ color: ThemeColors.text }}
+            leftIcon={
+              <Icon
+                name='user'
+                type='font-awesome'
+                iconStyle={{
+                  fontSize: 18,
+                  marginLeft: 2,
+                  marginRight: 3,
                 }}
               />
-            </View>
-            <View style={{ marginBottom: 15, marginHorizontal: 10 }}>
-              <Button
-                title="Update Account"
-                raised
-                disabled={loadingData}
-                loading={updatingData}
-                icon={{
-                  name: 'user-plus',
-                  type: 'font-awesome',
-                  color: 'white',
-                  marginRight: 8
+            }
+            value={firstNameText}
+            inputStyle={{ fontSize: 20 }}
+            containerStyle={{
+              marginTop: 15
+            }}
+            errorMessage={firstNameError ? "Please enter a valid first name" : ""}
+            onChangeText={(text) => this.setState({ firstNameText: text.replace(/\s/g, '')
+          
+          })}
+          />
+          <Input
+            placeholder="Last Name"
+            textContentType="name"
+            label="Last Name"
+            labelStyle={{ color: ThemeColors.text }}
+            value={lastNameText}
+            leftIcon={
+              <Icon
+                name='user'
+                type='font-awesome'
+                iconStyle={{
+                  fontSize: 18,
+                  marginLeft: 2,
+                  marginRight: 3,
                 }}
-                titleStyle={{ fontWeight: '500', fontSize: 22 }}
-                buttonStyle={{
-                  backgroundColor: '#E54040',
-                  borderColor: 'transparent',
-                  borderWidth: 0,
-                  height: 60,
-                }}
-                containerStyle={{
-                  width: '100%',
-                  alignSelf: 'center',
-                  marginTop: 0,
-                  overflow: 'visible',
-                }}
-                onPress={this.updateAccount}
               />
-            </View>
-          </View>
-        )}
-      </HeaderHeightContext.Consumer>
+            }
+            inputStyle={{ fontSize: 20 }}
+            errorMessage={lastNameError ? "Please enter a valid last name" : ""}
+            onChangeText={(text) => this.setState({ lastNameText: text.replace(/\s/g, '') })}
+          />
+          <Input
+            placeholder="Email Address"
+            disabled
+            textContentType="name"
+            label="Email Address"
+            labelStyle={{ color: ThemeColors.text }}
+            value={emailAddressText}
+            leftIcon={
+              <Icon
+                name='envelope'
+                type='font-awesome'
+                iconStyle={{
+                  fontSize: 18,
+                  marginLeft: 2,
+                  marginRight: 3,
+                }}
+              />
+            }
+            inputStyle={{ fontSize: 20 }}
+          />
+          <Button
+            title="Delete Account"
+            titleStyle={{
+              color: ThemeColors.text,
+              fontSize: 16,
+            }}
+            type="clear"
+            icon={
+              <Icon
+                name="warning"
+                type="font-awesome"
+                color={ThemeColors.text}
+                style={{
+                  paddingRight: 10,
+                }}
+                size={20}
+              />
+            }
+            containerStyle={{ marginTop: 20 }}
+            onPress={() => {
+              this.setState({ removeAccountOverlayShowing: true });
+            }}
+          />
+        </View>
+        <View style={{ marginBottom: 15, marginHorizontal: 10 }}>
+          <Button
+            title="Update Account"
+            raised
+            disabled={loadingData}
+            loading={updatingData}
+            icon={{
+              name: 'user-plus',
+              type: 'font-awesome',
+              color: 'white',
+              marginRight: 8
+            }}
+            titleStyle={{ fontWeight: '500', fontSize: 22 }}
+            buttonStyle={{
+              backgroundColor: '#E54040',
+              borderColor: 'transparent',
+              borderWidth: 0,
+              height: 60,
+            }}
+            containerStyle={{
+              width: '100%',
+              alignSelf: 'center',
+              marginTop: 0,
+              overflow: 'visible',
+            }}
+            onPress={this.updateAccount}
+          />
+        </View>
+      </View>
     );
   }
 }

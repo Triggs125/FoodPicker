@@ -1,11 +1,10 @@
 import * as Facebook from 'expo-facebook';
 import { useState } from 'react';
-import { Button, Overlay, Text } from 'react-native-elements';
+import { Button } from 'react-native-elements';
 import * as firebase from 'firebase/auth';
 import { AddUserToDB, GetUserFromDB } from './firebase';
 import * as Analytics from 'expo-firebase-analytics';
-import { ScreenWidth } from 'react-native-elements/dist/helpers';
-import ThemeColors from '../../assets/ThemeColors';
+import ErrorOverlay from './ErrorOverlay';
 
 export default function FacebookLoginButton(props) {
   const [loading, setLoading] = useState(false);
@@ -32,7 +31,7 @@ export default function FacebookLoginButton(props) {
           const credential = firebase.FacebookAuthProvider.credential(userObject.token);
           firebase.signInWithCredential(props.auth, credential)
             .then(async user => {
-              console.log("Logged in successfully", user);
+              console.log("Logged into Facebook successfully", user);
               const dbUser = await GetUserFromDB(props.db, user.user.uid);
               if (!dbUser) {
                 AddUserToDB(props.db, user.user, "", "", user.user.displayName, user.providerId)
@@ -86,54 +85,17 @@ export default function FacebookLoginButton(props) {
     });
   }
 
-  function errorOverlay() {
-    return (
-      <Overlay
-        isVisible={error}
-        overlayStyle={{ width: ScreenWidth - 20, borderRadius: 10 }}
-        onBackdropPress={() => {
-          setError(false);
-          setErrorMessage("");
-          setErrorMessageShowing(false);
-        }}
-      >
-        <Button
-          type='clear'
-          title="Error logging in with Facebook. Please try again or contact support."
-          titleStyle={{
-            color: 'black'
-          }}
-          icon={{
-            name: errorMessageShowing ? "caret-up" : "caret-down",
-            type: "font-awesome",
-            color: 'black',
-            fontSize: 18
-          }}
-          iconRight
-          onPress={() => setErrorMessageShowing(!errorMessageShowing)}
-        />
-        {
-          errorMessageShowing && (
-            <Text>{errorMessage}</Text>
-          )
-        }
-        <Button
-          title="Continue"
-          type="clear"
-          titleStyle={{ color: ThemeColors.text, fontSize: 24 }}
-          onPress={() => {
-            setError(false);
-            setErrorMessage("");
-            setErrorMessageShowing(false);
-          }}
-        />
-      </Overlay>
-    )
-  }
-
   return (
     <>
-      {errorOverlay()}
+      <ErrorOverlay
+        buttonName="Facebook"
+        error={error}
+        setError={setError}
+        errorMessage={errorMessageShowing}
+        setErrorMessage={setErrorMessage}
+        errorMessageShowing={errorMessageShowing}
+        setErrorMessageShowing={setErrorMessageShowing}
+      />
       <Button
         raised
         loading={loading}

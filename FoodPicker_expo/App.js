@@ -1,6 +1,7 @@
 import 'react-native-gesture-handler';
 import React, { useState } from 'react';
-import { View, LogBox, SafeAreaView, StatusBar } from 'react-native';
+import { View, LogBox, SafeAreaView, StatusBar, Dimensions } from 'react-native';
+import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Button, Image } from 'react-native-elements';
 import { NavigationContainer, ThemeProvider } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
@@ -219,6 +220,7 @@ export default function App() {
   ) : (
     <ThemeProvider theme={themeProviderColors}>
       <UserColors.Provider value={{ userColors, setUserColors }}>
+      <SafeAreaProvider>
         <SafeAreaView
           style={{
             flex: 1,
@@ -250,9 +252,10 @@ export default function App() {
                 return {
                   headerStyle: {
                     height: 50,
-                    borderTopWidth: 1,
-                    borderTopColor: setOpacity(ThemeColors.text, 0.3)
+                    borderTopWidth: 0.5,
+                    borderTopColor: 'gray',
                   },
+                  headerStatusBarHeight: 0,
                   headerTitleStyle: { fontSize: 20 },
                   headerRight: () => (
                     <Button
@@ -396,6 +399,7 @@ export default function App() {
             </Stack.Navigator>
           </NavigationContainer>
         </SafeAreaView>
+          </SafeAreaProvider>
       </UserColors.Provider>
     </ThemeProvider>
   )

@@ -1,5 +1,5 @@
 import { Component } from 'react';
-import { View, Dimensions, KeyboardAvoidingView, StatusBar } from 'react-native';
+import { View, KeyboardAvoidingView, ScrollView } from 'react-native';
 import { Input, Text, Icon, Button, Switch } from 'react-native-elements';
 import PasswordValidator from 'password-validator';
 import isAlpha from 'validator/lib/isAlpha';
@@ -7,7 +7,6 @@ import isEmail from 'validator/lib/isEmail';
 // import SignInWithGoogle from '../Utils/SignInWithGoogle';
 import { AddUserToDB } from '../Utils/firebase';
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
-import Constants from 'expo-constants';
 import { HeaderHeightContext } from '@react-navigation/elements';
 import ThemeColors from '../../assets/ThemeColors';
 import * as Analytics from 'expo-firebase-analytics';
@@ -25,12 +24,7 @@ class CreateAccount extends Component {
       .has().digits(1, " at least 1 number")
       .has().not().spaces(0, " no spaces");
 
-    const offset = Constants.platform.android ? 48 : 10;
-    const adBannerHeight = StatusBar.currentHeight + 60;
-    const screenHeight = Dimensions.get('screen').height - offset - adBannerHeight;
-
     this.state = {
-      screenHeight,
       firstNameError: false,
       firstNameText: "",
       lastNameText: "",
@@ -96,11 +90,11 @@ class CreateAccount extends Component {
 
     // Email Validation
     const validEmailAddress = isEmail(emailAddressText);
-    
+
     // Password Validation
     const passwordFailures = passwordValidator.validate(passwordText, { list: true, details: true });
 
-    this.setState({ 
+    this.setState({
       passwordFailures: passwordFailures,
       firstNameError: !validFirstName,
       emailAddressError: !validEmailAddress,
@@ -112,8 +106,7 @@ class CreateAccount extends Component {
 
   render() {
     const {
-      screenHeight,
-      firstNameError, 
+      firstNameError,
       firstNameText,
       lastNameText,
       emailAddressError,
@@ -128,198 +121,182 @@ class CreateAccount extends Component {
     } = this.state;
 
     return (
-      <HeaderHeightContext.Consumer>
-        {headerHeight => (
-          <KeyboardAvoidingView style={{ height: screenHeight - headerHeight, justifyContent: 'space-between' }}>
-            <View>
-              <Input
-                placeholder="First Name"
-                textContentType="name"
-                label="First Name *"
-                labelStyle={{ color: ThemeColors.text }}
-                leftIcon={
-                  <Icon
-                    name='user'
-                    type='font-awesome'
-                    iconStyle={{
-                      ...styles.inputIcon,
-                      marginLeft: 2,
-                      marginRight: 3,
-                    }}
-                  />
-                }
-                value={firstNameText}
-                inputStyle={styles.inputStyle}
-                containerStyle={{
-                  marginTop: 15
+      <ScrollView contentContainerStyle={{ flex: 1, justifyContent: 'space-between' }}>
+        <View>
+          <Input
+            placeholder="First Name"
+            textContentType="name"
+            label="First Name *"
+            labelStyle={{ color: ThemeColors.text }}
+            leftIcon={
+              <Icon
+                name='user'
+                type='font-awesome'
+                iconStyle={{
+                  ...styles.inputIcon,
+                  marginLeft: 2,
+                  marginRight: 3,
                 }}
-                errorMessage={firstNameError ? "Please enter a valid first name" : ""}
-                onChangeText={(text) => this.setState({ firstNameText: text })}
               />
-              <Input
-                placeholder="Last Name"
-                textContentType="name"
-                label="Last Name"
-                labelStyle={{ color: ThemeColors.text }}
-                value={lastNameText}
-                leftIcon={
-                  <Icon
-                    name='user'
-                    type='font-awesome'
-                    iconStyle={{
-                      ...styles.inputIcon,
-                      marginLeft: 2,
-                      marginRight: 3,
-                    }}
-                  />
-                }
-                inputStyle={styles.inputStyle}
-                onChangeText={(text) => this.setState({ lastNameText: text })}
-              />
-              <Input
-                placeholder="Email Address"
-                textContentType="emailAddress"
-                label="Email Address *"
-                labelStyle={{ color: ThemeColors.text }}
-                autoCapitalize='none'
-                value={emailAddressText}
-                leftIcon={
-                  <Icon
-                    name='envelope'
-                    type='font-awesome'
-                    iconStyle={styles.inputIcon}
-                  />
-                }
-                inputStyle={styles.inputStyle}
-                errorMessage={emailAddressError ? "Please enter a valid email address" : emailExistsError ? "Email address already in use" : ""}
-                onChangeText={(text) => this.setState({ emailAddressText: text })}
-              />
-              <Input
-                placeholder="Password"
-                textContentType="password"
-                label="Password *"
-                labelStyle={{ color: ThemeColors.text }}
-                autoCapitalize="none"
-                secureTextEntry={!passwordShowing}
-                value={passwordText}
-                leftIcon={
-                  <Icon
-                    name='key'
-                    type='font-awesome-5'
-                    iconStyle={styles.inputIcon}
-                  />
-                }
-                rightIcon={
-                  <Icon
-                    name={passwordShowing ? 'eye-slash' : 'eye'}
-                    type='font-awesome'
-                    iconStyle={styles.inputIcon}
-                    onPress={() => this.setState({ passwordShowing: !passwordShowing })}
-                  />
-                }
-                inputStyle={styles.inputStyle}
-                containerStyle={{
-                  marginBottom: 5
+            }
+            value={firstNameText}
+            inputStyle={styles.inputStyle}
+            containerStyle={{
+              marginTop: 15
+            }}
+            errorMessage={firstNameError ? "Please enter a valid first name" : ""}
+            onChangeText={(text) => this.setState({ firstNameText: text.replace(/\s/g, '') })}
+          />
+          <Input
+            placeholder="Last Name"
+            textContentType="name"
+            label="Last Name"
+            labelStyle={{ color: ThemeColors.text }}
+            value={lastNameText}
+            leftIcon={
+              <Icon
+                name='user'
+                type='font-awesome'
+                iconStyle={{
+                  ...styles.inputIcon,
+                  marginLeft: 2,
+                  marginRight: 3,
                 }}
-                errorMessage={passwordFailures.length > 0 ?
-                    "Password requirements:" +
-                    passwordFailures.flatMap((failure) => {
-                      return failure.message;
-                    }) + "."
-                    : ""
-                }
-                onChangeText={(text) => this.setState({ passwordText: text })}
               />
-              <View>
-                <View
-                  style={{
-                    flexDirection: 'row',
-                    marginHorizontal: 10,
-                  }}
-                >
-                  <Switch
-                    value={oldEnoughValue}
-                    color={ThemeColors.button}
-                    onValueChange={(value) => this.setState({ oldEnoughValue: value, oldEnoughError: false })}
-                  />
-                  <Text style={{ marginLeft: 10, alignSelf: 'center', fontSize: 22 }}>Are you 13 or older?</Text>
-                </View>
-                <Text
-                  style={{ color: 'red', marginLeft: 15, fontSize: 12 }}
-                >
-                  {oldEnoughError && "You must be 13 years old or older to create an account."}
-                </Text>
-              </View>
-              {
-                (emailAddressError || emailExistsError || passwordFailures.length > 0 || firstNameError || oldEnoughError) && (
-                  <Text
-                    style={{
-                      color: "red",
-                      fontSize: 18,
-                      textAlign: 'center',
-                      marginTop: 10,
-                    }}
-                  >
-                    There are errors above. Please fix them before trying again.
-                  </Text>
-                )
-              }
-            </View>
-            <View style={{ marginHorizontal: 10 }}>
-              <Button
-                title="Create Account"
-                raised
-                loading={loading}
-                loadingStyle={{ paddingVertical: 10 }}
-                icon={{
-                  name: 'user-plus',
-                  type: 'font-awesome',
-                  color: 'white',
-                  marginRight: 8
-                }}
-                titleStyle={{ fontWeight: '500', fontSize: 22 }}
-                buttonStyle={{
-                  backgroundColor: '#E54040',
-                  borderColor: 'transparent',
-                  borderWidth: 0,
-                  height: 60,
-                }}
-                containerStyle={{
-                  width: '100%',
-                  alignSelf: 'center',
-                  marginTop: 0,
-                  overflow: 'visible'
-                }}
-                onPress={this.createAccount}
+            }
+            inputStyle={styles.inputStyle}
+            onChangeText={(text) => this.setState({ lastNameText: text.replace(/\s/g, '') })}
+          />
+          <Input
+            placeholder="Email Address"
+            textContentType="emailAddress"
+            label="Email Address *"
+            labelStyle={{ color: ThemeColors.text }}
+            autoCapitalize='none'
+            value={emailAddressText}
+            leftIcon={
+              <Icon
+                name='envelope'
+                type='font-awesome'
+                iconStyle={styles.inputIcon}
               />
-              <Button
-                title="Sign In"
-                type='clear'
-                titleStyle={{
-                  textAlign: 'center',
-                  fontSize: 20,
-                  marginTop: 10,
-                  marginBottom: 10,
-                  color: ThemeColors.text,
-                }}
-                onPress={() => this.props.navigation.navigate('Home')}
+            }
+            inputStyle={styles.inputStyle}
+            errorMessage={emailAddressError ? "Please enter a valid email address" : emailExistsError ? "Email address already in use" : ""}
+            onChangeText={(text) => this.setState({ emailAddressText: text.replace(/\s/g, '') })}
+          />
+          <Input
+            placeholder="Password"
+            textContentType="password"
+            label="Password *"
+            labelStyle={{ color: ThemeColors.text }}
+            autoCapitalize="none"
+            secureTextEntry={!passwordShowing}
+            value={passwordText}
+            leftIcon={
+              <Icon
+                name='key'
+                type='font-awesome-5'
+                iconStyle={styles.inputIcon}
               />
-            </View>
-            {/* <Text
+            }
+            rightIcon={
+              <Icon
+                name={passwordShowing ? 'eye-slash' : 'eye'}
+                type='font-awesome'
+                iconStyle={styles.inputIcon}
+                onPress={() => this.setState({ passwordShowing: !passwordShowing })}
+              />
+            }
+            inputStyle={styles.inputStyle}
+            containerStyle={{
+              marginBottom: 5
+            }}
+            errorMessage={passwordFailures.length > 0 ?
+              "Password requirements:" +
+              passwordFailures.flatMap((failure) => {
+                return failure.message;
+              }) + "."
+              : ""
+            }
+            onChangeText={(text) => this.setState({ passwordText: text.replace(/\s/g, '') })}
+          />
+          <View>
+            <View
               style={{
-                textAlign: 'center',
-                fontSize: 20,
-                marginTop: 30,
-                marginBottom: 40,
-                color: 'grey',
+                flexDirection: 'row',
+                marginHorizontal: 10,
               }}
             >
-              - OR -
+              <Switch
+                value={oldEnoughValue}
+                color={ThemeColors.button}
+                onValueChange={(value) => this.setState({ oldEnoughValue: value, oldEnoughError: false })}
+              />
+              <Text style={{ marginLeft: 10, alignSelf: 'center', fontSize: 22 }}>Are you 13 or older?</Text>
+            </View>
+            <Text
+              style={{ color: 'red', marginLeft: 15, fontSize: 12 }}
+            >
+              {oldEnoughError && "You must be 13 years old or older to create an account."}
             </Text>
-            <SignInWithGoogle auth={this.props.auth} /> */}
-          </KeyboardAvoidingView>
-        )}
-      </HeaderHeightContext.Consumer>
+          </View>
+          {
+            (emailAddressError || emailExistsError || passwordFailures.length > 0 || firstNameError || oldEnoughError) && (
+              <Text
+                style={{
+                  color: "red",
+                  fontSize: 18,
+                  textAlign: 'center',
+                  marginTop: 10,
+                }}
+              >
+                There are errors above. Please fix them before trying again.
+              </Text>
+            )
+          }
+        </View>
+        <View style={{ marginHorizontal: 10 }}>
+          <Button
+            title="Create Account"
+            raised
+            loading={loading}
+            loadingStyle={{ paddingVertical: 10 }}
+            icon={{
+              name: 'user-plus',
+              type: 'font-awesome',
+              color: 'white',
+              marginRight: 8
+            }}
+            titleStyle={{ fontWeight: '500', fontSize: 22 }}
+            buttonStyle={{
+              backgroundColor: '#E54040',
+              borderColor: 'transparent',
+              borderWidth: 0,
+              height: 60,
+            }}
+            containerStyle={{
+              width: '100%',
+              alignSelf: 'center',
+              marginTop: 0,
+              overflow: 'visible'
+            }}
+            onPress={this.createAccount}
+          />
+          <Button
+            title="Sign In"
+            type='clear'
+            titleStyle={{
+              textAlign: 'center',
+              fontSize: 20,
+              marginTop: 10,
+              marginBottom: 10,
+              color: ThemeColors.text,
+            }}
+            onPress={() => this.props.navigation.navigate('Home')}
+          />
+        </View>
+      </ScrollView>
     );
   }
 }
