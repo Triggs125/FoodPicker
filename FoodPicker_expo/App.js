@@ -210,7 +210,7 @@ export default function App() {
   const setOpacity = (hex, alpha) => `${hex}${Math.floor(alpha * 255).toString(16).padStart(2, 0)}`;
 
   if (Constants.platform.web) {
-    return (<Image source={'./assets/splash.png'} />)
+    return (<Image source={'./assets/bg-trans_text-red.png'} />)
   }
 
   return loading === true ? (

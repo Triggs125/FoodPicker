@@ -1,5 +1,5 @@
 import { Component } from "react";
-import { SafeAreaView, StyleSheet, View } from 'react-native';
+import { SafeAreaView, StyleSheet, View, Linking } from 'react-native';
 import Constants from 'expo-constants';
 import { Input, Button, Text, Icon, Overlay, Avatar } from 'react-native-elements';
 import { signInWithEmailAndPassword, signOut } from 'firebase/auth';
@@ -13,6 +13,7 @@ import * as Analytics from 'expo-firebase-analytics';
 import FacebookLoginButton from "./Utils/FacebookLoginButton";
 import LocationView from "./Lobby/LocationView";
 import AppleLoginButton from "./Utils/AppleLoginButton";
+import LocationHook from "./Utils/locationHook";
 
 class Home extends Component {
   constructor(props) {
@@ -378,13 +379,22 @@ class Home extends Component {
 
   getUserLocation() {
     return Location.requestForegroundPermissionsAsync()
-      .then(async ({ status }) => {
+      .then(async ({ status, canAskAgain }) => {
         if (status !== 'granted') {
           console.log(`User ${this.props.user.uid} did not grant access to their location.`);
-          return { error: 'This feature requires access to your location.' };
+
+          // Detect if you can request this permission again
+          if (!canAskAgain || status === "denied") {
+            /**
+             *   Code to open device setting then the user can manually grant the app
+             *  that permission
+             */
+            Linking.openSettings();
+            return { error: `Status: ${status} -- This feature requires access to your location.` };
+          }
         }
         Location.setGoogleApiKey(GOOGLE_MAPS_API_KEY);
-        const loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High })
+        const loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced })
           .then(loc => {
             const distance = this.state.distance || this.distances[2];
             const location = { longitude: loc.coords.longitude, latitude: loc.coords.latitude };
@@ -574,7 +584,7 @@ class Home extends Component {
                 textAlign: 'center',
                 fontSize: 20,
                 marginVertical: 0,
-                color: 'black',
+                color: 'gray',
                 fontWeight: 'normal'
               }}
               onPress={() => this.props.navigation.navigate('ForgotPassword')}

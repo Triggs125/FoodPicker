@@ -111,6 +111,9 @@ export default function FacebookLoginButton(props) {
           backgroundColor: '#4267B2',
           paddingVertical: 10
         }}
+        loadingStyle={{
+          paddingVertical: 4
+        }}
         containerStyle={{
           marginVertical: 5
         }}

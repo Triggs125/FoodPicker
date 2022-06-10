@@ -94,7 +94,8 @@ class UserSelections extends Component {
 
   clearSelections() {
     const { selectedFoodChoices } = this.state;
-    const { lobbyData, user } = this.props;
+    const { lobbyData } = this.props;
+    const { user } = this.props.route?.params;
     setDoc(selectedFoodChoices.ref, { selections: [] }, { merge: true })
       .then(() => {
         const usersReady = lobbyData.usersReady || [];
@@ -198,6 +199,7 @@ class UserSelections extends Component {
     const userDisplayName = user.displayName ? user.displayName : user.firstName + " " + user.lastName
 
     const isUserChoices = user.uid === this.props.user.uid;
+    const isHost = lobbyData?.host === this.props.user.uid;
 
     return (
       <View
@@ -319,7 +321,7 @@ class UserSelections extends Component {
           style={{ paddingTop: 5 }}
         >
           {
-            isUserChoices && (
+            (isUserChoices || isHost) && (
               <Button
                 title="Clear Selections"
                 raised

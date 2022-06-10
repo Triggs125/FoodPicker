@@ -1,7 +1,7 @@
 import { Component } from "react";
 import { Button, Icon, ListItem, Text, BottomSheet } from "react-native-elements";
 import * as Location from 'expo-location';
-import { KeyboardAvoidingView, View } from "react-native";
+import { View, Linking } from "react-native";
 import { GOOGLE_MAPS_API_KEY } from "../../config";
 import MapView, { Circle } from 'react-native-maps';
 import ThemeColors from "../../assets/ThemeColors";
@@ -72,13 +72,23 @@ class LocationView extends Component {
   getUsersLocation() {
     this.setState({ loading: true });
     Location.requestForegroundPermissionsAsync()
-      .then(({ status }) => {
+      .then(async ({ status, canAskAgain }) => {
         if (status !== 'granted') {
-          console.log(`User ${this.props.user.uid} did not grant access to their location.`);
-          return;
+          console.log(`Status: ${status} -- This feature requires access to your location.`);
+
+          // Detect if you can request this permission again
+          if (!canAskAgain || status === "denied") {
+            /**
+             *   Code to open device setting then the user can manually grant the app
+             *  that permission
+             */
+            Linking.openSettings();
+            this.setState({ loading: false })
+            return;
+          }
         }
         Location.setGoogleApiKey(GOOGLE_MAPS_API_KEY);
-        Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High })
+        Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced })
           .then(location => {
             Location.reverseGeocodeAsync({ latitude: location.coords.latitude, longitude: location.coords.longitude })
               .then(locationGeocodeAddress => {
@@ -310,6 +320,7 @@ class LocationView extends Component {
                       rankby: 'distance',
                     }}
                     debounce={200}
+                    
                     // requestUrl={{
                     //   useOnPlatform: 'web',
                     //   url: 'https://cors-anywhere.herokuapp.com/https://maps.googleapis.com/maps/api',

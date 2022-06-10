@@ -2,11 +2,11 @@
   "expo": {
     "name": "Food Picker",
     "slug": "FoodPicker",
-    "version": "1.3.2",
+    "version": "1.4.1",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/bg-red_text-white-ios.png",
     "splash": {
-      "image": "./assets/splash.png",
+      "image": "./assets/bg-trans_text-red.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
@@ -20,7 +20,7 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.driggs.foodpicker",
       "googleServicesFile": "./GoogleService-Info.plist",
-      "buildNumber": "5",
+      "buildNumber": "7",
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "This app uses your location to find restaurants around you and to set the location of your hosted lobby if you choose."
       },
@@ -29,15 +29,20 @@
     "android": {
       "package": "com.driggs.foodpicker",
       "googleServicesFile": "./google-services.json",
-      "versionCode": 6,
+      "versionCode": 10,
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#FFFFFF"
+        "foregroundImage": "./assets/bg-red_text-white-android.png",
+        "backgroundColor": "#E54040"
       },
-      "permissions": []
+      "config": {
+        "googleMaps": {
+          "apiKey": "AIzaSyABLEWTpgnHhloYv_JH301853XGEhVDpMc"
+        }
+      },
+      "permissions": ["ACCESS_FINE_LOCATION"]
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "favicon": "./assets/favicon2.png"
     },
     "facebookScheme": "fb1300932740403155",
     "facebookAppId": "1300932740403155",
