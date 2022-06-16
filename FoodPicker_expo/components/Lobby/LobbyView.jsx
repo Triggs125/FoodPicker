@@ -63,7 +63,9 @@ class LobbyView extends Component {
     const unsubscribeLobby = onSnapshot(lobbyRef, async (lobby) => {
       const { user, db } = this.props;
       if (user && lobby) {
-        this.setState({ loading: true });
+        if (this.state.lobbyData == {}) {
+          this.setState({ loading: true });
+        }
         const lobbyData = lobby.data();
         try {
           const isHost = lobbyData.host === user.uid;

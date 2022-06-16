@@ -31,7 +31,7 @@ class Home extends Component {
       emailAddressError: false,
       randomRestaurantError: false,
       randomRestaurantErrorDetails: '',
-      randomRestaurantErrorDetailsOpen: false,
+      randomRestaurantErrorDetailsOpen: true,
       randomRestaurantLoading: false,
       randomRestaurantOverlayOpen: false,
       randomRestaurantOverlayLoading: false,
@@ -379,19 +379,12 @@ class Home extends Component {
 
   getUserLocation() {
     return Location.requestForegroundPermissionsAsync()
-      .then(async ({ status, canAskAgain }) => {
+      .then(async ({ status }) => {
         if (status !== 'granted') {
           console.log(`User ${this.props.user.uid} did not grant access to their location.`);
-
-          // Detect if you can request this permission again
-          if (!canAskAgain || status === "denied") {
-            /**
-             *   Code to open device setting then the user can manually grant the app
-             *  that permission
-             */
-            Linking.openSettings();
-            return { error: `Status: ${status} -- This feature requires access to your location.` };
-          }
+          return {
+            error: `This feature requires access to your location. Please enable location permissions in your phone's settings.`
+          };
         }
         Location.setGoogleApiKey(GOOGLE_MAPS_API_KEY);
         const loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced })

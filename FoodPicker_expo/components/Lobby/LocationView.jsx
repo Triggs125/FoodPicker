@@ -1,5 +1,5 @@
 import { Component } from "react";
-import { Button, Icon, ListItem, Text, BottomSheet } from "react-native-elements";
+import { Button, Icon, ListItem, Text, BottomSheet, Overlay } from "react-native-elements";
 import * as Location from 'expo-location';
 import { View, Linking } from "react-native";
 import { GOOGLE_MAPS_API_KEY } from "../../config";
@@ -26,6 +26,8 @@ class LocationView extends Component {
       distanceChoicesOpen: false,
       locationSearchText: undefined,
       loading: false,
+      error: undefined,
+      errorDetailsOpen: true,
     }
 
     this.setPlaceData = this.setPlaceData.bind(this);
@@ -70,22 +72,13 @@ class LocationView extends Component {
   }
 
   getUsersLocation() {
-    this.setState({ loading: true });
+    this.setState({ loading: true, error: undefined });
     Location.requestForegroundPermissionsAsync()
-      .then(async ({ status, canAskAgain }) => {
+      .then(async ({ status }) => {
         if (status !== 'granted') {
-          console.log(`Status: ${status} -- This feature requires access to your location.`);
-
-          // Detect if you can request this permission again
-          if (!canAskAgain || status === "denied") {
-            /**
-             *   Code to open device setting then the user can manually grant the app
-             *  that permission
-             */
-            Linking.openSettings();
-            this.setState({ loading: false })
-            return;
-          }
+          console.log(`This feature requires access to your location.`);
+          this.setState({ loading: false, error: "This feature requires access to your location. Please enable location permissions in your phone's settings." })
+          return;
         }
         Location.setGoogleApiKey(GOOGLE_MAPS_API_KEY);
         Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced })
@@ -147,6 +140,65 @@ class LocationView extends Component {
       });
   }
 
+  errorOverlay() {
+    const { error, errorDetailsOpen } = this.state;
+    return (
+      <Overlay
+        isVisible={error != undefined}
+        overlayStyle={{ width: ScreenWidth - 20, borderRadius: 10 }}
+        onBackdropPress={() => {
+          this.setState({ error: undefined });
+        }}
+      >
+        <View
+          style={{ flexDirection: 'row', justifyContent: 'center', marginBottom: 10 }}
+        >
+          <Icon
+            name="warning"
+            type="font-awesome"
+            size={30}
+            color={ThemeColors.text}
+            style={{ flex: 1, justifyContent: 'center' }}
+          />
+          <Text
+            style={{ fontSize: 24, color: ThemeColors.text, marginLeft: 10 }}
+          >
+            Error setting the location
+          </Text>
+        </View>
+        <Button
+          type="clear"
+          title={<Text style={{ color: 'black' }}>Details: {!errorDetailsOpen && '...'}</Text>}
+          titleStyle={{ color: ThemeColors.button }}
+          iconRight
+          icon={
+            <Icon
+              name={errorDetailsOpen ? "caret-up" : "caret-down"}
+              type="font-awesome"
+              size={16}
+              style={{ marginLeft: 5 }}
+            />
+          }
+          onPress={() => this.setState({ errorDetailsOpen: !errorDetailsOpen })}
+        />
+        {
+          errorDetailsOpen && (
+            <Text style={{ textAlign: 'center' }}>{error}</Text>
+          )
+        }
+        <Button
+          title="Close"
+          type="clear"
+          titleStyle={{ color: ThemeColors.text, fontSize: 24 }}
+          containerStyle={{ marginTop: 10 }}
+          onPress={() => {
+            this.setState({ error: undefined });
+          }}
+        />
+      </Overlay>
+    )
+  }
+
   render() {
     const { 
       locationGeocodeAddress, location,
@@ -164,6 +216,7 @@ class LocationView extends Component {
     
     return (
       <View style={{ borderWidth: 1.5, borderColor: 'lightgray', borderRadius: 10, overflow: 'hidden', backgroundColor: 'white', marginVertical: 10 }}>
+        {this.errorOverlay()}
         <View style={{ flexDirection: 'column', justifyContent: 'center' }}>
           <View>
             <View style={{ flexDirection: 'row', justifyContent: 'flex-start', paddingLeft: 10 }}>
