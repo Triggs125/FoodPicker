@@ -1,15 +1,13 @@
 import { Component } from "react";
-import Constants from 'expo-constants';
 import { doc, onSnapshot, setDoc } from "firebase/firestore";
-import { View, Dimensions, StatusBar } from "react-native";
+import { View } from "react-native";
 import LoadingSpinner from '../LoadingSpinner';
-import { ScrollView, TouchableOpacity } from "react-native-gesture-handler";
-import { HeaderHeightContext } from '@react-navigation/elements';
-import { Text, Icon, Button, Card, Image } from 'react-native-elements';
-import { getDistance } from 'geolib';
+import { ScrollView } from "react-native-gesture-handler";
+import { Text, Icon, Button } from 'react-native-elements';
 import ThemeColors from "../../assets/ThemeColors";
 import { ScreenWidth } from "react-native-elements/dist/helpers";
 import * as Analytics from 'expo-firebase-analytics';
+import FoodChoiceCard from "./FoodChoiceCard";
 
 
 class UserSelections extends Component {
@@ -125,64 +123,6 @@ class UserSelections extends Component {
       });
   }
 
-  stars(rating) {
-    if (!rating && isNaN(rating)) return [];
-    const _rating = Math.round(rating * 2);
-    const fullStars = Math.floor(_rating / 2);
-    const halfStar = _rating % 2 !== 0;
-    const stars = [];
-
-    // Gets the number of full stars to display
-    for (let i = 0; i < fullStars; i++) {
-      stars.push(<Icon name="star" type="font-awesome" color='gold' size={18} />);
-    }
-
-    // Adds a half star if the rating decimal is .5 or above
-    if (halfStar) {
-      stars.push(<Icon name="star-half-full" type="font-awesome" color='gold' size={18} />);
-    }
-
-    for (let i = fullStars + halfStar; i < 5; i++) {
-      stars.push(<Icon name="star-o" type="font-awesome" color='gold' size={18} />)
-    }
-
-    return stars;
-  }
-
-  totalRatings(num) {
-    if (!num || isNaN(num)) return;
-    return `(${Math.abs(num) > 999 ? Math.sign(num) * ((Math.abs(num) / 1000).toFixed(1)) + 'k' : Math.sign(num) * Math.abs(num)})`;
-  }
-
-  priceLevel(priceLevel) {
-    let price = "";
-    for (let i = 0; i < priceLevel; i++) {
-      price += '$';
-    }
-    return price;
-  }
-
-  distanceAway(coords) {
-    const { lobbyData } = this.props;
-    const lobbyCoords = { latitude: lobbyData.location.latitude, longitude: lobbyData.location.longitude };
-    return Math.round((getDistance(lobbyCoords, coords) / 1609.344) * 10) / 10;
-  }
-
-  placeTypes(types) {
-    let typeNames = "";
-    if (types.length === 0) return typeNames;
-    for (let i = 0; i < types.length; i++) {
-      const type = types[i];
-      if (i >= 4) break;
-      if (type.toLowerCase() === "restaurant") {
-        typeNames += " " + type.replace('_', ' ') + ",";
-        break;
-      }
-      typeNames += " " + type.replace('_', ' ') + ",";
-    }
-    return typeNames.substring(1, typeNames.length - 1);
-  }
-
   render() {
     const {
       selectedFoodChoices,
@@ -206,7 +146,7 @@ class UserSelections extends Component {
         key={'user-selection-view'}
         style={{
           flex: 1,
-          paddingHorizontal: 10,
+          paddingHorizontal: 5,
           justifyContent: 'space-between',
         }}
       >
@@ -223,7 +163,7 @@ class UserSelections extends Component {
                   textAlign: 'center',
                   alignSelf: 'center',
                   marginTop: 5,
-                  marginBottom: 10,
+                  marginBottom: 5,
                   fontWeight: '600',
                   fontSize: 30,
                   fontWeight: 'normal',
@@ -235,110 +175,31 @@ class UserSelections extends Component {
               >
                 {userDisplayName}
               </Text>
-              <View style={{ paddingBottom: 3, paddingLeft: 12 }}>
+              {/* <View style={{ paddingBottom: 3, paddingLeft: 12 }}>
                 <Text style={{ fontSize: 10 }}>**Select Card to see the place's details</Text>
                 {
                   (isUserChoices || isHost) &&
                   <Text style={{ fontSize: 10 }}>**Hold down selection to delete it</Text>
                 }
-              </View>
+              </View> */}
               {
                 selectedFoodChoices?.data?.selections?.map((foodChoice, i) => {
                   return (
-                    <TouchableOpacity
-                      onLongPress={() => isUserChoices && this.removeFoodChoice(foodChoice)}
-                      onPress={() => this.props.navigation.navigate("PlaceDetails", { foodChoice, finalDecision: false })}
-                      key={'food-choice-' + i}
-                      containerStyle={{ marginHorizontal: 5 }}
-                      style={{ marginHorizontal: -5 }}
-                    >
-                      <Card
-                        containerStyle={{
-                          elevation: 6,
-                          height: 80,
-                          marginBottom: 10,
-                          marginTop: 0,
-                          marginHorizontal: 5,
-                          paddingRight: 0,
-                          paddingLeft: 7,
-                          justifyContent: 'center',
-                          borderRadius: 5
-                        }}
-                      >
-                        <View style={{ display: 'flex', flexDirection: 'row' }}>
-                          <Image
-                            source={{ uri: foodChoice.photos[0] }}
-                            style={{
-                              height: 65,
-                              width: 65,
-                              marginRight: 10,
-                              borderRadius: 5
-                            }}
-                          />
-                          <View style={{ width: '76%', alignSelf: 'center' }}>
-                            <Card.Title
-                              style={{
-                                fontSize: 18,
-                                textAlign: 'left',
-                                marginBottom: 0
-                              }}
-                              ellipsizeMode='tail'
-                              numberOfLines={1}
-                            >
-                              {foodChoice.name}
-                            </Card.Title>
-                            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                              <Text style={{ marginRight: 5, alignSelf: 'center' }}>{foodChoice.rating}</Text>
-                              <View style={{ flexDirection: 'row', marginRight: 5, alignSelf: 'center' }}>
-                                {
-                                  this.stars(foodChoice?.rating)
-                                }
-                              </View>
-                              <Text style={{ alignSelf: 'center', marginRight: 5 }}>{this.totalRatings(foodChoice.userRatingsTotal)}</Text>
-                              <Icon
-                                name="circle"
-                                type="font-awesome"
-                                size={5}
-                                color='#333'
-                                style={{ alignSelf: 'center', marginRight: 5 }}
-                              />
-                              <Text style={{ flexDirection: 'row', marginRight: 5, alignSelf: 'center' }}>
-                                {
-                                  this.priceLevel(foodChoice.priceLevel)
-                                }
-                              </Text>
-                              <Icon
-                                name="circle"
-                                type="font-awesome"
-                                size={5}
-                                color='#333'
-                                style={{ alignSelf: 'center', marginRight: 5 }}
-                              />
-                              <Text style={{ flexDirection: 'row', marginRight: 5, alignSelf: 'center' }}>
-                                {
-                                  `${this.distanceAway(foodChoice.coordinate)} mi`
-                                }
-                              </Text>
-                            </View>
-                            <Text
-                              style={{ textTransform: 'capitalize', marginRight: 5 }}
-                              ellipsizeMode='tail'
-                              numberOfLines={1}
-                            >
-                              {this.placeTypes(foodChoice.types)}
-                            </Text>
-                          </View>
-                        </View>
-                      </Card>
-                    </TouchableOpacity>
-                  );
+                    <FoodChoiceCard
+                      i={i}
+                      foodChoice={foodChoice}
+                      navigation={this.props.navigation}
+                      lobbyData={this.props.lobbyData}
+                      deleteFunction={() => (isUserChoices || isHost) && this.removeFoodChoice(foodChoice)}
+                    />
+                  )
                 })
               }
             </ScrollView>
           )
         }
         <View
-          style={{ paddingTop: 5 }}
+          style={{ paddingTop: 5, paddingHorizontal: 5 }}
         >
           {
             (isUserChoices || isHost) && (
@@ -346,7 +207,7 @@ class UserSelections extends Component {
                 title="Clear Selections"
                 raised
                 titleStyle={{ color: ThemeColors.text, fontWeight: 'bold', fontSize: 26 }}
-                buttonStyle={{ backgroundColor: 'white' }}
+                buttonStyle={{ backgroundColor: 'white', borderWidth: 0.5, borderColor: 'lightgray' }}
                 containerStyle={{ marginBottom: 10 }}
                 icon={{
                   name: 'remove-circle',
@@ -358,7 +219,7 @@ class UserSelections extends Component {
             )
           }
           <Button
-            title="Back to Lobby"
+            title="Go to Lobby"
             raised
             titleStyle={{ color: 'white', fontWeight: 'bold', fontSize: 26 }}
             buttonStyle={{ backgroundColor: ThemeColors.text }}

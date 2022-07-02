@@ -46,8 +46,9 @@ class AccountEdit extends Component {
       .then(docs => {
         const user = docs.docs[0];
         this.setState({
-          firstNameText: user.data().firstName,
+          firstNameText: user.data().firstName ? user.data().firstName : user.displayName,
           lastNameText: user.data().lastName,
+          displayName: user.data().displayName,
           emailAddressText: user.data().email,
           loadingData: false,
           error: false,
@@ -65,27 +66,32 @@ class AccountEdit extends Component {
 
   updateAccount() {
     const { firstNameText, lastNameText, userRef } = this.state;
-    if (this.validForm()) {
-      console.log("Updating data");
+    if(this.validForm()) {
       this.setState({ updatingData: true });
-      const displayName = `${this.state.firstNameText}${this.state.lastNameText !== "" ? " " + this.state.lastNameText : ""}`;
-      setDoc(userRef, { firstName: firstNameText, lastName: lastNameText }, { merge: true })
+      const displayName = `${firstNameText.trim()}${lastNameText.trim() !== "" ? " " + lastNameText.trim() : ""}`;
+      setDoc(userRef, { firstName: firstNameText.trim(), lastName: lastNameText.trim() }, { merge: true })
         .then(() => {
           updateProfile(this.props.user, { displayName: displayName })
             .then(() => {
               this.setState({ updatingData: false, loading: false, error: false });
-              const updatedUser = { ...this.props.user, firstName: firstNameText, lastName: lastNameText };
-              console.log("Setting user", updatedUser);
+              const updatedUser = { ...this.props.user, firstName: firstNameText.trim(), lastName: lastNameText.trim() };
               this.props.setUser(updatedUser);
               this.props.navigation.navigate("Home");
               Analytics.logEvent("event", {
                 description: "AccountEdit::updateAccount::updateProfile"
               });
+            })
+            .catch(err => {
+              Analytics.logEvent("exception", {
+                description: "AccountEdit::updateAccount::" + err.message
+              });
+              this.setState({ error: true, loading: false });
+              console.error("AccountEdit::updateAccount", err);
             });
         })
         .catch(err => {
           Analytics.logEvent("exception", {
-            description: "AccountEdit::updateAccount"
+            description: "AccountEdit::updateAccount::" + err.message
           });
           this.setState({ error: true, loading: false });
           console.error("AccountEdit::updateAccount", err);
@@ -97,12 +103,12 @@ class AccountEdit extends Component {
     const { firstNameText, lastNameText } = this.state;
 
     // First Name Validation
-    const validFirstName = isAlpha(firstNameText);
+    const validFirstName = isAlpha((firstNameText || "").replace(/\s/g, ''));
 
     // Last Name Validation
     let validLastName = true;
     if (lastNameText && lastNameText.trim() !== "") {
-      if (!isAlpha(lastNameText)) {
+      if (!isAlpha((lastNameText || "").replace(/\s/g, ''))) {
         validLastName = false;
       }
     }
@@ -129,7 +135,7 @@ class AccountEdit extends Component {
           })
           .catch(err => {
             Analytics.logEvent("exception", {
-              description: "AccountEdit::removeAccount::deleteUser"
+              description: "AccountEdit::removeAccount::deleteUser::" + err.message
             });
             console.error("AccountEdit::removeAccount::deleteUser", err);
             this.setState({
@@ -140,7 +146,7 @@ class AccountEdit extends Component {
       })
       .catch(err => {
         Analytics.logEvent("exception", {
-          description: "AccountEdit::removeAccount::deleteDoc"
+          description: "AccountEdit::removeAccount::deleteDoc::" + err.message
         });
         console.error("AccountEdit::removeAccount::deleteDoc", err);
         this.setState({
@@ -240,9 +246,7 @@ class AccountEdit extends Component {
               marginTop: 15
             }}
             errorMessage={firstNameError ? "Please enter a valid first name" : ""}
-            onChangeText={(text) => this.setState({ firstNameText: text.replace(/\s/g, '')
-          
-          })}
+            onChangeText={(text) => this.setState({ firstNameText: text })}
           />
           <Input
             placeholder="Last Name"
@@ -263,7 +267,7 @@ class AccountEdit extends Component {
             }
             inputStyle={{ fontSize: 20 }}
             errorMessage={lastNameError ? "Please enter a valid last name" : ""}
-            onChangeText={(text) => this.setState({ lastNameText: text.replace(/\s/g, '') })}
+            onChangeText={(text) => this.setState({ lastNameText: text })}
           />
           <Input
             placeholder="Email Address"
@@ -309,7 +313,7 @@ class AccountEdit extends Component {
             }}
           />
         </View>
-        <View style={{ marginBottom: 15, marginHorizontal: 10 }}>
+        <View style={{ marginBottom: 10, marginHorizontal: 10 }}>
           <Button
             title="Update Account"
             raised
@@ -326,7 +330,7 @@ class AccountEdit extends Component {
               backgroundColor: '#E54040',
               borderColor: 'transparent',
               borderWidth: 0,
-              height: 60,
+              height: 50,
             }}
             containerStyle={{
               width: '100%',

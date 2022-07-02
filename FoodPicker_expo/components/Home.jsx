@@ -100,6 +100,30 @@ class Home extends Component {
     this.setState(data);
   }
 
+  //This function takes in latitude and longitude of two locations
+  // and returns the distance between them as the crow flies (in meters)
+  calcCrow(coords1, coords2) {
+    // var R = 6.371; // km
+    var R = 6371000; // m
+    console.log("coords1", coords1)
+    console.log("coords2", coords2)
+    var dLat = this.toRad(coords2.latitude - coords1.latitude);
+    var dLon = this.toRad(coords2.longitude - coords1.longitude);
+    var lat1 = this.toRad(coords1.latitude);
+    var lat2 = this.toRad(coords2.longitude);
+
+    var a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.sin(dLon / 2) * Math.sin(dLon / 2) * Math.cos(lat1) * Math.cos(lat2); 
+    var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)); 
+    var d = R * c;
+    return d;
+  }
+
+  // Converts numeric degrees to radians
+  toRad(Value) {
+      return Value * Math.PI / 180;
+  }
+
   getRandomRestaurant() {
     Analytics.logEvent("button_click", {
       name: "Get Random Restaurant"
@@ -117,8 +141,27 @@ class Home extends Component {
           return;
         }
         
+        // TODO: check if the location has changed enough to get the restaurants again. Otherwise, get a random restaurant from the previous list
+        const { lastLocation } = this.state;
+        const { randomRestaurantList, setRandomRestaurantList } = this.props;
+        const locationDif = lastLocation && this.calcCrow(location, lastLocation);
+        if (randomRestaurantList.length > 0 && locationDif < 200) {
+          const randomRestaurantIndex = Math.round((Math.random() * 100)) % randomRestaurantList.length;
+          const randomFoodChoice = randomRestaurantList[randomRestaurantIndex];
+          this.props.navigation.navigate('PlaceDetails', { foodChoice: randomFoodChoice, finalDecision: true });
+          this.setState({
+            randomRestaurantError: false,
+            randomRestaurantErrorDetails: '',
+            randomRestaurantLoading: false
+          });
+          return;
+        }
+
+        this.setState({ lastLocation: location });
+
         const latitude = location.latitude;
         const longitude = location.longitude;
+
         const radius = Math.round(distance * 1609.344);
         const types = 'restaurant';
         let url = 'https://maps.googleapis.com/maps/api/place/nearbysearch/json?'
@@ -166,8 +209,9 @@ class Home extends Component {
                   this.setState({
                     randomRestaurantError: true,
                     randomRestaurantErrorDetails: err.message,
-                    randomRestaurantLoading: false,
+                    randomRestaurantLoading: false
                   });
+                  setRandomRestaurantList(places);
                 });
             }
     
@@ -177,8 +221,9 @@ class Home extends Component {
             this.setState({
               randomRestaurantError: false,
               randomRestaurantErrorDetails: '',
-              randomRestaurantLoading: false,
+              randomRestaurantLoading: false
             });
+            setRandomRestaurantList(places);
           })
           .catch(err => {
             Analytics.logEvent("exception", {
@@ -189,8 +234,9 @@ class Home extends Component {
             this.setState({
               randomRestaurantError: true,
               randomRestaurantErrorDetails: err.message,
-              randomRestaurantLoading: false,
+              randomRestaurantLoading: false
             });
+            setRandomRestaurantList(places);
           });
       })
       .catch(err => {
@@ -201,7 +247,7 @@ class Home extends Component {
         this.setState({
           randomRestaurantError: true,
           randomRestaurantErrorDetails: err.message,
-          randomRestaurantLoading: false,
+          randomRestaurantLoading: false
         });
       })
   }
@@ -437,17 +483,39 @@ class Home extends Component {
               <Icon name="user-circle" type="font-awesome" iconStyle={{ fontSize: 130 }} />
             )
           }
-          <Text
-            style={{ textAlign: 'center', fontSize: 30, marginTop: 10, width: ScreenWidth - 50, alignSelf: 'center' }}
-            ellipsizeMode='tail'
-            numberOfLines={1}
-          >
-            {this.props.user?.displayName}
-          </Text>
+          <Button
+            type="clear"
+            title={
+              <Text
+                style={{ fontSize: 30, alignSelf: 'center', maxWidth: '90%' }}
+                ellipsizeMode='tail'
+                numberOfLines={1}
+              >
+                {
+                  this.props.user?.firstName || this.props.user?.lastName ?
+                    this.props.user?.firstName + " " + this.props.user?.lastName
+                    : this.props.user?.displayName
+                }
+              </Text>
+            }
+            raised
+            disabled={randomRestaurantLoading}
+            titleStyle={{ color: 'black', fontSize: 26 }}
+            buttonStyle={{ justifyContent: 'center' }}
+            icon={
+              <Icon
+                name="edit"
+                iconStyle={{ fontSize: 25, marginRight: 10, alignSelf: 'center' }}
+              />
+            }
+            onPress={() => this.props.navigation.navigate('AccountEdit')}
+            containerStyle={{ marginTop: 10 }}
+          />
+          
         </View>
         <View style={{ paddingHorizontal: 10 }}>
           <Button
-            title="Join or Create a Lobby"
+            title="Lobbies"
             raised
             disabled={randomRestaurantLoading}
             titleStyle={{ color: 'white', fontSize: 26, paddingLeft: 3 }}
@@ -464,7 +532,9 @@ class Home extends Component {
             loading={randomRestaurantLoading}
             loadingStyle={{ marginVertical: 7, flex: 1, justifyContent: 'center' }}
             loadingProps={{ color: ThemeColors.text }}
-            buttonStyle={{ justifyContent: 'space-between', backgroundColor: 'white' }}
+            buttonStyle={{
+              justifyContent: 'space-between', backgroundColor: 'white', borderWidth: 1, borderColor: 'lightgray'
+            }}
             icon={<Icon name="angle-right" type="font-awesome" iconStyle={{ fontSize: 30, color: ThemeColors.text, paddingRight: 3 }} />}
             iconRight
             onPress={() => {
@@ -472,7 +542,7 @@ class Home extends Component {
             }}
             containerStyle={{ marginVertical: 5 }}
           />
-          <Button
+          {/* <Button
             title="Account"
             raised
             disabled={randomRestaurantLoading}
@@ -482,7 +552,7 @@ class Home extends Component {
             iconRight
             onPress={() => this.props.navigation.navigate('AccountEdit')}
             containerStyle={{ marginVertical: 5 }}
-          />
+          /> */}
         </View>
         <Button
           title="Sign Out"

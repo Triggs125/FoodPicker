@@ -50,7 +50,7 @@ class CreateAccount extends Component {
           await updateProfile(this.props.auth.currentUser, {
             displayName: displayName
           });
-          await AddUserToDB(this.props.db, res.user, this.state.firstNameText, this.state.lastNameText, displayName);
+          await AddUserToDB(this.props.db, res.user, this.state.firstNameText, this.state.lastNameText);
           this.setState({
             firstNameText: "",
             lastNameText: "",

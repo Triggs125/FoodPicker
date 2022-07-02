@@ -26,7 +26,7 @@
 //         if (hasPlayServices) {
 //           GoogleSignin.signIn()
 //             .then(async user => {
-//               await AddUserToDB(this.props.db, user, user.firstName, user.lastName, user.displayName, "google");
+//               await AddUserToDB(this.props.db, user, user.firstName, user.lastName, "google");
 //             });
 //         } else {
 //           this.setState({ playServicesError: true });

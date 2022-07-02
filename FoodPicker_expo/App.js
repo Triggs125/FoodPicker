@@ -2,7 +2,7 @@ import 'react-native-gesture-handler';
 import React, { useState } from 'react';
 import { View, LogBox, SafeAreaView, StatusBar, Dimensions } from 'react-native';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Button, Image } from 'react-native-elements';
+import { Button, Image, Text } from 'react-native-elements';
 import { NavigationContainer, ThemeProvider } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import * as SplashScreen from 'expo-splash-screen';
@@ -44,11 +44,13 @@ export default function App() {
 
   const [userColors, setUserColors] = useState({});
   const [loading, setLoading] = useState(true);
+  const [bannerError, setBannerError] = useState(true)
   const [user, setUser] = useState();
   const [lobbyData, setLobbyData] = useState();
   const [userLobbies, setUserLobbies] = useState();
   const [kickedFromLobby, setKickedFromLobby] = useState(false);
   const [interstitialAdShowing, setInterstitialAdShowing] = useState(false);
+  const [randomRestaurantList, setRandomRestaurantList] = useState([]);
 
   const bannerId = getPlacementId(true);
   const interstitialId = getPlacementId(false);
@@ -58,6 +60,14 @@ export default function App() {
       const canTrack = persmissionResponse.granted;
       FacebookAds.AdSettings.setAdvertiserTrackingEnabled(canTrack);
       setLoading(false);
+      setBannerError(false);
+    })
+    .catch(err => {
+      setBannerError(true);
+      Analytics.logEvent("exception", {
+        description: "App::AdSettings::requestPermissionsAsync"
+      });
+      console.error('App::getBannerAd', err.nativeEvent);
     });
 
   function getPlacementId(isBanner) {
@@ -77,7 +87,7 @@ export default function App() {
   }
 
   function getBannerAd() {
-    if (!loading) {
+    if (!loading && !bannerError) {
       return (
         <FacebookAds.BannerAd
           placementId={bannerId}
@@ -89,15 +99,25 @@ export default function App() {
             });
             console.log('Banner Ad Clicked');
           }}
-          onError={err => {
-            Analytics.logEvent("exception", {
-              description: "App:getBannerAd"
-            });
-            console.error('App::getBannerAd', err.nativeEvent);
-          }}
+          // onError={err => {
+          //   Analytics.logEvent("exception", {
+          //     description: "App::getBannerAd"
+          //   });
+          //   console.error('App::getBannerAd', err.nativeEvent);
+          //   setBannerError(true)
+          // }}
         />
       );
     }
+    return (
+      <View
+        style={{
+          height: 40
+        }}
+      >
+        <Text>Error retrieving banner ad</Text>
+      </View>
+    );
   }
 
   function showInterstitial() {
@@ -293,6 +313,8 @@ export default function App() {
                     db={db}
                     setLobbyData={setLobbyData}
                     showInterstitial={showInterstitial}
+                    randomRestaurantList={randomRestaurantList}
+                    setRandomRestaurantList={setRandomRestaurantList}
                   />
                 )}
               </Stack.Screen>

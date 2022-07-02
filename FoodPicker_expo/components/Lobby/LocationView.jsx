@@ -1,7 +1,7 @@
 import { Component } from "react";
 import { Button, Icon, ListItem, Text, BottomSheet, Overlay } from "react-native-elements";
 import * as Location from 'expo-location';
-import { View, Linking } from "react-native";
+import { View, Linking, Platform } from "react-native";
 import { GOOGLE_MAPS_API_KEY } from "../../config";
 import MapView, { Circle } from 'react-native-maps';
 import ThemeColors from "../../assets/ThemeColors";
@@ -129,7 +129,7 @@ class LocationView extends Component {
     const newCoords = { longitude: details?.geometry.location.lng, latitude: details?.geometry.location.lat };
     Location.reverseGeocodeAsync(newCoords)
       .then(locationGeocodeAddress => {
-        this.props.setLocationData(newCoords, locationGeocodeAddress);
+        this.props.setLocationData(newCoords, locationGeocodeAddress, undefined, details.utc_offset);
         this.setState({ locationGeocodeAddress });
       })
       .catch(err => {
@@ -238,7 +238,7 @@ class LocationView extends Component {
                           textAlign: 'left',
                           fontSize: 18,
                           fontWeight: 'normal',
-                          color: ThemeColors.text,
+                          color: 'black',
                           marginRight: 5,
                         }}
                       >
@@ -248,7 +248,7 @@ class LocationView extends Component {
                     titleStyle={{ textAlign: 'left', fontSize: 18, color: ThemeColors.text, marginRight: 10 }}
                     buttonStyle={{ backgroundColor: 'transparent' }}
                     containerStyle={{ alignSelf: 'center' }}
-                    icon={!Constants.platform.web && distance && isHost && <Icon name={distanceChoicesOpen ? "angle-up" : "angle-down"} type="font-awesome" />}
+                    icon={!Constants.platform.web && distance && isHost && <Icon name={distanceChoicesOpen ? "angle-up" : "angle-down"} type="font-awesome" size={16} />}
                     iconRight
                     onPress={() => isHost && this.setState({ distanceChoicesOpen: !distanceChoicesOpen })}
                   />
@@ -296,8 +296,15 @@ class LocationView extends Component {
             }
           </View>
           <View>
-            <View style={{ flexDirection: 'row', justifyContent: 'flex-start', paddingLeft: 10, marginBottom: isLoading ? 5 : 0 }}>
-              <Text style={{ fontSize: 20, paddingBottom: 2, textAlign: 'center', alignSelf: 'center' }}>
+            <View
+              style={{
+                flexDirection: 'row', 
+                justifyContent: 'flex-start', 
+                paddingLeft: 10, 
+                marginBottom: isLoading ? 5 : 0
+              }}
+            >
+              <Text style={{ color: 'black', fontSize: 20, paddingBottom: 2, textAlign: 'center', alignSelf: 'center' }}>
                 Location:
               </Text>
               {
@@ -311,7 +318,7 @@ class LocationView extends Component {
                           textAlign: 'left',
                           fontSize: 18,
                           fontWeight: 'normal',
-                          color: ThemeColors.text,
+                          color: 'black',
                           marginRight: 5,
                           maxWidth: ScreenWidth - 175
                         }}
@@ -321,7 +328,16 @@ class LocationView extends Component {
                     }
                     onPress={() => { !Constants.platform.web && this.setState({ mapViewOpen: !mapViewOpen }) }}
                     buttonStyle={{ backgroundColor: 'transparent' }}
-                    icon={!Constants.platform.web && location && <Icon name={mapViewOpen ? "angle-up" : "map-o"} type="font-awesome" />}
+                    icon={
+                      !Constants.platform.web && location && (
+                        <Icon
+                          name={mapViewOpen ? "angle-up" : "map-o"}
+                          type="font-awesome"
+                          size={16}
+                          containerStyle={{ paddingLeft: 5 }}
+                        />
+                      )
+                    }
                     iconRight
                     containerStyle={{ alignSelf: 'center' }}
                   />
@@ -349,7 +365,7 @@ class LocationView extends Component {
             }
           </View>
           {
-            (mapViewOpen && isHost) && // Location search for host only
+            (mapViewOpen && isHost && !Constants.platform.web) && // Location search for host only
             (
               <View style={{ flexDirection: "row", alignSelf: 'stretch' }}>
                 {

@@ -149,8 +149,22 @@ class PlaceDetails extends Component {
     });
   }
 
+  getDateWithUTCOffset(inputTzOffset) {
+    var now = new Date(); // get the current time
+
+    var currentTzOffset = -now.getTimezoneOffset() / 60 // in hours, i.e. -4 in NY
+    var deltaTzOffset = inputTzOffset - currentTzOffset; // timezone diff
+
+    var nowTimestamp = now.getTime(); // get the number of milliseconds since unix epoch 
+    var deltaTzOffsetMilli = deltaTzOffset * 1000 * 60 * 60; // convert hours to milliseconds (tzOffsetMilli*1000*60*60)
+    var outputDate = new Date(nowTimestamp + deltaTzOffsetMilli) // your new Date object with the timezone offset applied.
+
+    return outputDate;
+}
+
   render() {
     const { place, tabIndex, tabRoutes } = this.state;
+    const { utcOffset } = this.props.route?.params;
 
     const GooglePicBaseUrl = `https://maps.googleapis.com/maps/api/place/photo?key=${PLACE_DETAILS_API_KEY}&maxwidth=400&photo_reference=`;
     const images = place?.photos?.map(photo => GooglePicBaseUrl + photo.photo_reference);
@@ -159,8 +173,51 @@ class PlaceDetails extends Component {
       longitude: place?.geometry.location.lng,
     };
 
+    // console.log("Place:", place)
+
+    // Transform the day of the week to work with Google's api
     let dayOfWeek = ((new Date()).getDay()) - 1;
     if (dayOfWeek < 0) dayOfWeek = 6;
+
+    // Get the number of minutes right now in the day
+    let minutesToday;
+    if (utcOffset) {
+      const now = new Date(); 
+      const now_utc = Date.UTC(
+        now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(),
+        now.getUTCHours(), now.getUTCMinutes(), now.getUTCSeconds(),
+        now.getUTCMilliseconds()
+      );
+      const date = new Date((now_utc * 1) + (utcOffset * 60 * 1000));
+      const hours = date.getUTCHours();
+      const minutes = date.getUTCMinutes();
+      minutesToday = Number(`${hours}` + `${minutes < 10 ? 0 : ""}${minutes}`);
+    } else {
+      const now = new Date();
+      const hours = now.getHours();
+      const minutes = now.getMinutes();
+      minutesToday = Number(`${hours}` + `${minutes < 10 ? 0 : ""}${minutes}`);
+    }
+
+    // console.log("minutes today:", minutesToday)
+
+    // Get all of the closing times in case there are multiple in one day
+    const closingTimes = place?.opening_hours?.open_now
+      ? place?.opening_hours?.periods
+        .filter(period => period.close.day === dayOfWeek)
+        .map(period => period.close.time)
+      : [];
+    
+    // Go through all of the closing times to see if they are within one hour of the user's current time
+    const closingSoon =
+      closingTimes.filter(
+        closingTime => {
+          if (minutesToday >= closingTime) {
+            return minutesToday - closingTime < 60
+          }
+          return closingTime - minutesToday < 60;
+        }
+      ).length > 0;
 
     const DetailsTab = () => (
       <View style={{
@@ -169,67 +226,71 @@ class PlaceDetails extends Component {
         justifyContent: 'space-between',
       }}>
         <ScrollView>
-          <Text h3 h3Style={{ textAlign: 'center', paddingBottom: 5, paddingTop: 10 }}>{place?.name}</Text>
+          <Text h3
+            h3Style={{ textAlign: 'center', paddingBottom: 5, paddingTop: 10, paddingHorizontal: 5, fontWeight: 'bold' }}>
+              {place?.name}
+            </Text>
           <Text
             style={{
               textAlign: 'center',
               fontSize: 20,
               textTransform: 'capitalize',
-              paddingVertical: 5,
+              paddingVertical: 10,
+              paddingHorizontal: 5
             }}
           >
             {this.placeTypes(place?.types)}
           </Text>
-          <View style={{ flexDirection: 'row', justifyContent: 'center', paddingVertical: 5 }}>
+          <View style={{ flexDirection: 'row', justifyContent: 'center', paddingVertical: 10 }}>
             <Text
               style={{
                 fontWeight: 'normal',
                 marginRight: 5,
-                alignSelf: 'center',
                 fontSize: 18
               }}
             >
               {place?.rating}
             </Text>
-            <Text style={{ flexDirection: 'row', marginRight: 5, alignSelf: 'center' }}>
-              {
-                this.stars(place?.rating)
-              }
-            </Text>
+            {
+              this.stars(place?.rating)
+            }
             <Text
               style={{
                 fontWeight: 'normal',
-                alignSelf: 'center',
-                marginRight: 5,
+                marginHorizontal: 5,
                 fontSize: 18
               }}
             >
               {this.totalRatings(place?.user_ratings_total)}
             </Text>
           </View>
-          <View style={{ flexDirection: 'row', justifyContent: 'center', paddingVertical: 5 }}>
-            <Text
-              style={{
-                flexDirection: 'row',
-                marginRight: 5,
-                alignSelf: 'center',
-                fontSize: 18
-              }}
-            >
-              {
-                this.priceLevel(place?.price_level)
-              }
-            </Text>
-            <Icon
-              name="circle"
-              type="font-awesome"
-              size={5}
-              color='#333'
-              style={{
-                marginRight: 5,
-                paddingTop: 10,
-              }}
-            />
+          <View style={{ flexDirection: 'row', justifyContent: 'center', paddingVertical: 10 }}>
+            {place?.priceLevel &&
+              <>
+                <Text
+                  style={{
+                    flexDirection: 'row',
+                    marginRight: 5,
+                    alignSelf: 'center',
+                    fontSize: 18
+                  }}
+                >
+                  {
+                    this.priceLevel(place?.price_level)
+                  }
+                </Text>
+                <Icon
+                  name="circle"
+                  type="font-awesome"
+                  size={5}
+                  color='#333'
+                  style={{
+                    marginRight: 5,
+                    paddingTop: 10,
+                  }}
+                />
+              </>
+            }
             <Text style={{ flexDirection: 'row', marginRight: 5, alignSelf: 'center', fontSize: 18 }}>
               {
                 `${this.distanceAway(coordinate)} mi`
@@ -238,71 +299,30 @@ class PlaceDetails extends Component {
           </View>
           <Text
             style={{
-              color: place?.opening_hours.open_now ? 'green' : ThemeColors.text,
+              color: place?.opening_hours.open_now ? closingSoon ? '#dd8100' : 'green' : ThemeColors.text,
               fontSize: 22,
+              fontWeight: 'bold',
               alignSelf: 'center',
-              paddingVertical: 5,
+              paddingTop: 10,
+              paddingBottom: 5,
             }}
           >
             {
-              place?.opening_hours.open_now ? "Open Now" : "Closed Now"
+              place?.opening_hours.open_now
+                ? closingSoon
+                  ? "Closing Soon"
+                  : "Open Now"
+                : "Closed Now"
             }
           </Text>
           <Text style={{
-            fontSize: 16,
+            fontSize: 20,
             textAlign: 'center',
-            paddingVertical: 5,
+            padding: 5,
           }}>
             {place?.opening_hours?.weekday_text[dayOfWeek]}
           </Text>
         </ScrollView>
-        <View style={{ flexDirection: 'row', justifyContent: 'space-evenly', marginTop: 5, marginBottom: 5 }}>
-          <Button
-            title={'Call'}
-            type='solid'
-            buttonStyle={{
-              backgroundColor: ThemeColors.button,
-              borderRadius: 10,
-              height: 70,
-            }}
-            titleStyle={{ fontSize: 20, color: 'white' }}
-            raised
-            containerStyle={{ marginTop: 5, marginBottom: 5, width: 100, borderRadius: 10 }}
-            icon={<Icon onPress={() => this.callNumber(place.international_phone_number)} name="phone-alt" type="font-awesome-5" color='white' />}
-            iconPosition='top'
-            onPress={() => this.callNumber(place.international_phone_number)}
-          />
-          <Button
-            title={'Directions'}
-            type='solid'
-            buttonStyle={{
-              backgroundColor: ThemeColors.button,
-              borderRadius: 10,
-              height: 70,
-            }}
-            raised
-            titleStyle={{ fontSize: 20, color: 'white' }}
-            containerStyle={{ marginTop: 5, marginBottom: 5, width: 130, borderRadius: 10 }}
-            icon={<Icon name="map" type="font-awesome-5" color='white' />}
-            iconPosition='top'
-            onPress={() => this.clickPlaceLink(place?.url)}
-          />
-          <Button
-            title={'Website'}
-            type='solid'
-            buttonStyle={{
-              backgroundColor: ThemeColors.button,
-              borderRadius: 10,
-              height: 70,
-            }}
-            raised
-            titleStyle={{ fontSize: 20, color: 'white' }}
-            containerStyle={{ marginTop: 5, marginBottom: 5, width: 100, borderRadius: 10 }}
-            icon={<Icon name="globe-americas" type="font-awesome-5" color='white' />}
-            iconPosition='top'
-            onPress={() => this.clickPlaceLink(place?.website)}
-          />
-        </View>
       </View>
     );
 
@@ -323,6 +343,7 @@ class PlaceDetails extends Component {
             width: ScreenWidth,
             textAlign: 'center',
             fontSize: 22,
+            marginBottom: 10,
           }}
         >
           Average Review: {place?.rating} {this.totalRatings(place.user_ratings_total)}
@@ -330,7 +351,18 @@ class PlaceDetails extends Component {
         {
           place?.reviews?.map(review => {
             return (
-              <>
+              <View
+                style={{
+                  marginBottom: 10,
+                  marginHorizontal: 10,
+                  borderWidth: 0.5,
+                  borderColor: 'lightgray',
+                  shadowColor: '#444',
+                  shadowOpacity: 0.5,
+                  shadowRadius: 2,
+                  shadowOffset: {height: 1}
+                }}
+              >
                 <ListItem>
                   <Avatar source={{ uri: review.profile_photo_url }} />
                   <ListItem.Title>{review.author_name}</ListItem.Title>
@@ -346,7 +378,7 @@ class PlaceDetails extends Component {
                     {review.text}
                   </ListItem.Title>
                 </ListItem>
-              </>
+              </View>
             );
           })
         }
@@ -354,17 +386,18 @@ class PlaceDetails extends Component {
     );
 
     const HoursTab = () => (
-      <View style={{ paddingHorizontal: 10, paddingTop: 10 }}>
+      <View style={{ paddingHorizontal: 10 }}>
         <Text
           style={{
-            color: place?.opening_hours.open_now ? 'green' : ThemeColors.text,
+            color: place?.opening_hours.open_now ? closingSoon ? '#dd8100' : 'green' : ThemeColors.text,
             fontSize: 24,
+            fontWeight: 'bold',
             textAlign: 'center',
-            marginBottom: 10,
+            marginVertical: 10,
           }}
         >
           {
-            place?.opening_hours.open_now ? "Open Now" : "Closed Now"
+            place?.opening_hours.open_now ? closingSoon ? "Closing Soon" : "Open Now" : "Closed Now"
           }
         </Text>
         {
@@ -374,10 +407,11 @@ class PlaceDetails extends Component {
                 fontWeight: 'normal',
                 fontSize: 20,
                 textAlign: 'center',
+                marginVertical: 4
               }}>
                 {weekday}
               </Text>
-            )
+            );
           })
         }
       </View>
@@ -425,6 +459,53 @@ class PlaceDetails extends Component {
                   />
                 )}
               />
+              <View style={{ flexDirection: 'row', justifyContent: 'space-evenly', marginVertical: 5 }}>
+                <Button
+                  title={'Call'}
+                  type='solid'
+                  buttonStyle={{
+                    backgroundColor: ThemeColors.button,
+                    borderRadius: 10,
+                    height: 70,
+                  }}
+                  titleStyle={{ fontSize: 20, color: 'white' }}
+                  raised
+                  containerStyle={{ width: 100, borderRadius: 10 }}
+                  icon={<Icon onPress={() => this.callNumber(place.international_phone_number)} name="phone-alt" type="font-awesome-5" color='white' />}
+                  iconPosition='top'
+                  onPress={() => this.callNumber(place.international_phone_number)}
+                />
+                <Button
+                  title={'Directions'}
+                  type='solid'
+                  buttonStyle={{
+                    backgroundColor: ThemeColors.button,
+                    borderRadius: 10,
+                    height: 70,
+                  }}
+                  raised
+                  titleStyle={{ fontSize: 20, color: 'white' }}
+                  containerStyle={{ width: 130, borderRadius: 10 }}
+                  icon={<Icon name="map" type="font-awesome-5" color='white' />}
+                  iconPosition='top'
+                  onPress={() => this.clickPlaceLink(place?.url)}
+                />
+                <Button
+                  title={'Website'}
+                  type='solid'
+                  buttonStyle={{
+                    backgroundColor: ThemeColors.button,
+                    borderRadius: 10,
+                    height: 70,
+                  }}
+                  raised
+                  titleStyle={{ fontSize: 20, color: 'white' }}
+                  containerStyle={{ width: 100, borderRadius: 10 }}
+                  icon={<Icon name="globe-americas" type="font-awesome-5" color='white' />}
+                  iconPosition='top'
+                  onPress={() => this.clickPlaceLink(place?.website)}
+                />
+              </View>
             </>
           ) : (
             <View

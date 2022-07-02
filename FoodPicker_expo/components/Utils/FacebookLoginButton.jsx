@@ -34,7 +34,7 @@ export default function FacebookLoginButton(props) {
               console.log("Logged into Facebook successfully", user);
               const dbUser = await GetUserFromDB(props.db, user.user.uid);
               if (!dbUser) {
-                AddUserToDB(props.db, user.user, "", "", user.user.displayName, user.providerId)
+                AddUserToDB(props.db, user.user, user.user.displayName, "", user.providerId)
                   .then(() => {
                     setLoading(false);
                   })

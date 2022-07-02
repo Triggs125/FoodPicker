@@ -35,14 +35,14 @@ export default function AppleLoginButton({ auth, db }) {
         console.error("AppleLoginButton::login::provider", err);
         setLoading(false);
         setError(true);
-        setErrorMessage(err);
+        setErrorMessage(err.message);
         return;
       }
       firebaseAuth.signInWithCredential(auth, credential)
         .then(async user => {
           const dbUser = await GetUserFromDB(db, user.user.uid);
           if (!dbUser) {
-            AddUserToDB(db, user.user, "", "", user.user.displayName, user.providerId)
+            AddUserToDB(db, user.user, credential.fullName || user.user.displayName, "", user.providerId)
               .then(() => {
                 setLoading(false);
               })
@@ -53,7 +53,7 @@ export default function AppleLoginButton({ auth, db }) {
                 console.error("AppleLoginButton::login::AddUserToDB", err);
                 setLoading(false);
                 setError(true);
-                setErrorMessage(err);
+                setErrorMessage(err.message);
               });
           } else {
             setLoading(false);
@@ -65,7 +65,7 @@ export default function AppleLoginButton({ auth, db }) {
           console.error("AppleLoginButton::login::signInWithCredential", err);
           setLoading(false);
           setError(true);
-          setErrorMessage(err);
+          setErrorMessage(err.message);
         })
     }).catch(err => {
       Analytics.logEvent("exception", {

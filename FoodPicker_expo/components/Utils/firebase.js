@@ -9,7 +9,7 @@ import { collection, addDoc, query, where, getDocs } from 'firebase/firestore';
  * @return {Promise} user
  */
 export const AddUserToDB = (
-  db, user, firstName, lastName="", displayName="", authProvider="local",
+  db, user, firstName, lastName="", authProvider="local",
 ) => {
   return addDoc(collection(db, 'users'), {
     uid: user.uid,
@@ -17,7 +17,6 @@ export const AddUserToDB = (
     lastName,
     authProvider,
     email: user.email,
-    displayName,
   });
 }
 

@@ -1,6 +1,6 @@
 import { Component } from "react";
 import PropType from 'prop-types';
-import { View, Dimensions, StatusBar, SafeAreaView } from "react-native";
+import { View, Dimensions, StatusBar, SafeAreaView, FlatList } from "react-native";
 import { Tile, Text, Icon } from 'react-native-elements';
 import Constants from 'expo-constants';
 import { getDistance } from 'geolib';
@@ -88,17 +88,18 @@ class FoodChoices extends Component {
   }
 
   render() {
-    const { choicesPageIndex, foodChoices, selectedFoodChoices, maxNumberOfSelections } = this.props;
-
-    return (
-      <SafeAreaInsetsContext.Consumer>
-        {
-          insets => (
-            <HeaderHeightContext.Consumer>
-              {
-                headerHeight => (
-                  foodChoices?.map((place, i) => {
-                    if (i < choicesPageIndex * 2 || i >= choicesPageIndex * 2 + 2) return;
+    const {
+      foodChoices, selectedFoodChoices, maxNumberOfSelections, nextChoicesPage, i = 0, choicesPageIndex
+    } = this.props;
+    const item = ({ item }) => {
+      const place = item;
+      return (
+        <SafeAreaInsetsContext.Consumer>
+          {
+            insets => (
+              <HeaderHeightContext.Consumer>
+                {
+                  headerHeight => {
                     const isSelected = this.isSelected(place);
                     return (
                       <Tile
@@ -130,7 +131,7 @@ class FoodChoices extends Component {
                         onPress={() => this.toggleSelection(place, isSelected)}
                         onLongPress={() => this.props.navigation.navigate("PlaceDetails", { foodChoice: place, finalDecision: false })}
                       >
-                        <View key={'food-choice-info'} style={{ flexDirection: 'row', alignItems: 'center' }}>
+                        <View key={'food-choice-info'} style={{ flexDirection: 'row', alignItems: 'center', marginVertical: 2 }}>
                           <Text style={{ marginRight: 5, alignSelf: 'center', color: isSelected ? 'white' : 'black' }}>{place.rating}</Text>
                           <View style={{ flexDirection: 'row', marginRight: 5, alignSelf: 'center' }}>
                             {
@@ -181,20 +182,31 @@ class FoodChoices extends Component {
                             }
                           </Text>
                         </View>
-                        <Text key={'food-choic-types'} style={{ textTransform: 'capitalize', marginRight: 5, color: isSelected ? 'white' : 'black' }}>
+                        <Text key={'food-choic-types'} style={{ textTransform: 'capitalize', marginRight: 5, color: isSelected ? 'white' : 'black', marginVertical: 5 }}>
                           {this.placeTypes(place.types)}
                         </Text>
-                        <Text key={'food-choice-vicinity'} style={{ color: isSelected ? 'white' : 'black' }}>{place.vicinity}</Text>
+                        <Text key={'food-choice-vicinity'} style={{ color: isSelected ? 'white' : 'black', marginVertical: 2 }}>{place.vicinity}</Text>
                       </Tile>
                     );
-                  })
-                )
-              }
-            </HeaderHeightContext.Consumer>
-          )
-        }
-      </SafeAreaInsetsContext.Consumer>
-    );
+                  }
+                }
+              </HeaderHeightContext.Consumer>
+            )
+          }
+        </SafeAreaInsetsContext.Consumer>
+      );
+    };
+
+    return (
+      <FlatList
+        data={foodChoices}
+        renderItem={item}
+        onEndReached={nextChoicesPage}
+        onEndReachedThreshold={0.3}
+        initialNumToRender={4}
+        keyExtractor={item => item.id}
+      />
+    )
   }
 }
 

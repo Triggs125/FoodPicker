@@ -454,26 +454,27 @@ class LobbyPicker extends Component {
           <ScrollView
             contentContainerStyle={{ paddingBottom: 10 }}
           >
-            <Card
-              id="user-lobbies"
-              containerStyle={styles.cardContainer}
-            >
-              <Card.Title style={styles.cardTitle}>Joined Lobbies</Card.Title>
-              {
-                userLobbies && userLobbies.length > 0 &&
-                <Text style={{ fontSize: 12, marginBottom: 2, marginTop: -5, marginLeft: 5 }}>
-                  *Hold down <Text style={{ color: ThemeColors.text }}>your lobby</Text> to delete it
-                </Text>
-              }
-              {userLobbies?.map((lobby, i) => {
-                return this.lobbyComponent(lobby, i);
-              })}
-            </Card>
+            {
+              userLobbies?.length > 0 && (
+                <Card
+                  id="user-lobbies"
+                  containerStyle={styles.cardContainer}
+                >
+                  <Card.Title style={styles.cardTitle}>Joined Lobbies</Card.Title>
+                  <Text style={{ fontSize: 12, marginBottom: 2, marginTop: -5, marginLeft: 5 }}>
+                    *Hold down your hosted lobby (<Text style={{ color: ThemeColors.text }}>in red</Text>) to delete it
+                  </Text>
+                  {userLobbies?.map((lobby, i) => {
+                    return this.lobbyComponent(lobby, i);
+                  })}
+                </Card>
+              )
+            }
             <Card
               id="search-for-lobbies"
               containerStyle={styles.cardContainer}
             >
-              <Card.Title style={styles.cardTitle}>All Lobbies</Card.Title>
+              <Card.Title style={styles.cardTitle}>Lobbies</Card.Title>
               <SearchAlgolia
                 lobbyComponent={this.lobbyComponent}
                 db={this.props.db}

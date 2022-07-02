@@ -1,6 +1,6 @@
 import { Component } from "react";
-import { Dimensions, StatusBar, View } from "react-native";
-import { Switch, Text } from 'react-native-elements';
+import { Dimensions, FlatList, StatusBar, View } from "react-native";
+import { Switch, Text, Button } from 'react-native-elements';
 import { HeaderHeightContext } from '@react-navigation/elements';
 // import FoodProfile from "../FoodProfile/FoodProfile";
 // import GoogleFoodSearch from "./GoogleFoodSearch";
@@ -11,7 +11,7 @@ import Constants from 'expo-constants';
 import { getDoc, doc, setDoc } from "firebase/firestore";
 import { PLACE_DETAILS_API_KEY, GOOGLE_MAPS_API_KEY } from "../../config";
 import ThemeColors from "../../assets/ThemeColors";
-import { TouchableOpacity } from "react-native-gesture-handler";
+import { ScrollView, TouchableOpacity } from "react-native-gesture-handler";
 import * as Analytics from 'expo-firebase-analytics';
 
 class MakeSelections extends Component {
@@ -43,7 +43,7 @@ class MakeSelections extends Component {
     this.lastChoicesPage = this.lastChoicesPage.bind(this);
     this.clearSelections = this.clearSelections.bind(this);
     this.getUserFoodSelections = this.getUserFoodSelections.bind(this);
-    this.userSelectionPage = this.userSelectionPage.bind(this);
+    this.saveUserSelections = this.saveUserSelections.bind(this);
   }
 
   componentDidMount() {
@@ -100,15 +100,11 @@ class MakeSelections extends Component {
 
   nextChoicesPage() {
     const { choicesPageIndex, foodChoices } = this.state;
-    if (choicesPageIndex < Math.ceil(foodChoices.length / 2) - 1) {
+    if (foodChoices.length < 60) {
+      this.fetchNearestPlacesFromGoogle();
       this.setState({ choicesPageIndex: choicesPageIndex + 1 });
     } else {
-      if (foodChoices.length < 60) {
-        this.fetchNearestPlacesFromGoogle();
-        this.setState({ choicesPageIndex: choicesPageIndex + 1 });
-      } else {
-        this.setState({ choicesPageIndex: 0 });
-      }
+      this.setState({ choicesPageIndex: 0 });
     }
   }
 
@@ -126,7 +122,6 @@ class MakeSelections extends Component {
     nextPageToken = this.state.nextPageToken
   ) {
     const { lobbyData } = this.props;
-
     const latitude = lobbyData.location.latitude;
     const longitude = lobbyData.location.longitude;
     const radius = Math.round(lobbyData.distance * 1609.344);
@@ -220,7 +215,7 @@ class MakeSelections extends Component {
     }
   }
 
-  userSelectionPage() {
+  saveUserSelections() {
     const { lobbyData, user, db } = this.props;
     const { selectedFoodChoices } = this.state;
 
@@ -290,6 +285,9 @@ class MakeSelections extends Component {
   }
 
   render() {
+    if (Constants.platform.web) {
+      return <></>;
+    }
     const {
       googleSearchText,
       choicesPageIndex,
@@ -300,7 +298,7 @@ class MakeSelections extends Component {
       maxNumberOfSelections,
     } = this.state;
 
-    const { user, lobbyData } = this.props;
+    const { lobbyData } = this.props;
 
     return (
       <View
@@ -310,14 +308,6 @@ class MakeSelections extends Component {
           flex: 1
         }}
       >
-        {/* <FoodProfile
-              {...this.props}
-              selectedFoodProfile={this.setSelectedFoodProfile}
-            /> */}
-        {/* <GoogleFoodSearch
-              {...this.props}
-              googleSearchText={this.setGoogleSearchText}
-            /> */}
         <View
           style={{
             flexDirection: 'row',
@@ -351,32 +341,26 @@ class MakeSelections extends Component {
               Only open now?
             </Text>
           </View>
-          <View style={{ paddingRight: 15, paddingTop: 5 }}>
-            <TouchableOpacity
-              onPress={this.userSelectionPage}
+          <View style={{ paddingRight: 15, paddingTop: 5, marginBottom: 15 }}>
+            <Text style={{ textAlign: 'center', fontSize: 18 }}>Picks</Text>
+            <Text
+              style={{
+                textAlign: 'center',
+                fontSize: 20,
+                fontWeight: 'bold'
+              }}
             >
-              <Text style={{ textAlign: 'center', fontSize: 18 }}>Picks</Text>
               <Text
-                style={{
-                  textAlign: 'center',
-                  fontSize: 20,
-                  fontWeight: 'bold'
-                }}
+                style={{ fontWeight: 'bold', color: ThemeColors.text }}
               >
                 {
-                  loading ? (
-                    <LoadingSpinner size="small" />
-                  ) : (
-                    <Text
-                      style={{ fontWeight: 'bold', color: ThemeColors.text }}
-                    >
-                      {selectedFoodChoices?.length || 0}
-                    </Text>
-                  )
+                  loading ?
+                    "-" :
+                    selectedFoodChoices?.length || 0
                 }
-                {` / ${maxNumberOfSelections}`}
               </Text>
-            </TouchableOpacity>
+              {` / ${maxNumberOfSelections}`}
+            </Text>
           </View>
         </View>
         {
@@ -388,18 +372,8 @@ class MakeSelections extends Component {
             </>
           ) : (
             <View
-              style={{ justifyContent: 'center' }}
+              style={{ justifyContent: 'center', flex: 1 }}
             >
-              <Text
-                style={{
-                  fontSize: 12,
-                  marginLeft: 15,
-                  marginBottom: 5,
-                  textAlign: 'center'
-                }}
-              >
-                Choose up to 5 selections
-              </Text>
               <FoodChoices
                 {...this.props}
                 googleSearchText={googleSearchText}
@@ -412,24 +386,27 @@ class MakeSelections extends Component {
                 lobbyData={lobbyData}
                 selectedFoodChoices={selectedFoodChoices}
                 maxNumberOfSelections={maxNumberOfSelections}
+                nextChoicesPage={this.nextChoicesPage}
+              />
+              <Button
+                onPress={this.saveUserSelections}
+                title="Save Selections"
+                titleStyle={{
+                  fontSize: 20,
+                  fontWeight: 'bold'
+                }}
+                buttonStyle={{
+                  backgroundColor: ThemeColors.text,
+                  borderRadius: 0,
+                  height: 50
+                }}
+                containerStyle={{
+                  borderRadius: 0
+                }}
               />
             </View>
           )
         }
-        <FoodPageNavigation
-          {...this.props}
-          nextChoicesPage={this.nextChoicesPage}
-          lastChoicesPage={this.lastChoicesPage}
-          userSelectionPage={this.userSelectionPage}
-          choicesPageIndex={choicesPageIndex}
-          clearSelections={this.clearSelections}
-          selectedFoodChoices={selectedFoodChoices}
-          foodChoices={foodChoices}
-          lobbyData={lobbyData}
-          user={user}
-          maxNumberOfSelections={maxNumberOfSelections}
-          loading={loading}
-        />
       </View>
     )
   }

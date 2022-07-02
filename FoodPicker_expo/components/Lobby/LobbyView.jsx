@@ -11,6 +11,7 @@ import { ScreenWidth } from "react-native-elements/dist/helpers";
 import { getDistance } from 'geolib';
 import LoadingSpinner from "../LoadingSpinner";
 import * as Analytics from 'expo-firebase-analytics';
+import FoodChoiceCard from "../Selections/FoodChoiceCard";
 
 class LobbyView extends Component {
   constructor(props) {
@@ -30,6 +31,8 @@ class LobbyView extends Component {
 
     this.setLocationData = this.setLocationData.bind(this);
     this.goToFinalDecision = this.goToFinalDecision.bind(this);
+    this.getFinalDecision = this.getFinalDecision.bind(this);
+    this.resetFinalDecision = this.resetFinalDecision.bind(this);
   }
 
   componentDidMount() {
@@ -151,7 +154,7 @@ class LobbyView extends Component {
         <Text
           style={{
             fontSize: 18,
-            color: userReady ? 'green' : ThemeColors.text,
+            color: userReady ? 'green' : 'black',
             marginRight: 8,
             maxWidth: ScreenWidth - 152,
             textAlign: 'center'
@@ -159,7 +162,11 @@ class LobbyView extends Component {
           ellipsizeMode='tail'
           numberOfLines={1}
         >
-          {user.displayName && user.displayName !== "" ? user.displayName : `${user.firstName}${user.lastName && " " + user.lastName}`}
+          {
+            user.firstName || user.lastName ?
+              `${user.firstName ? user.firstName : ""}${user.lastName && " " + user.lastName}` :
+              user.displayName
+          }
         </Text>
         <Icon
           name="angle-right"
@@ -205,7 +212,7 @@ class LobbyView extends Component {
       });
   }
 
-  setLocationData(location, locationGeocodeAddress, distance) {
+  setLocationData(location, locationGeocodeAddress, distance, utcOffset) {
     const data = {};
     if (location) {
       data.location = location;
@@ -215,6 +222,9 @@ class LobbyView extends Component {
     }
     if (distance) {
       data.distance = distance;
+    }
+    if (utcOffset) {
+      data.utcOffset = utcOffset;
     }
     if (Object.keys(data).length > 0) {
       console.log("Submit location data")
@@ -235,7 +245,7 @@ class LobbyView extends Component {
       return;
     }
 
-    this.setState({ loading: true });
+    this.setState({ decisionLoading: true });
 
     getDocs(query(
       collection(db, 'food_selections'),
@@ -261,11 +271,18 @@ class LobbyView extends Component {
         setDoc(lobbyData.ref, { finalDecision: finalSelection }, { merge: true })
           .then(() => {
             // Navigate to place details page
-            this.props.navigation.navigate("PlaceDetails", { foodChoice: finalSelection, finalDecision: true });
-            this.setState({ loading: false });
+            // this.props.navigation.navigate("PlaceDetails", { foodChoice: finalSelection, finalDecision: true });
+            this.setState({ decisionLoading: false });
             Analytics.logEvent("event", {
               description: "LobbyView::getFinalDecision::decisionMade"
             });
+          })
+          .catch(err => {
+            Analytics.logEvent("exception", {
+              description: "LobbyView::getFinalDecision::" + err.message
+            });
+            console.error("LobbyView::getFinalDecision", err);
+            this.setState({ decisionLoading: false });
           });
       })
       .catch(err => {
@@ -273,7 +290,7 @@ class LobbyView extends Component {
           description: "LobbyView::getFinalDecision"
         });
         console.error("LobbyView::getFinalDecision", err);
-        this.setState({ loading: false });
+        this.setState({ decisionLoading: false });
       });
   }
 
@@ -378,10 +395,10 @@ class LobbyView extends Component {
   }
 
   resetFinalDecision() {
-    this.setState({ loading: true });
+    this.setState({ decisionLoading: true });
     setDoc(this.state.lobbyData.ref, { finalDecision: null }, { merge: true })
       .then(() => {
-        this.setState({ loading: false });
+        this.setState({ decisionLoading: false });
         Analytics.logEvent("event", {
           description: "LobbyView::resetFinalDecision"
         });
@@ -391,7 +408,7 @@ class LobbyView extends Component {
           description: "LobbyView::resetFinalDecision"
         });
         console.error("LobbyView::resetFinalDecision", err);
-        this.setState({ loading: false });
+        this.setState({ decisionLoading: false });
       });
   }
 
@@ -476,14 +493,14 @@ class LobbyView extends Component {
 
   render() {
     const {
-      lobbyData, lobbyName, lobbyUsers, isHost, loading,
+      lobbyData, lobbyName, lobbyUsers, isHost, loading, decisionLoading
     } = this.state;
 
-    const { user } = this.props;
+    const { user, navigation, setKickedFromLobby } = this.props;
 
     if (!loading && !lobbyData.users?.includes(user.uid)) {
-      this.props.setKickedFromLobby(true);
-      this.props.navigation.navigate("LobbyPicker");
+      setKickedFromLobby(true);
+      navigation.navigate("LobbyPicker");
       Analytics.logEvent("event", {
         description: "LobbyView::render::userKickedFromLobby"
       });
@@ -505,7 +522,7 @@ class LobbyView extends Component {
           <Button
             buttonStyle={{ backgroundColor: 'transparent' }}
             icon={<Icon name="settings" color={isHost ? 'black' : 'transparent'} />}
-            onPress={() => isHost && this.props.navigation.navigate("LobbyCreator", { lobbyData })}
+            onPress={() => isHost && !loading && navigation.navigate("LobbyCreator", { lobbyData })}
           />
           <Text
             style={{ fontSize: 24, width: ScreenWidth - 120, alignSelf: 'center', textAlign: 'center' }}
@@ -517,13 +534,97 @@ class LobbyView extends Component {
           <Button
             type='clear'
             titleStyle={{ color: ThemeColors.text }}
-            onPress={() => this.share()}
-            icon={<Icon name="share" type="font-awesome" />}
+            onPress={() => !loading && this.share()}
+            icon={{
+              name: 'share',
+              type: 'feather',
+              color: loading ? 'transparent' : 'black'
+            }}
           />
         </View>
         <ScrollView
           showsVerticalScrollIndicator={false}
         >
+          {
+            (lobbyData?.finalDecision || isHost) && (
+              <Card
+                containerStyle={{
+                  marginHorizontal: 0,
+                  marginBottom: 5,
+                  marginTop: 10,
+                  borderRadius: 10,
+                  borderColor: 'lightgray',
+                  padding: 0
+                }}
+                wrapperStyle={{
+                  marginHorizontal: 0
+                }}
+              >
+                <Text
+                  style={{
+                    fontSize: 20,
+                    alignSelf: 'center',
+                    marginTop: 10,
+                    marginBottom: 5,
+                    fontWeight: 'bold'
+                  }}
+                >
+                  Final Decision
+                </Text>
+                {(lobbyData.finalDecision || decisionLoading) && (
+                  <View style={{ marginHorizontal: 5, marginBottom: 5 }}>
+                    {
+                      decisionLoading
+                      ? <LoadingSpinner style={{ paddingVertical: 28 }} />
+                      : (
+                        <FoodChoiceCard
+                          i={0}
+                          foodChoice={lobbyData.finalDecision}
+                          lobbyData={lobbyData}
+                          navigation={navigation}
+                          deleteFunction={this.resetFinalDecision}
+                          finalDecision={true}
+                        />
+                      )
+                    }
+                  </View>
+                )}
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 5 }}>
+                  {
+                    isHost && (
+                      <Button
+                        title={
+                          decisionLoading ?
+                            'Analyzing Restaurants...' :
+                            !lobbyData.finalDecision ? "Calculate Decision" : "Recalulate Decision"
+                        }
+                        disabled={!(lobbyData.finalDecision || lobbyData.usersReady?.length > 0) || decisionLoading}
+                        raised
+                        titleStyle={{ color: ThemeColors.text, fontWeight: 'bold', fontSize: 26 }}
+                        buttonStyle={{ backgroundColor: 'transparent', borderRadius: 10, borderWidth: 0.5, borderColor: 'lightgray' }}
+                        containerStyle={{ marginBottom: 10, marginTop: 5, marginHorizontal: 5, flex: 1, borderRadius: 10 }}
+                        onPress={this.getFinalDecision}
+                      />
+                    )
+                  }
+                </View>
+                {
+                  !(lobbyData.finalDecision || lobbyData.usersReady?.length > 0) && (
+                    <Text
+                      style={{
+                        paddingHorizontal: 15,
+                        paddingBottom: 10,
+                        fontSize: 15,
+                        alignSelf: 'center'
+                      }}
+                    >
+                      *At least one person must make selections
+                    </Text>
+                  )
+                }
+              </Card>
+            )
+          }
           <LocationView
             {...this.props}
             setLocationData={this.setLocationData}
@@ -544,7 +645,7 @@ class LobbyView extends Component {
                   <View>
                     {
                       isHost ? (
-                        <Text style={{ fontSize: 12, marginBottom: 2, marginTop: -5 }}>*Hold down user to remove them</Text>
+                        <Text style={{ fontSize: 12, marginBottom: 2, marginTop: -5 }}>*Hold down any user to remove them</Text>
                       ) : (
                         <Text style={{ fontSize: 12, marginBottom: 2, marginTop: -5 }}>*Hold down your user to remove yourself</Text>
                       )
@@ -600,44 +701,6 @@ class LobbyView extends Component {
             containerStyle={{ marginTop: 0 }}
             onPress={() => this.props.navigation.navigate('MakeSelections')}
           />
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-            {
-              isHost && lobbyData.finalDecision && (
-                <Button
-                  title="Reset Decision"
-                  disabled={!lobbyData.finalDecision}
-                  raised
-                  titleStyle={{ color: ThemeColors.text, fontWeight: 'bold', fontSize: 25 }}
-                  buttonStyle={{ backgroundColor: 'white', borderColor: 'lightgray', borderWidth: 0.5 }}
-                  containerStyle={{ marginTop: 10, marginRight: 10, flex: 1 }}
-                  onPress={() => this.resetFinalDecision()}
-                />
-              )
-            }
-            {
-              isHost ? (
-                <Button
-                  title={lobbyData.finalDecision === undefined ? "Calculate Final Decision" : "Final Decision"}
-                  disabled={!(lobbyData.finalDecision !== undefined || lobbyData.usersReady?.length > 0)}
-                  raised
-                  titleStyle={{ color: 'white', fontWeight: 'bold', fontSize: 26 }}
-                  buttonStyle={{ backgroundColor: ThemeColors.text }}
-                  containerStyle={{ marginTop: 10, flex: 1 }}
-                  onPress={() => lobbyData.finalDecision ? this.goToFinalDecision() : this.getFinalDecision()}
-                />
-              ) : (
-                <Button
-                  title={"Final Decision"}
-                  disabled={lobbyData.finalDecision === undefined}
-                  raised
-                  titleStyle={{ color: 'white', fontWeight: 'bold', fontSize: 26 }}
-                  buttonStyle={{ backgroundColor: ThemeColors.text }}
-                  containerStyle={{ marginTop: 10, flex: 1 }}
-                  onPress={this.goToFinalDecision}
-                />
-              )
-            }
-          </View>
         </View>
       </View>
     );
