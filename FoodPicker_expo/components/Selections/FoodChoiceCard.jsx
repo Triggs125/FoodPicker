@@ -100,7 +100,8 @@ class FoodChoiceCard extends Component {
                 width: 65,
                 marginHorizontal: 10,
                 borderRadius: 5,
-                marginVertical: 3
+                marginVertical: 3,
+                minHeight: 40
               }}
             />
             <View style={{ alignSelf: 'center' }}>

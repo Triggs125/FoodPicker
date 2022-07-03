@@ -1,4 +1,4 @@
-import { collection, deleteDoc, doc, getDocs, onSnapshot, query, setDoc, where } from "firebase/firestore";
+import { collection, deleteDoc, doc, getDocs, onSnapshot, query, setDoc, updateDoc, where, arrayUnion } from "firebase/firestore";
 import { Component } from "react";
 import { Dimensions, Share, StatusBar, View } from "react-native";
 import { Card, Icon, Text, Button, Overlay } from 'react-native-elements';
@@ -27,12 +27,16 @@ class LobbyView extends Component {
       removeUserOverlayUser: null,
       removeUserOverlayLoading: false,
       removeUserOverlayError: false,
+      resetLobbyOverlay: false,
+      resetLobbyOverlayLoading: false,
+      resetLobbyOverlayError: false,
     }
 
     this.setLocationData = this.setLocationData.bind(this);
     this.goToFinalDecision = this.goToFinalDecision.bind(this);
     this.getFinalDecision = this.getFinalDecision.bind(this);
     this.resetFinalDecision = this.resetFinalDecision.bind(this);
+    this.resetLobby = this.resetLobby.bind(this);
   }
 
   componentDidMount() {
@@ -165,7 +169,7 @@ class LobbyView extends Component {
           {
             user.firstName || user.lastName ?
               `${user.firstName ? user.firstName : ""}${user.lastName && " " + user.lastName}` :
-              user.displayName
+              user.displayName || ""
           }
         </Text>
         <Icon
@@ -437,9 +441,11 @@ class LobbyView extends Component {
           ellipsizeMode='tail'
           numberOfLines={1}
         >
-          {removeUserOverlayUser?.displayName && removeUserOverlayUser?.displayName !== ""
-            ? removeUserOverlayUser?.displayName
-            : `${removeUserOverlayUser?.firstName}${removeUserOverlayUser?.lastName ?? " " + removeUserOverlayUser?.lastName}`}
+          {
+            removeUserOverlayUser?.firstName || removeUserOverlayUser?.lastName ?
+              `${removeUserOverlayUser?.firstName ? removeUserOverlayUser?.firstName : ""}${removeUserOverlayUser?.lastName && " " + removeUserOverlayUser?.lastName}` :
+              removeUserOverlayUser?.displayName || ""
+          }
         </Text>
         {
           removeUserOverlayError && (
@@ -491,9 +497,137 @@ class LobbyView extends Component {
     );
   }
 
+  resetLobby() {
+    const { lobbyData } = this.state;
+    this.setState({ resetLobbyOverlayLoading: true });
+    return getDocs(query(
+      collection(this.props.db, 'food_selections'),
+      where('lobbyId', '==', lobbyData.ref.id),
+      where('uid', 'in', lobbyData.users)
+    ))
+    .then(async foodSelections => {
+      const selections = [];
+      const removedUsers = [];
+      foodSelections.forEach(foodSelection => {
+        selections.push(
+          updateDoc(foodSelection.ref, {
+            selections: []
+          })
+          .then(() => {
+            removedUsers.push(foodSelection.data().uid)
+          })
+          .catch(err => {
+            Analytics.logEvent("exception", {
+              description: "LobbyView::ResetLobby::" + lobbyData.name + "::" + err.message
+            });
+            console.log("LobbyView::ResetLobby", err);
+            this.setState({
+              resetLobbyOverlayLoading: false,
+              resetLobbyOverlayError: true,
+            });
+          })
+        );
+      });
+      await Promise.all(selections);
+      const usersReady = lobbyData.usersReady.filter(uid => !removedUsers.includes(uid));
+      console.log("users ready", usersReady);
+      updateDoc(lobbyData.ref, { usersReady })
+      .then(() => {
+        this.resetFinalDecision();
+      })
+      .catch(err => {
+        Analytics.logEvent("exception", {
+          description: "LobbyView::ResetLobby::" + lobbyData.name + "::" + err.message
+        });
+        console.log("LobbyView::ResetLobby", err);
+        this.setState({
+          resetLobbyOverlayLoading: false,
+          resetLobbyOverlayError: true,
+        });
+      })
+    })
+    .catch(err => {
+      Analytics.logEvent("exception", {
+        description: "LobbyView::ResetLobby::" + lobbyData.name + "::" + err.message
+      });
+      console.log("LobbyView::ResetLobby", err);
+      this.setState({
+        resetLobbyOverlayLoading: false,
+        resetLobbyOverlayError: true,
+      });
+    })
+  }
+
+  resetLobbyOverlay() {
+    const {
+      resetLobbyOverlay, resetLobbyOverlayLoading, resetLobbyOverlayError, decisionLoading,
+    } = this.state;
+    return (
+      <Overlay
+        isVisible={resetLobbyOverlay}
+        overlayStyle={{ width: ScreenWidth - 20, borderRadius: 10 }}
+        onBackdropPress={() => {
+          this.setState({
+            resetLobbyOverlay: false,
+            resetLobbyOverlayLoading: false,
+          });
+        }}
+      >
+        <Text
+          style={{ fontSize: 18, textAlign: 'center', marginTop: 10, marginBottom: 20 }}
+        >
+          Would you like to reset the lobby selections? This will clear everyone's selections and reset the final decision.
+        </Text>
+        {
+          resetLobbyOverlayError && (
+            <Text>Error resetting the selections. Please try again or contact support.</Text>
+          )
+        }
+        <Button
+          title="Reset Selections"
+          loading={resetLobbyOverlayLoading && decisionLoading}
+          titleStyle={{ fontSize: 24 }}
+          buttonStyle={{ backgroundColor: ThemeColors.button }}
+          onPress={() => {
+            this.setState({ resetLobbyOverlayLoading: true });
+            this.resetLobby()
+              .then(() => {
+                this.setState({
+                  resetLobbyOverlay: false,
+                  resetLobbyOverlayLoading: false,
+                  resetLobbyOverlayError: false,
+                });
+              })
+              .catch(err => {
+                Analytics.logEvent("exception", {
+                  description: "LobbyView::resetLobbyOverlay"
+                });
+                console.log("LobbyView::resetLobbyOverlay", err);
+                this.setState({
+                  resetLobbyOverlayLoading: false,
+                  resetLobbyOverlayError: true,
+                });
+              });
+          }}
+        />
+        <Button
+          title="Cancel"
+          type="clear"
+          disabled={resetLobbyOverlayLoading}
+          titleStyle={{ color: ThemeColors.text, fontSize: 24 }}
+          onPress={() => {
+            this.setState({
+              resetLobbyOverlay: false
+            });
+          }}
+        />
+      </Overlay>
+    );
+  }
+
   render() {
     const {
-      lobbyData, lobbyName, lobbyUsers, isHost, loading, decisionLoading
+      lobbyData, lobbyName, lobbyUsers, isHost, loading, decisionLoading, resetLobbyOverlayLoading
     } = this.state;
 
     const { user, navigation, setKickedFromLobby } = this.props;
@@ -516,6 +650,7 @@ class LobbyView extends Component {
         }}
       >
         {this.removeUserOverlay()}
+        {this.resetLobbyOverlay()}
         <View
           style={{ flexDirection: "row", justifyContent: 'space-between', width: ScreenWidth - 20 }}
         >
@@ -596,7 +731,7 @@ class LobbyView extends Component {
                         title={
                           decisionLoading ?
                             'Analyzing Restaurants...' :
-                            !lobbyData.finalDecision ? "Calculate Decision" : "Recalulate Decision"
+                            !lobbyData.finalDecision ? "Select Restaurant" : "Re-select Restaurant"
                         }
                         disabled={!(lobbyData.finalDecision || lobbyData.usersReady?.length > 0) || decisionLoading}
                         raised
@@ -691,16 +826,43 @@ class LobbyView extends Component {
             </Card>
           </View>
         </ScrollView>
-        <View style={{ marginBottom: 10, marginTop: 5 }}>
+        <View>
           <Button
             title="Make Selections"
             disabled={!lobbyData.location}
             raised
             titleStyle={{ color: 'white', fontWeight: 'bold', fontSize: 26 }}
-            buttonStyle={{ backgroundColor: ThemeColors.text }}
-            containerStyle={{ marginTop: 0 }}
+            buttonStyle={{ backgroundColor: ThemeColors.text, borderRadius: 0 }}
+            containerStyle={{
+              marginTop: 0,
+              marginHorizontal: -10,
+              borderRadius: 0
+            }}
             onPress={() => this.props.navigation.navigate('MakeSelections')}
           />
+          {
+            isHost && (
+              <Button
+                title="Reset Selections"
+                disabled={!lobbyData.location}
+                loading={resetLobbyOverlayLoading}
+                raised
+                titleStyle={{ color: ThemeColors.text, fontWeight: 'bold', fontSize: 26 }}
+                buttonStyle={{ backgroundColor: 'white', borderRadius: 0, borderWidth: 1, borderColor: 'lightgray' }}
+                containerStyle={{
+                  marginTop: 0,
+                  marginHorizontal: -10,
+                  borderRadius: 0
+                }}
+                icon={{
+                  name: 'remove-circle',
+                  type: 'material-icons',
+                  color: ThemeColors.text
+                }}
+                onPress={() => this.setState({ resetLobbyOverlay: true })}
+              />
+            )
+          }
         </View>
       </View>
     );

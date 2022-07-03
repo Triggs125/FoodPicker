@@ -13,7 +13,6 @@ import * as Analytics from 'expo-firebase-analytics';
 import FacebookLoginButton from "./Utils/FacebookLoginButton";
 import LocationView from "./Lobby/LocationView";
 import AppleLoginButton from "./Utils/AppleLoginButton";
-import LocationHook from "./Utils/locationHook";
 
 class Home extends Component {
   constructor(props) {
@@ -22,7 +21,7 @@ class Home extends Component {
     this.distances = [0.5, 1, 2, 5, 10, 20];
 
     this.state = {
-      loading: true,
+      loading_signin: false,
       loginError: false,
       generalError: false,
       emailAddressText: "",
@@ -42,6 +41,7 @@ class Home extends Component {
     }
 
     this.setLocationData = this.setLocationData.bind(this);
+    this.signIn = this.signIn.bind(this);
   }
 
   componentDidMount() {
@@ -62,25 +62,26 @@ class Home extends Component {
     });
   }
 
-  async signIn() {
+  signIn() {
     const { emailAddressText, passwordText } = this.state;
     if (isEmail(emailAddressText) && passwordText.length > 0) {
-      try {
-        const res = await signInWithEmailAndPassword(this.props.auth, emailAddressText, passwordText);
-        this.setState({ emailAddressText: "", passwordText: "", passwordShowing: false });
-        this.props.navigation.navigate('LobbyPicker');
-      } catch (err) {
-        console.error("Sign In Error:", err);
-        if (
-          err.code === "auth/email-already-in-use" ||
-          err.code === "auth/wrong-password" ||
-          err.code === "auth/user-not-found"
-        ) {
-          this.setState({ loginError: true, generalError: false });
-        } else {
-          this.setState({ loginError: false, generalError: true });
-        }
-      }
+      this.setState({ loading_signin: true });
+      signInWithEmailAndPassword(this.props.auth, emailAddressText, passwordText)
+        .catch(err => {
+          console.error("Sign In Error:", err);
+          if (
+            err.code === "auth/email-already-in-use" ||
+            err.code === "auth/wrong-password" ||
+            err.code === "auth/user-not-found"
+          ) {
+            this.setState({ loginError: true, generalError: false });
+          } else {
+            this.setState({ loginError: false, generalError: true });
+          }
+        })
+        .finally(() => {
+          this.setState({ loading_signin: false });
+        });
     } else {
       this.setState({ emailAddressError: true });
     }
@@ -502,6 +503,7 @@ class Home extends Component {
             disabled={randomRestaurantLoading}
             titleStyle={{ color: 'black', fontSize: 26 }}
             buttonStyle={{ justifyContent: 'center' }}
+            iconRight
             icon={
               <Icon
                 name="edit"
@@ -511,7 +513,6 @@ class Home extends Component {
             onPress={() => this.props.navigation.navigate('AccountEdit')}
             containerStyle={{ marginTop: 10 }}
           />
-          
         </View>
         <View style={{ paddingHorizontal: 10 }}>
           <Button
@@ -567,7 +568,11 @@ class Home extends Component {
 
   userNotLoggedIn() {
     const {
-      emailAddressText, passwordText, emailAddressError, passwordShowing, loginError, generalError
+      emailAddressText, passwordText,
+      emailAddressError,
+      passwordShowing,
+      loginError, generalError,
+      loading_signin
     } = this.state;
 
     return (
@@ -641,6 +646,26 @@ class Home extends Component {
           />
           <View style={{ paddingHorizontal: 10 }}>
             <Button
+              title="Sign in with FoodPicker"
+              raised
+              loading={loading_signin}
+              icon={{
+                name: 'home',
+                type: 'font-awesome',
+                color: 'white',
+                marginRight: 5
+              }}
+              titleStyle={{ fontWeight: '500', fontSize: 19 }}
+              buttonStyle={{
+                backgroundColor: '#E54040',
+                paddingVertical: 10
+              }}
+              containerStyle={{
+                marginVertical: 5,
+              }}
+              onPress={this.signIn}
+            />
+            <Button
               title="Forgot Password"
               type='clear'
               titleStyle={{
@@ -652,69 +677,44 @@ class Home extends Component {
               }}
               onPress={() => this.props.navigation.navigate('ForgotPassword')}
             />
-            <Button
-              title="Sign in with FoodPicker"
-              raised
-              icon={{
-                name: 'home',
-                type: 'font-awesome',
-                color: 'white',
-                marginRight: 8
-              }}
-              titleStyle={{ fontWeight: '500', fontSize: 22 }}
-              buttonStyle={{
-                backgroundColor: '#E54040',
-                paddingVertical: 10
-              }}
-              containerStyle={{
-                marginVertical: 5,
-              }}
-              onPress={() => { this.signIn(); }}
-            />
-            {/* {<SignInWithGoogle />} */}
           </View>
         </View>
-        {/* <SignInWithGoogle /> */}
         <Text
           style={{
             textAlign: 'center',
             fontSize: 20,
-            // marginTop: 40,
-            // marginBottom: 40,
             color: 'grey',
           }}
         >
           - OR -
         </Text>
-        <View style={{ paddingHorizontal: 10 }}>
-          {<FacebookLoginButton db={this.props.db} auth={this.props.auth} />}
-          {
-            Constants.platform.ios && (
-              <AppleLoginButton db={this.props.db} auth={this.props.auth} />
-            )
-          }
+        <View style={{ paddingHorizontal: 10, paddingBottom: 5 }}>
           <Button
             title="Create an Account"
             raised
             icon={{
-              name: 'user',
+              name: 'user-plus',
               type: 'font-awesome',
               color: 'black',
-              marginRight: 8
+              marginRight: 5,
+              size: 20
             }}
-            titleStyle={{ fontWeight: '500', fontSize: 22, color: 'black' }}
+            titleStyle={{ fontWeight: '500', fontSize: 19, color: 'black' }}
             buttonStyle={{
               backgroundColor: '#fff',
               paddingVertical: 10,
               borderWidth: 1,
               borderColor: 'lightgray'
             }}
-            containerStyle={{
-              marginBottom: 10,
-              marginTop: 5,
-            }}
             onPress={() => { this.props.navigation.navigate('CreateAccount') }}
           />
+          {<FacebookLoginButton db={this.props.db} auth={this.props.auth} />}
+          {/* <SignInWithGoogle /> */}
+          {
+            Constants.platform.ios && (
+              <AppleLoginButton db={this.props.db} auth={this.props.auth} />
+            )
+          }
         </View>
       </View>
     );

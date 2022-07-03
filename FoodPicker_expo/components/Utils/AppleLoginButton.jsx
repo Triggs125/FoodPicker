@@ -42,7 +42,7 @@ export default function AppleLoginButton({ auth, db }) {
         .then(async user => {
           const dbUser = await GetUserFromDB(db, user.user.uid);
           if (!dbUser) {
-            AddUserToDB(db, user.user, credential.fullName || user.user.displayName, "", user.providerId)
+            AddUserToDB(db, user.user, credential.fullName || user.user.displayName || "", "", user.providerId)
               .then(() => {
                 setLoading(false);
               })
@@ -100,9 +100,16 @@ export default function AppleLoginButton({ auth, db }) {
       />
       <AppleAuthentication.AppleAuthenticationButton
         buttonType={AppleAuthentication.AppleAuthenticationButtonType.CONTINUE}
-        buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.WHITE_OUTLINE}
+        buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.BLACK}
         cornerRadius={2}
-        style={{ width: ScreenWidth - 20, height: 48 }}
+        style={{
+          width: ScreenWidth - 20,
+          height: 48,
+          shadowColor: '#444',
+          shadowOpacity: 0.5,
+          shadowRadius: 1,
+          shadowOffset: {width: 1, height: 1}
+        }}
         onPress={login}
       />
     </>

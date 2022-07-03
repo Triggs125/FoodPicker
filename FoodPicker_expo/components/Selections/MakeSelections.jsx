@@ -260,6 +260,7 @@ class MakeSelections extends Component {
               .then(() => {
                 this.clearSelections();
                 this.setState({ loading: false });
+                this.props.navigation.navigate('LobbyView', { lobbyRef: lobbyData.ref });
                 this.props.navigation.navigate('UserSelections', { lobbyData: lobbyData, user: user });
               })
               .catch(err => {
@@ -271,6 +272,7 @@ class MakeSelections extends Component {
               });
           } else {
             this.setState({ loading: false });
+            this.props.navigation.navigate('LobbyView', { lobbyRef: lobbyData.ref });
             this.props.navigation.navigate('UserSelections', { lobbyData: lobbyData, user: user });
           }
         }
@@ -341,7 +343,7 @@ class MakeSelections extends Component {
               Only open now?
             </Text>
           </View>
-          <View style={{ paddingRight: 15, paddingTop: 5, marginBottom: 15 }}>
+          <View style={{ paddingRight: 15, paddingTop: 5, marginBottom: 10 }}>
             <Text style={{ textAlign: 'center', fontSize: 18 }}>Picks</Text>
             <Text
               style={{
@@ -366,7 +368,6 @@ class MakeSelections extends Component {
         {
           loading ? (
             <>
-              <Text>{''}</Text>
               <LoadingSpinner />
               <Text>{''}</Text>
             </>
@@ -392,16 +393,12 @@ class MakeSelections extends Component {
                 onPress={this.saveUserSelections}
                 title="Save Selections"
                 titleStyle={{
-                  fontSize: 20,
+                  fontSize: 26,
                   fontWeight: 'bold'
                 }}
                 buttonStyle={{
                   backgroundColor: ThemeColors.text,
-                  borderRadius: 0,
                   height: 50
-                }}
-                containerStyle={{
-                  borderRadius: 0
                 }}
               />
             </View>

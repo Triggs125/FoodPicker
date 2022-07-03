@@ -9,7 +9,6 @@ import { ScreenWidth } from "react-native-elements/dist/helpers";
 import * as Analytics from 'expo-firebase-analytics';
 import FoodChoiceCard from "./FoodChoiceCard";
 
-
 class UserSelections extends Component {
   constructor(props) {
     super(props);
@@ -136,7 +135,9 @@ class UserSelections extends Component {
     //   lobbyData.locationGeocodeAddress[0]?.city + ", " +
     //   lobbyData.locationGeocodeAddress[0]?.region;
 
-    const userDisplayName = user.displayName ? user.displayName : user.firstName + " " + user.lastName
+    const userDisplayName = user.firstName || user.lastName ?
+      `${user.firstName ? user.firstName : ""}${user.lastName && " " + user.lastName}` :
+      user.displayName || "";
 
     const isUserChoices = user.uid === this.props.user.uid;
     const isHost = lobbyData?.host === this.props.user.uid;
@@ -219,7 +220,7 @@ class UserSelections extends Component {
             )
           }
           <Button
-            title="Go to Lobby"
+            title="Back to Lobby"
             raised
             titleStyle={{ color: 'white', fontWeight: 'bold', fontSize: 26 }}
             buttonStyle={{ backgroundColor: ThemeColors.text }}

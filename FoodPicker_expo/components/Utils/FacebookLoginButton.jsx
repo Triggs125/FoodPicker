@@ -100,12 +100,13 @@ export default function FacebookLoginButton(props) {
         raised
         loading={loading}
         title="Continue with Facebook"
-        titleStyle={{ color: 'white', fontWeight: '500', fontSize: 22 }}
+        titleStyle={{ color: 'white', fontWeight: '500', fontSize: 19 }}
         icon={{
           name: "facebook-square",
           type: "ant-design",
           color: "white",
-          marginRight: 8
+          marginRight: 5,
+          size: 19
         }}
         buttonStyle={{
           backgroundColor: '#4267B2',

@@ -204,8 +204,8 @@ class PlaceDetails extends Component {
     // Get all of the closing times in case there are multiple in one day
     const closingTimes = place?.opening_hours?.open_now
       ? place?.opening_hours?.periods
-        .filter(period => period.close.day === dayOfWeek)
-        .map(period => period.close.time)
+        .filter(period => period.close?.day === dayOfWeek)
+        .map(period => period.close?.time)
       : [];
     
     // Go through all of the closing times to see if they are within one hour of the user's current time
