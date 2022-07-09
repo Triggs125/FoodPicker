@@ -173,14 +173,14 @@ class LobbyCreator extends Component {
   validateForm() {
     const {
       lobbyName,
-      passwordSchema, passwordProtected, passwordText,
+      passwordSchema, passwordProtected, passwordText, passwordInLobby,
       distance,
       location, locationGeocodeAddress
     } = this.state;
 
     const validLobbyName = lobbyName.length > 0;
     const passwordFailures =
-      passwordProtected
+      passwordProtected && !passwordInLobby
         ? passwordSchema.validate(passwordText, { list: true, details: true })
         : [];
     const validLocation = location && locationGeocodeAddress;

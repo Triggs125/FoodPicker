@@ -7,9 +7,9 @@ import ThemeColors from "../../assets/ThemeColors";
 class FoodChoiceCard extends Component {
   stars(rating) {
     if (!rating && isNaN(rating)) return [];
-    const _rating = Math.round(rating * 2);
-    const fullStars = Math.floor(_rating / 2);
-    const halfStar = _rating % 2 !== 0;
+    const rounded_rating = Math.round(rating);
+    const fullStars = Math.floor(rounded_rating);
+    const halfStar = rounded_rating % 2 !== 0;
     const stars = [];
 
     // Gets the number of full stars to display

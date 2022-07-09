@@ -1,10 +1,11 @@
 import { Component } from "react";
 import PropType from 'prop-types';
 import { View, FlatList } from "react-native";
-import { Tile, Text, Icon } from 'react-native-elements';
+import { Tile, Text, Icon, Button } from 'react-native-elements';
 import Constants from 'expo-constants';
 import { getDistance } from 'geolib';
 import ThemeColors from "../../assets/ThemeColors";
+import { ScrollView } from "react-native-gesture-handler";
 
 const propTypes = {
   googleSearchText: PropType.string,
@@ -14,6 +15,16 @@ const propTypes = {
 }
 
 class FoodChoices extends Component {
+  constructor(props) {
+    super(props);
+
+    this.state = {
+      scroll: false
+    }
+
+    this.scrollToTop = this.scrollToTop.bind(this);
+  }
+
   isSelected(place) {
     const { selectedFoodChoices } = this.props;
     return selectedFoodChoices.some(choice => choice.id === place.id);
@@ -21,9 +32,9 @@ class FoodChoices extends Component {
 
   stars(rating) {
     if (!rating && isNaN(rating)) return [];
-    const _rating = Math.round(rating * 2);
-    const fullStars = Math.floor(_rating / 2);
-    const halfStar = _rating % 2 !== 0;
+    const rounded_rating = Math.round(rating);
+    const fullStars = Math.floor(rounded_rating);
+    const halfStar = rounded_rating % 2 !== 0;
     const stars = [];
 
     // Gets the number of full stars to display
@@ -84,16 +95,124 @@ class FoodChoices extends Component {
     }
   }
 
+  headerComponent() {
+    return (
+      <View style={{ marginTop: 0 }}>
+        <Button
+          title="Scroll to the Bottom"
+          onPress={() => this.flatlistRef && this.flatlistRef.scrollToEnd()}
+          titleStyle={{ fontSize: 20, color: ThemeColors.text }}
+          type="clear"
+          containerStyle={{
+            alignSelf: 'center'
+          }}
+          iconRight
+          icon={{
+            name: 'angle-down',
+            type: 'font-awesome',
+            color: ThemeColors.text
+          }}
+        />
+      </View>
+    )
+  }
+
+  scrollToTop(animated = false) {
+    this.flatlistRef && this.flatlistRef.scrollToIndex({ index: 0, viewOffset: 50, animated });
+  }
+
+  footerComponent() {
+    const {
+      lastChoicesPage, nextChoicesPage,
+      foodChoices, choicesPageIndex
+    } = this.props;
+    let totalLength = 0;
+    foodChoices.forEach(choices => totalLength += choices.length);
+    return (
+      <View
+        style={{
+          flexDirection: 'row', flex: 1, justifyContent: 'space-between',
+          paddingHorizontal: 10, marginTop: -10
+        }}
+      >
+        <Button
+          title={"Last Page"}
+          disabled={choicesPageIndex === 0}
+          onPress={() => lastChoicesPage()}
+          titleStyle={{ fontSize: 20, color: ThemeColors.text }}
+          buttonStyle={{
+            backgroundColor: 'white',
+            paddingLeft: 20,
+            paddingRight: 12,
+            borderRadius: 10,
+            borderTopLeftRadius: 25,
+            borderBottomLeftRadius: 25,
+          }}
+          raised
+          containerStyle={{
+            borderRadius: 10,
+            borderTopLeftRadius: 25,
+            borderBottomLeftRadius: 25,
+            marginVertical: 10,
+            marginLeft: 5,
+          }}
+        />
+        <Button
+          title="Top"
+          onPress={() => this.scrollToTop(true)}
+          titleStyle={{ fontSize: 20, color: ThemeColors.text }}
+          type="clear"
+          containerStyle={{
+            alignSelf: 'center'
+          }}
+          iconRight
+          icon={{
+            name: 'angle-up',
+            type: 'font-awesome',
+            color: ThemeColors.text
+          }}
+        />
+        <Button
+          title={
+            choicesPageIndex == 3 || foodChoices[choicesPageIndex]?.length % 20 != 0
+              ? "First Page"
+              : "Next Page"
+          }
+          onPress={() => nextChoicesPage()}
+          disabled={choicesPageIndex == 0 && foodChoices[choicesPageIndex]?.length % 20 != 0}
+          titleStyle={{ fontSize: 20, color: 'white' }}
+          buttonStyle={{ 
+            backgroundColor: ThemeColors.text,
+            paddingRight: 20,
+            paddingLeft: 12,
+            borderRadius: 10,
+            borderTopRightRadius: 25,
+            borderBottomRightRadius: 25,
+          }}
+          raised
+          containerStyle={{
+            borderRadius: 10,
+            borderTopRightRadius: 25,
+            borderBottomRightRadius: 25,
+            marginVertical: 10,
+            marginRight: 5,
+          }}
+        />
+      </View>
+    );
+  }
+
   render() {
     const {
-      foodChoices, selectedFoodChoices, maxNumberOfSelections, nextChoicesPage, i = 0, choicesPageIndex
+      foodChoices, choicesPageIndex
     } = this.props;
     const item = ({ item }) => {
       const place = item;
+      const { selectedFoodChoices, maxNumberOfSelections } = this.props
       const isSelected = this.isSelected(place);
+      this.scrollToTop();
       return (
         <Tile
-          key={'food-choice-' + i}
           width={'90%'}
           disabled={selectedFoodChoices.length >= maxNumberOfSelections && !isSelected}
           title={place.name}
@@ -118,7 +237,7 @@ class FoodChoices extends Component {
           onPress={() => this.toggleSelection(place, isSelected)}
           onLongPress={() => this.props.navigation.navigate("PlaceDetails", { foodChoice: place, finalDecision: false })}
         >
-          <View key={'food-choice-info'} style={{ flexDirection: 'row', alignItems: 'center', marginVertical: 2 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', marginVertical: 2 }}>
             <Text style={{ marginRight: 5, alignSelf: 'center', color: isSelected ? 'white' : 'black' }}>{place.rating}</Text>
             <View style={{ flexDirection: 'row', marginRight: 5, alignSelf: 'center' }}>
               {
@@ -178,15 +297,19 @@ class FoodChoices extends Component {
     };
 
     return (
-      <FlatList
-        data={foodChoices}
-        renderItem={item}
-        onEndReached={nextChoicesPage}
-        onEndReachedThreshold={0.3}
-        initialNumToRender={4}
-        keyExtractor={item => item.id}
-        style={{ marginHorizontal: -10 }}
-      />
+      <>
+        <FlatList
+          ref={ref => this.flatlistRef = ref}
+          data={foodChoices[choicesPageIndex]}
+          extraData={choicesPageIndex}
+          renderItem={item}
+          initialNumToRender={4}
+          keyExtractor={(item) => { return item.id.toString() }}
+          style={{ marginHorizontal: -10 }}
+          ListHeaderComponent={this.headerComponent()}
+          ListFooterComponent={this.footerComponent()}
+        />
+      </>
     )
   }
 }

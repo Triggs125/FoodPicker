@@ -158,7 +158,7 @@ class UserSelections extends Component {
               <LoadingSpinner />
             </>
           ) : (
-            <ScrollView>
+            <ScrollView contentContainerStyle={{ paddingBottom: 10 }}>
               <Text
                 style={{
                   textAlign: 'center',
@@ -200,16 +200,22 @@ class UserSelections extends Component {
           )
         }
         <View
-          style={{ paddingTop: 5, paddingHorizontal: 5 }}
+          style={{ paddingTop: 5, marginHorizontal: -5 }}
         >
+          <Button
+            title="Back to Lobby"
+            titleStyle={{ color: 'white', fontWeight: 'bold', fontSize: 26 }}
+            buttonStyle={{ backgroundColor: ThemeColors.text, borderRadius: 0 }}
+            containerStyle={{ borderRadius: 0 }}
+            onPress={() => this.props.navigation.navigate('LobbyView', { lobbyRef: lobbyData.ref })}
+          />
           {
             (isUserChoices || isHost) && (
               <Button
                 title="Clear Selections"
-                raised
                 titleStyle={{ color: ThemeColors.text, fontWeight: 'bold', fontSize: 26 }}
-                buttonStyle={{ backgroundColor: 'white', borderWidth: 0.5, borderColor: 'lightgray' }}
-                containerStyle={{ marginBottom: 10 }}
+                buttonStyle={{ backgroundColor: 'white', borderWidth: 0.5, borderColor: 'lightgray', borderRadius: 0 }}
+                containerStyle={{ borderRadius: 0 }}
                 icon={{
                   name: 'remove-circle',
                   type: 'material-icons',
@@ -219,14 +225,6 @@ class UserSelections extends Component {
               />
             )
           }
-          <Button
-            title="Back to Lobby"
-            raised
-            titleStyle={{ color: 'white', fontWeight: 'bold', fontSize: 26 }}
-            buttonStyle={{ backgroundColor: ThemeColors.text }}
-            containerStyle={{ marginBottom: 10 }}
-            onPress={() => this.props.navigation.navigate('LobbyView', { lobbyRef: lobbyData.ref })}
-          />
         </View>
       </View>
     )

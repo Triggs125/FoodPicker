@@ -662,7 +662,7 @@ class LobbyView extends Component {
           <Text
             style={{ fontSize: 24, width: ScreenWidth - 120, alignSelf: 'center', textAlign: 'center' }}
             ellipsizeMode='tail'
-            numberOfLines={1}
+            numberOfLines={2}
           >
             {lobbyName}
           </Text>
@@ -689,10 +689,11 @@ class LobbyView extends Component {
                   marginTop: 10,
                   borderRadius: 10,
                   borderColor: 'lightgray',
-                  padding: 0
+                  padding: 0,
                 }}
                 wrapperStyle={{
-                  marginHorizontal: 0
+                  marginHorizontal: 0,
+                  marginBottom: 5
                 }}
               >
                 <Text
@@ -707,7 +708,7 @@ class LobbyView extends Component {
                   Final Decision
                 </Text>
                 {(lobbyData.finalDecision || decisionLoading) && (
-                  <View style={{ marginHorizontal: 5, marginBottom: 5 }}>
+                  <View style={{ marginHorizontal: 5, marginBottom: 0 }}>
                     {
                       decisionLoading
                       ? <LoadingSpinner style={{ paddingVertical: 28 }} />
@@ -735,9 +736,9 @@ class LobbyView extends Component {
                         }
                         disabled={!(lobbyData.finalDecision || lobbyData.usersReady?.length > 0) || decisionLoading}
                         raised
-                        titleStyle={{ color: ThemeColors.text, fontWeight: 'bold', fontSize: 26 }}
+                        titleStyle={{ color: ThemeColors.text, fontSize: 22 }}
                         buttonStyle={{ backgroundColor: 'transparent', borderRadius: 10, borderWidth: 0.5, borderColor: 'lightgray' }}
-                        containerStyle={{ marginBottom: 10, marginTop: 5, marginHorizontal: 5, flex: 1, borderRadius: 10 }}
+                        containerStyle={{ marginBottom: 5, marginTop: 5, marginHorizontal: 5, flex: 1, borderRadius: 10 }}
                         onPress={this.getFinalDecision}
                       />
                     )
@@ -748,7 +749,7 @@ class LobbyView extends Component {
                     <Text
                       style={{
                         paddingHorizontal: 15,
-                        paddingBottom: 10,
+                        paddingVertical: 5,
                         fontSize: 15,
                         alignSelf: 'center'
                       }}
@@ -844,7 +845,7 @@ class LobbyView extends Component {
             isHost && (
               <Button
                 title="Reset Selections"
-                disabled={!lobbyData.location}
+                disabled={!lobbyData.location || lobbyData.usersReady.length === 0}
                 loading={resetLobbyOverlayLoading}
                 raised
                 titleStyle={{ color: ThemeColors.text, fontWeight: 'bold', fontSize: 26 }}
@@ -857,7 +858,7 @@ class LobbyView extends Component {
                 icon={{
                   name: 'remove-circle',
                   type: 'material-icons',
-                  color: ThemeColors.text
+                  color: !lobbyData.location || lobbyData.usersReady.length === 0 ? '#bbb' : ThemeColors.text
                 }}
                 onPress={() => this.setState({ resetLobbyOverlay: true })}
               />

@@ -49,7 +49,6 @@ class MakeSelections extends Component {
   componentDidMount() {
     const { lobbyData } = this.props;
     this.componentFocusUnsub = this.props.navigation.addListener('focus', () => {
-      this.fetchNearestPlacesFromGoogle();
       this.getUserFoodSelections();
     });
 
@@ -76,7 +75,9 @@ class MakeSelections extends Component {
   }
 
   setChoices(foodChoices) {
-    this.setState({ foodChoices });
+    const choices = this.state.foodChoices;
+    choices.push(foodChoices);
+    this.setState({ foodChoices: choices });
   }
 
   addFoodChoice(foodChoice) {
@@ -98,10 +99,12 @@ class MakeSelections extends Component {
     this.setState({ selectedFoodChoices: [] });
   }
 
-  nextChoicesPage() {
+  async nextChoicesPage() {
     const { choicesPageIndex, foodChoices } = this.state;
-    if (foodChoices.length < 60) {
-      this.fetchNearestPlacesFromGoogle();
+    let totalLength = 0;
+    foodChoices.forEach(choices => totalLength += choices.length);
+    if (totalLength < 60 && foodChoices[choicesPageIndex].length % 20 == 0) {
+      await this.fetchNearestPlacesFromGoogle();
       this.setState({ choicesPageIndex: choicesPageIndex + 1 });
     } else {
       this.setState({ choicesPageIndex: 0 });
@@ -109,16 +112,13 @@ class MakeSelections extends Component {
   }
 
   lastChoicesPage() {
-    const { choicesPageIndex, foodChoices } = this.state;
-    if (choicesPageIndex !== 0) {
+    const { choicesPageIndex } = this.state;
+    if (choicesPageIndex > 0) {
       this.setState({ choicesPageIndex: choicesPageIndex - 1 });
-    } else {
-      this.setState({ choicesPageIndex: Math.ceil(foodChoices.length / 2) - 1 });
     }
   }
 
-  async fetchNearestPlacesFromGoogle(
-    foodChoices = this.state.foodChoices,
+  fetchNearestPlacesFromGoogle(
     nextPageToken = this.state.nextPageToken
   ) {
     const { lobbyData } = this.props;
@@ -132,7 +132,7 @@ class MakeSelections extends Component {
       + '&type=' + types
       + '&key=' + GOOGLE_MAPS_API_KEY;
 
-    let places = foodChoices;
+    let places = [];
     if (nextPageToken != null) {
       url += "&pagetoken=" + nextPageToken;
     } else {
@@ -145,7 +145,7 @@ class MakeSelections extends Component {
 
     this.setState({ loading: true });
 
-    await fetch(url)
+    return fetch(url)
       .then(res => {
         return res.json();
       })
@@ -188,7 +188,7 @@ class MakeSelections extends Component {
       })
       .catch(error => {
         Analytics.logEvent("exception", {
-          description: "MakeSelections::fetchNearestPlacesFromGoogle"
+          description: "MakeSelections::fetchNearestPlacesFromGoogle::" + error.message
         });
         console.error("MakeSelections::fetchNearestPlacesFromGoogle", error);
       })
@@ -314,6 +314,8 @@ class MakeSelections extends Component {
           style={{
             flexDirection: 'row',
             justifyContent: 'space-between',
+            borderBottomWidth: 1,
+            borderBottomColor: 'lightgray'
           }}
         >
           <View
@@ -322,7 +324,9 @@ class MakeSelections extends Component {
               borderRadius: 10,
               paddingHorizontal: 10,
               paddingTop: 5,
-              justifyContent: 'center'
+              justifyContent: 'center',
+              alignSelf: 'center',
+              paddingBottom: 5
             }}
           >
             <Switch
@@ -331,8 +335,8 @@ class MakeSelections extends Component {
               style={{ alignSelf: 'center' }}
               onValueChange={(value) => {
                 this.openNowFilter = value;
-                this.setState({ choicesPageIndex: 0 });
-                this.fetchNearestPlacesFromGoogle([], null);
+                this.setState({ choicesPageIndex: 0, foodChoices: [] });
+                this.fetchNearestPlacesFromGoogle(null);
               }}
             />
             <Text
@@ -343,38 +347,56 @@ class MakeSelections extends Component {
               Only open now?
             </Text>
           </View>
-          <View style={{ paddingRight: 15, paddingTop: 5, marginBottom: 10 }}>
-            <Text style={{ textAlign: 'center', fontSize: 18 }}>Picks</Text>
-            <Text
-              style={{
-                textAlign: 'center',
-                fontSize: 20,
-                fontWeight: 'bold'
-              }}
-            >
+          <View style={{ flexDirection: 'row' }}>
+            <View style={{ paddingRight: 15, paddingTop: 5, marginBottom: 10 }}>
+              <Text style={{ textAlign: 'center', fontSize: 18 }}>Page</Text>
               <Text
-                style={{ fontWeight: 'bold', color: ThemeColors.text }}
+                style={{
+                  textAlign: 'center',
+                  fontSize: 20,
+                  fontWeight: 'bold'
+                }}
               >
-                {
-                  loading ?
-                    "-" :
-                    selectedFoodChoices?.length || 0
-                }
+                <Text
+                  style={{ fontWeight: 'bold', color: 'black' }}
+                >
+                  {
+                      choicesPageIndex || 0
+                  }
+                </Text>
               </Text>
-              {` / ${maxNumberOfSelections}`}
-            </Text>
+            </View>
+            <View style={{ paddingRight: 15, paddingTop: 5, marginBottom: 10 }}>
+              <Text style={{ textAlign: 'center', fontSize: 18 }}>Picks</Text>
+              <Text
+                style={{
+                  textAlign: 'center',
+                  fontSize: 20,
+                  fontWeight: 'bold'
+                }}
+              >
+                <Text
+                  style={{ fontWeight: 'bold', color: ThemeColors.text }}
+                >
+                  {
+                    selectedFoodChoices?.length || 0
+                  }
+                </Text>
+                {` / ${maxNumberOfSelections}`}
+              </Text>
+            </View>
           </View>
         </View>
-        {
-          loading ? (
-            <>
-              <LoadingSpinner />
-              <Text>{''}</Text>
-            </>
-          ) : (
-            <View
-              style={{ justifyContent: 'center', flex: 1 }}
-            >
+        <View
+          style={{ justifyContent: 'space-between', flex: 1 }}
+        >
+          {
+            loading ? (
+              <>
+                <Text>{''}</Text>
+                <LoadingSpinner />
+              </>
+            ) : (
               <FoodChoices
                 {...this.props}
                 googleSearchText={googleSearchText}
@@ -388,22 +410,28 @@ class MakeSelections extends Component {
                 selectedFoodChoices={selectedFoodChoices}
                 maxNumberOfSelections={maxNumberOfSelections}
                 nextChoicesPage={this.nextChoicesPage}
+                lastChoicesPage={this.lastChoicesPage}
               />
-              <Button
-                onPress={this.saveUserSelections}
-                title="Save Selections"
-                titleStyle={{
-                  fontSize: 26,
-                  fontWeight: 'bold'
-                }}
-                buttonStyle={{
-                  backgroundColor: ThemeColors.text,
-                  height: 50
-                }}
-              />
-            </View>
-          )
-        }
+            )
+          }
+          <Button
+            onPress={this.saveUserSelections}
+            disabled={loading}
+            title="Save Selections"
+            titleStyle={{
+              fontSize: 26,
+              fontWeight: 'bold'
+            }}
+            buttonStyle={{
+              backgroundColor: ThemeColors.text,
+              height: 50,
+              borderRadius: 0
+            }}
+            containerStyle={{
+              borderRadius: 0
+            }}
+          />
+        </View>
       </View>
     )
   }
