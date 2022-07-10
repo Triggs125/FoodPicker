@@ -315,7 +315,8 @@ class MakeSelections extends Component {
             flexDirection: 'row',
             justifyContent: 'space-between',
             borderBottomWidth: 1,
-            borderBottomColor: 'lightgray'
+            borderBottomColor: 'lightgray',
+            marginHorizontal: 10
           }}
         >
           <View
@@ -326,7 +327,8 @@ class MakeSelections extends Component {
               paddingTop: 5,
               justifyContent: 'center',
               alignSelf: 'center',
-              paddingBottom: 5
+              paddingBottom: 5,
+              marginLeft: -10
             }}
           >
             <Switch
@@ -347,7 +349,7 @@ class MakeSelections extends Component {
               Only open now?
             </Text>
           </View>
-          <View style={{ flexDirection: 'row' }}>
+          <View style={{ flexDirection: 'row', marginRight: -10 }}>
             <View style={{ paddingRight: 15, paddingTop: 5, marginBottom: 10 }}>
               <Text style={{ textAlign: 'center', fontSize: 18 }}>Page</Text>
               <Text

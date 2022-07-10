@@ -8,6 +8,6 @@ export default {
   textSecondary: '#E54040',
   disabledButton: '#97c1e8',
   card: '#FFFFFF',
-  disabledCard: '#304b63',
+  disabledCard: '#f6f6f6',
   textTitle: '#E54040',
 };

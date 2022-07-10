@@ -81,6 +81,7 @@ class FoodChoiceCard extends Component {
           justifyContent: 'center',
           borderRadius: 10,
           borderWidth: border ? 1 : 0,
+          borderColor: 'lightgray',
           shadowColor: '#444',
           shadowOpacity: 0.5, 
           shadowRadius: 1,

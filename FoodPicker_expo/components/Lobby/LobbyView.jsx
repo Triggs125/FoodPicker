@@ -650,7 +650,14 @@ class LobbyView extends Component {
         {this.removeUserOverlay()}
         {this.resetLobbyOverlay()}
         <View
-          style={{ flexDirection: "row", justifyContent: 'space-between', width: ScreenWidth - 20 }}
+          style={{
+            flexDirection: "row",
+            justifyContent: 'space-between',
+            width: ScreenWidth - 20,
+            paddingBottom: 5,
+            borderBottomWidth: 1,
+            borderBottomColor: 'lightgray'
+          }}
         >
           <Button
             buttonStyle={{ backgroundColor: 'transparent' }}
@@ -799,7 +806,7 @@ class LobbyView extends Component {
                           // Group everyone that's ready next
                           if (userBReady === true) return 1;
                           if (userAReady === true) return -1;
-                          // Everyone not ready stays at the bottom
+                          // Everyone not ready stays at the bottom in order of when they joined
                           return 0;
                         })
                         .map((user, i) => {
@@ -809,11 +816,19 @@ class LobbyView extends Component {
                               title={this.userTitle(user, userReady, isHost)}
                               key={i}
                               raised={userReady}
-                              containerStyle={{ marginVertical: 1, borderWidth: Constants.platform.ios && userReady ? 0.3 : 0, borderColor: 'lightgray' }}
-                              buttonStyle={{ justifyContent: 'space-between', backgroundColor: 'transparent', paddingVertical: 5 }}
+                              containerStyle={{
+                                marginVertical: 1,
+                                borderWidth: userReady ? 1 : 0,
+                                borderColor: 'lightgray'
+                              }}
+                              buttonStyle={{
+                                justifyContent: 'space-between', backgroundColor: 'transparent', paddingVertical: 5
+                              }}
                               onPress={() => userReady && this.props.navigation.navigate('UserSelections', { user: user })}
                               onLongPress={() => {
-                                ((isHost && user.uid !== lobbyData.host) || (user.uid === this.props.user.uid && user.uid !== lobbyData.host)) && this.setState({ removeUserOverlay: true, removeUserOverlayUser: user })
+                                ((isHost && user.uid !== lobbyData.host)
+                                || (user.uid === this.props.user.uid && user.uid !== lobbyData.host))
+                                && this.setState({ removeUserOverlay: true, removeUserOverlayUser: user })
                               }}
                             />
                           );

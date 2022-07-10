@@ -487,31 +487,52 @@ class Home extends Component {
           <Button
             type="clear"
             title={
-              <Text
-                style={{ fontSize: 30, alignSelf: 'center', maxWidth: '90%' }}
-                ellipsizeMode='tail'
-                numberOfLines={1}
-              >
-                {
-                  this.props.user?.firstName || this.props.user?.lastName ?
-                    this.props.user?.firstName + " " + this.props.user?.lastName
-                    : this.props.user?.displayName
-                }
-              </Text>
+              <>
+                <Icon
+                  name="edit"
+                  size={25}
+                  style={{
+                    marginRight: 10,
+                    marginLeft: 5,
+                    alignSelf: 'center'
+                  }}
+                />
+                <Text
+                  style={{ fontSize: 30, alignSelf: 'center', maxWidth: '90%' }}
+                  ellipsizeMode='tail'
+                  numberOfLines={1}
+                >
+                  {
+                    this.props.user?.firstName || this.props.user?.lastName ?
+                      this.props.user?.firstName + " " + this.props.user?.lastName
+                      : this.props.user?.displayName
+                  }
+                </Text>
+                <Icon
+                  name="edit"
+                  size={25}
+                  color="transparent"
+                  style={{
+                    marginRight: 0,
+                    marginLeft: 5,
+                    alignSelf: 'center'
+                  }}
+                />
+              </>
             }
             raised
             disabled={randomRestaurantLoading}
             titleStyle={{ color: 'black', fontSize: 26 }}
             buttonStyle={{ justifyContent: 'center' }}
-            icon={{
-              name: "edit",
-              size: 25,
-              style: {
-                marginRight: 10,
-                marginLeft: 5,
-                alignSelf: 'center'
-              }
-            }}
+            // icon={{
+            //   name: "edit",
+            //   size: 25,
+            //   style: {
+            //     marginRight: 10,
+            //     marginLeft: 5,
+            //     alignSelf: 'center'
+            //   }
+            // }}
             onPress={() => this.props.navigation.navigate('AccountEdit')}
             containerStyle={{ marginTop: 10 }}
           />
