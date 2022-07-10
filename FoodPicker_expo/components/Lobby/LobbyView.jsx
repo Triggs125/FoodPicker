@@ -231,7 +231,6 @@ class LobbyView extends Component {
       data.utcOffset = utcOffset;
     }
     if (Object.keys(data).length > 0) {
-      console.log("Submit location data")
       setDoc(this.state.lobbyData.ref,
         data,
         { merge: true }
@@ -359,7 +358,6 @@ class LobbyView extends Component {
       });
 
     if (matchingSelections.length === 1) {
-      console.log("Returning")
       return matchingSelections[0];
     }
 
@@ -530,7 +528,7 @@ class LobbyView extends Component {
       });
       await Promise.all(selections);
       const usersReady = lobbyData.usersReady.filter(uid => !removedUsers.includes(uid));
-      console.log("users ready", usersReady);
+
       updateDoc(lobbyData.ref, { usersReady })
       .then(() => {
         this.resetFinalDecision();
@@ -731,8 +729,8 @@ class LobbyView extends Component {
                       <Button
                         title={
                           decisionLoading ?
-                            'Analyzing Restaurants...' :
-                            !lobbyData.finalDecision ? "Select Restaurant" : "Re-select Restaurant"
+                            'Analyzing Selections...' :
+                            !lobbyData.finalDecision ? "Get Decision" : "Redo Decision"
                         }
                         disabled={!(lobbyData.finalDecision || lobbyData.usersReady?.length > 0) || decisionLoading}
                         raised

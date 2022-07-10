@@ -425,10 +425,12 @@ class MakeSelections extends Component {
             buttonStyle={{
               backgroundColor: ThemeColors.text,
               height: 50,
-              borderRadius: 0
+              borderRadius: 0,
+              marginBottom: 5
             }}
             containerStyle={{
-              borderRadius: 0
+              borderRadius: 0,
+              backgroundColor: loading ? '#e5e5e5' : ThemeColors.text
             }}
           />
         </View>
