@@ -465,7 +465,7 @@ class Home extends Component {
       <View style={{ ...styles.container, flex: 1 }}>
         {this.randomRestaurantOverlay()}
         {this.randomRestaurantErrorOverlay()}
-        <View style={{ paddingHorizontal: 10, justifyContent: 'center' }}>
+        <View style={{ paddingHorizontal: 10, marginTop: 10, justifyContent: 'center' }}>
           {
             this.props.user.photoURL ? (
               <Avatar
@@ -503,13 +503,15 @@ class Home extends Component {
             disabled={randomRestaurantLoading}
             titleStyle={{ color: 'black', fontSize: 26 }}
             buttonStyle={{ justifyContent: 'center' }}
-            iconRight
-            icon={
-              <Icon
-                name="edit"
-                iconStyle={{ fontSize: 25, marginRight: 10, alignSelf: 'center' }}
-              />
-            }
+            icon={{
+              name: "edit",
+              size: 25,
+              style: {
+                marginRight: 10,
+                marginLeft: 5,
+                alignSelf: 'center'
+              }
+            }}
             onPress={() => this.props.navigation.navigate('AccountEdit')}
             containerStyle={{ marginTop: 10 }}
           />

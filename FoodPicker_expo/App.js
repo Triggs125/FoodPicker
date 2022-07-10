@@ -293,7 +293,11 @@ export default function App() {
                         borderWidth: 1,
                         borderColor: 'lightgray'
                       }}
-                      containerStyle={{ marginRight: 8, borderRadius: 25 }}
+                      containerStyle={{
+                        marginRight: 8,
+                        borderRadius: 25,
+                        backgroundColor: 'blue'
+                      }}
                       onPress={() => props.navigation.navigate('Home')}
                     />
                   ),
@@ -342,13 +346,13 @@ export default function App() {
                     </Stack.Screen>
                     <Stack.Screen
                       name="LobbyPicker"
-                      options={{ headerTitle: "Join or Create a Lobby" }}
+                      options={{ headerTitle: "Lobbies" }}
                     >
                       {props => <LobbyPicker {...props} userLobbies={userLobbies} user={user} auth={auth} db={db} kickedFromLobby={kickedFromLobby} setKickedFromLobby={setKickedFromLobby} />}
                     </Stack.Screen>
                     <Stack.Screen
                       name="LobbyCreator"
-                      options={{ headerTitle: "Create a Lobby" }}
+                      options={{ headerTitle: "Edit or Create Lobby" }}
                     >
                       {props => <LobbyCreator {...props} user={user} auth={auth} db={db} />}
                     </Stack.Screen>
